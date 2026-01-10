@@ -1,0 +1,133 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "Peluche Oso Barcelona",
+      "category": "peluches",
+      "price": 25.99,
+      "description": "Peluche oficial del equipo Barcelona. Suave y perfecto para regalar.",
+      "image": "https://images.unsplash.com/photo-1530325553241-4f6e7690cf36?w=500&h=500&fit=crop",
+      "stock": 15,
+      "featured": true
+    },
+    {
+      "id": 2,
+      "name": "Peluche Oso Real Madrid",
+      "category": "peluches",
+      "price": 25.99,
+      "description": "Peluche oficial del equipo Real Madrid. Ideal para fanáticos.",
+      "image": "https://images.unsplash.com/photo-1551099488-f906b2c97c1c?w=500&h=500&fit=crop",
+      "stock": 12,
+      "featured": true
+    },
+    {
+      "id": 3,
+      "name": "Peluche Osito con Corazón",
+      "category": "peluches",
+      "price": 19.99,
+      "description": "Tierno osito con corazón bordado. Perfecto para San Valentín.",
+      "image": "https://images.unsplash.com/photo-1563291074-2bf8677ac0e5?w=500&h=500&fit=crop",
+      "stock": 20,
+      "featured": true
+    },
+    {
+      "id": 4,
+      "name": "Peluche Unicornio Gigante",
+      "category": "peluches",
+      "price": 45.99,
+      "description": "Peluche unicornio de tamaño grande. Suave y colorido.",
+      "image": "https://images.unsplash.com/photo-1591088398332-8a7791972843?w=500&h=500&fit=crop",
+      "stock": 8,
+      "featured": false
+    },
+    {
+      "id": 5,
+      "name": "Set Peluches Familia",
+      "category": "peluches",
+      "price": 59.99,
+      "description": "Set de 4 peluches de diferentes tamaños. Ideal para coleccionar.",
+      "image": "https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?w=500&h=500&fit=crop",
+      "stock": 10,
+      "featured": false
+    },
+    {
+      "id": 6,
+      "name": "Perfume Carolina Herrera",
+      "category": "perfumes",
+      "price": 89.99,
+      "description": "Good Girl EDP 80ml. Fragancia seductora y elegante.",
+      "image": "https://images.unsplash.com/photo-1541643600914-78b084683601?w=500&h=500&fit=crop",
+      "stock": 15,
+      "featured": true
+    },
+    {
+      "id": 7,
+      "name": "Perfume Hugo Boss Bottled",
+      "category": "perfumes",
+      "price": 79.99,
+      "description": "EDT 100ml. Fragancia masculina clásica y sofisticada.",
+      "image": "https://images.unsplash.com/photo-1587017539504-67cfbddac569?w=500&h=500&fit=crop",
+      "stock": 12,
+      "featured": true
+    },
+    {
+      "id": 8,
+      "name": "Juguete Fisher Price Gimnasio",
+      "category": "juguetes",
+      "price": 65.99,
+      "description": "Gimnasio para bebés con música y luces. Estimula el desarrollo.",
+      "image": "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=500&h=500&fit=crop",
+      "stock": 7,
+      "featured": false
+    },
+    {
+      "id": 9,
+      "name": "LEGO Creator Expert",
+      "category": "legos",
+      "price": 129.99,
+      "description": "Set de construcción avanzado 2000+ piezas. Para mayores de 12 años.",
+      "image": "https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=500&h=500&fit=crop",
+      "stock": 5,
+      "featured": true
+    },
+    {
+      "id": 10,
+      "name": "Collar Plata 925",
+      "category": "joyas",
+      "price": 149.99,
+      "description": "Collar de plata fina con dije de corazón. Elegante y delicado.",
+      "image": "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=500&h=500&fit=crop",
+      "stock": 10,
+      "featured": false
+    },
+    {
+      "id": 11,
+      "name": "Reloj Deportivo Digital",
+      "category": "relojes",
+      "price": 45.99,
+      "description": "Reloj resistente al agua con cronómetro y alarma.",
+      "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop",
+      "stock": 18,
+      "featured": false
+    },
+    {
+      "id": 12,
+      "name": "Mochila Deportiva Nike",
+      "category": "accesorios",
+      "price": 55.99,
+      "description": "Mochila deportiva con múltiples compartimentos. Resistente y espaciosa.",
+      "image": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&h=500&fit=crop",
+      "stock": 14,
+      "featured": false
+    }
+  ],
+  "categories": [
+    { "id": "peluches", "name": "Peluches", "icon": "🧸" },
+    { "id": "perfumes", "name": "Perfumes", "icon": "💐" },
+    { "id": "juguetes", "name": "Juguetes", "icon": "🎮" },
+    { "id": "legos", "name": "LEGOs", "icon": "🧩" },
+    { "id": "joyas", "name": "Joyas", "icon": "💍" },
+    { "id": "relojes", "name": "Relojes", "icon": "⌚" },
+    { "id": "accesorios", "name": "Accesorios", "icon": "👜" }
+  ]
+}

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Tienda Online Mawewe - Peluches, Perfumes, Juguetes y más. Envíos a todo Ecuador.">
+    <meta name="keywords" content="peluches, perfumes, juguetes, regalos, Ecuador, Lago Agrio, Mawewe">
+    <title>Tienda Mawewe - Obsequios & Regalos Personalizados</title>
+    
+    <!-- Favicon -->
+    <link rel="shortcut icon" type="image/x-icon" href="images/fav5.png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/shop.css">
+    
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-FHRFVTPYFQ"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-FHRFVTPYFQ');
+    </script>
+</head>
+<body>
+    
+    <!-- Cart Button (Fixed) -->
+    <button class="cart-button" onclick="toggleCart()">
+        🛒 Carrito
+        <span class="cart-badge" id="cart-count">0</span>
+    </button>
+    
+    <!-- Main Container -->
+    <div class="shop-container">
+        
+        <!-- Header -->
+        <header class="shop-header">
+            <h1>🎁 Tienda Mawewe</h1>
+            <p>Despierta tu Imaginación - Obsequios & Regalos Personalizados</p>
+        </header>
+        
+        <!-- Filters Section -->
+        <section class="filters">
+            <div id="category-filters">
+                <!-- Categories will be loaded here -->
+            </div>
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    id="search-input" 
+                    placeholder="Buscar productos..."
+                    aria-label="Buscar productos"
+                />
+            </div>
+        </section>
+        
+        <!-- Products Grid -->
+        <section class="products-grid" id="products-grid">
+            <!-- Products will be loaded here -->
+        </section>
+        
+        <!-- Info Section -->
+        <section class="shop-info" style="background: linear-gradient(135deg, #8C004B 0%, #b31062 100%); color: white; padding: 3rem 2rem; border-radius: 20px; text-align: center; margin-top: 3rem;">
+            <h2 style="font-size: 2rem; margin-bottom: 1rem;">🚚 Envíos a Todo el País</h2>
+            <p style="font-size: 1.1rem; opacity: 0.95; max-width: 800px; margin: 0 auto 2rem;">
+                Entregamos tus productos favoritos de forma segura en todo Ecuador. 
+                Realizamos envíos rápidos desde nuestra matriz en Lago Agrio.
+            </p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; max-width: 1000px; margin: 0 auto;">
+                <div style="background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 12px;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📍</div>
+                    <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem;">Ubicación</h3>
+                    <p>Jorge Añazco y 12 de Febrero<br>Lago Agrio - Ecuador</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 12px;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📞</div>
+                    <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem;">Teléfonos</h3>
+                    <p>098 183 2313<br>0997146750 / 0968021028</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 12px;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">💳</div>
+                    <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem;">Pagos Seguros</h3>
+                    <p>Aceptamos PayPal<br>Transacciones 100% seguras</p>
+                </div>
+            </div>
+        </section>
+        
+    </div>
+    
+    <!-- Cart Modal -->
+    <div class="cart-overlay" id="cart-overlay"></div>
+    <aside class="cart-modal" id="cart-modal">
+        <div class="cart-header">
+            <h2>🛒 Tu Carrito</h2>
+            <button class="close-cart" onclick="toggleCart()">✕</button>
+        </div>
+        
+        <div class="cart-items" id="cart-items">
+            <!-- Cart items will be loaded here -->
+        </div>
+        
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span class="total-amount" id="cart-total">$0.00</span>
+            </div>
+            
+            <div style="background: #f3f4f6; padding: 1rem; border-radius: 12px; margin-bottom: 1rem; font-size: 0.9rem; color: #6b7280;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span>Subtotal:</span>
+                    <span id="cart-total">$0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">
+                    <span>Envío:</span>
+                    <span>$5.00</span>
+                </div>
+            </div>
+            
+            <!-- PayPal Button Container -->
+            <div id="paypal-button-container"></div>
+            
+            <p style="font-size: 0.85rem; color: var(--text-secondary); text-align: center; margin-top: 1rem;">
+                🔒 Pago seguro procesado por PayPal
+            </p>
+        </div>
+    </aside>
+    
+    <!-- Footer -->
+    <footer style="background: #1f2937; color: white; padding: 3rem 2rem; margin-top: 4rem; text-align: center;">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Mawewe - Despierta tu Imaginación</h3>
+            <p style="opacity: 0.8; margin-bottom: 1.5rem;">
+                Empresa líder en venta de artículos deportivos, cosméticos, juguetes, muebles y prendas de vestir.
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem;">
+                <a href="https://www.facebook.com/MaweweDespiertaTuImaginacion" target="_blank" style="color: white; text-decoration: none; padding: 0.5rem 1rem; background: rgba(255,255,255,0.1); border-radius: 50px; transition: all 0.3s;">
+                    📘 Facebook
+                </a>
+                <a href="https://twitter.com/Mawewe_Ec" target="_blank" style="color: white; text-decoration: none; padding: 0.5rem 1rem; background: rgba(255,255,255,0.1); border-radius: 50px; transition: all 0.3s;">
+                    🐦 Twitter
+                </a>
+                <a href="mailto:info@mawewe.com.ec" style="color: white; text-decoration: none; padding: 0.5rem 1rem; background: rgba(255,255,255,0.1); border-radius: 50px; transition: all 0.3s;">
+                    📧 Email
+                </a>
+            </div>
+            <p style="opacity: 0.6; font-size: 0.9rem;">
+                © 2024 MAWËWË. Todos los derechos reservados.
+            </p>
+        </div>
+    </footer>
+    
+    <!-- Main JavaScript -->
+    <script src="js/shop.js"></script>
+    
+</body>
+</html>
