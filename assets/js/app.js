@@ -1,7 +1,7 @@
 /**
- * MAWEWE E-COMMERCE - ENHANCED VERSION
- * With Checkout Form & Improved Cart
- * Version: 2.5
+ * MAWEWE E-COMMERCE - PROFESSIONAL VERSION 3.0
+ * With PayPal Fixed, Enhanced Product Details & Premium Design
+ * Version: 3.0
  */
 
 // ==============================================
@@ -14,16 +14,16 @@ const CONFIG = {
   paypal: {
     clientId: 'AeKUZVm_-yxZRjygolPx21RgDuy3_K24uOrKWf3MpLAG8xErNCyu4S2GcIu27tJclkpabpv0HXAeBgrg',
     currency: 'USD',
-    locale: 'es_EC'
+    locale: 'es_ES'  // FIXED: PayPal no soporta es_EC, usar es_ES
   },
   shipping: {
     cost: 5.00,
-    freeThreshold: 50.00,  // CAMBIADO: Envío gratis sobre $50
+    freeThreshold: 50.00,
     expressCost: 10.00
   },
   storage: {
-    cartKey: 'mawewe_cart_v2',
-    checkoutKey: 'mawewe_checkout_data'
+    cartKey: 'mawewe_cart_v3',
+    checkoutKey: 'mawewe_checkout_data_v3'
   }
 };
 
@@ -41,7 +41,8 @@ const state = {
   ui: {
     isCartOpen: false,
     isCheckoutOpen: false,
-    currentStep: 'cart' // cart | checkout | payment
+    currentStep: 'cart',
+    selectedProductId: null
   },
   checkoutData: {
     email: '',
@@ -77,6 +78,11 @@ const utils = {
       clearTimeout(timeout);
       timeout = setTimeout(later, wait);
     };
+  },
+
+  truncateText(text, maxLength) {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
   }
 };
 
@@ -139,7 +145,6 @@ const api = {
       state.products = data.products;
       state.categories = data.categories;
       
-      // Update shipping config if provided
       if (data.shippingConfig) {
         CONFIG.shipping = { ...CONFIG.shipping, ...data.shippingConfig };
       }
@@ -264,18 +269,21 @@ const render = {
     if (filteredProducts.length === 0) {
       container.innerHTML = `
         <div style="grid-column: 1/-1; text-align: center; padding: 4rem;">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin: 0 auto 1rem; opacity: 0.3;">
+            <circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path>
+          </svg>
           <h3>No se encontraron productos</h3>
-          <p style="color: var(--text-secondary);">Intenta con otra búsqueda</p>
+          <p style="color: var(--gray-600);">Intenta con otra búsqueda o categoría</p>
         </div>
       `;
       return;
     }
 
     container.innerHTML = filteredProducts.map(product => `
-      <article class="product-card">
+      <article class="product-card" data-product-id="${product.id}">
         ${product.featured ? '<div class="product-badge">Destacado</div>' : ''}
         
-        <div class="product-image-container">
+        <div class="product-image-container" onclick="productDetails.show(${product.id})">
           <img src="${product.image}" alt="${product.name}" class="product-image" loading="lazy" />
         </div>
         
@@ -306,8 +314,12 @@ const render = {
           </div>
           
           <div class="stock-indicator ${product.stock < 5 ? 'low' : product.stock === 0 ? 'out' : ''}">
-            ${product.stock === 0 ? 'Sin stock' : `${product.stock} disponibles`}
+            ${product.stock === 0 ? 'Sin stock' : product.stock < 5 ? `Solo ${product.stock} disponibles` : `${product.stock} disponibles`}
           </div>
+          
+          <button class="btn-details" onclick="productDetails.show(${product.id})">
+            Ver detalles
+          </button>
         </div>
       </article>
     `).join('');
@@ -424,7 +436,6 @@ const render = {
 
       <form class="checkout-form" onsubmit="checkout.handleSubmit(event)">
         
-        <!-- Contact -->
         <div class="form-section">
           <h3>Contacto</h3>
           <div class="form-group">
@@ -444,7 +455,6 @@ const render = {
           </div>
         </div>
 
-        <!-- Delivery -->
         <div class="form-section">
           <h3>Entrega</h3>
           
@@ -542,7 +552,6 @@ const render = {
           </div>
         </div>
 
-        <!-- Shipping Method -->
         <div class="form-section">
           <h3>Métodos de envío</h3>
           <div class="shipping-options">
@@ -575,7 +584,6 @@ const render = {
           </div>
         </div>
 
-        <!-- Order Summary -->
         <div class="checkout-summary">
           <h3>Resumen del Pedido</h3>
           <div class="summary-items">
@@ -639,6 +647,76 @@ const render = {
   getCategoryName(categoryId) {
     const category = state.categories.find(c => c.id === categoryId);
     return category ? category.name : categoryId;
+  }
+};
+
+// ==============================================
+// PRODUCT DETAILS MODAL
+// ==============================================
+const productDetails = {
+  show(productId) {
+    const product = state.products.find(p => p.id === productId);
+    if (!product) return;
+
+    const modal = document.createElement('div');
+    modal.className = 'product-modal-overlay';
+    modal.innerHTML = `
+      <div class="product-modal">
+        <button class="modal-close" onclick="productDetails.close()">×</button>
+        <div class="modal-content">
+          <div class="modal-image">
+            <img src="${product.image}" alt="${product.name}" />
+          </div>
+          <div class="modal-info">
+            <div class="product-category">${render.getCategoryName(product.category)}</div>
+            <h2 class="modal-title">${product.name}</h2>
+            <div class="product-rating">
+              <span class="rating-stars">${render.renderStars(product.rating || 0)}</span>
+              <span class="rating-count">(${product.reviewCount || 0} reseñas)</span>
+            </div>
+            <div class="modal-price">${utils.formatPrice(product.price)}</div>
+            <p class="modal-description">${product.description}</p>
+            
+            <div class="product-details-list">
+              <h3>Detalles del Producto</h3>
+              <ul>
+                <li><strong>SKU:</strong> ${product.sku}</li>
+                <li><strong>Stock disponible:</strong> ${product.stock} unidades</li>
+                <li><strong>Categoría:</strong> ${render.getCategoryName(product.category)}</li>
+                ${product.subcategory ? `<li><strong>Subcategoría:</strong> ${product.subcategory}</li>` : ''}
+              </ul>
+            </div>
+            
+            <div class="modal-actions">
+              <button 
+                class="btn-add-to-cart-large" 
+                onclick="cart.addItem(${product.id}); productDetails.close();"
+                ${product.stock === 0 ? 'disabled' : ''}
+              >
+                ${product.stock === 0 ? 'Agotado' : 'Agregar al Carrito'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    document.body.style.overflow = 'hidden';
+    
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        this.close();
+      }
+    });
+  },
+
+  close() {
+    const modal = document.querySelector('.product-modal-overlay');
+    if (modal) {
+      modal.remove();
+      document.body.style.overflow = '';
+    }
   }
 };
 
@@ -744,7 +822,6 @@ const checkout = {
     
     const formData = new FormData(event.target);
     
-    // Update checkout data
     state.checkoutData = {
       email: formData.get('email'),
       firstName: formData.get('firstName'),
@@ -758,8 +835,6 @@ const checkout = {
     };
 
     storage.saveCheckoutData();
-    
-    // Proceed to payment
     this.openPayment();
   },
 
@@ -782,10 +857,11 @@ const checkout = {
         <div class="payment-info">
           <div class="payment-section">
             <h3>Información de Entrega</h3>
-            <p>${state.checkoutData.firstName} ${state.checkoutData.lastName}</p>
+            <p><strong>${state.checkoutData.firstName} ${state.checkoutData.lastName}</strong></p>
             <p>${state.checkoutData.address}${state.checkoutData.apartment ? ', ' + state.checkoutData.apartment : ''}</p>
             <p>${state.checkoutData.city}, Ecuador</p>
-            <p>${state.checkoutData.phone}</p>
+            <p>Tel: ${state.checkoutData.phone}</p>
+            <p>Email: ${state.checkoutData.email}</p>
           </div>
 
           <div class="payment-section">
@@ -797,13 +873,12 @@ const checkout = {
       </div>
     `;
 
-    // Initialize PayPal
     paypal.init();
   }
 };
 
 // ==============================================
-// PAYPAL INTEGRATION
+// PAYPAL INTEGRATION - FIXED
 // ==============================================
 const paypal = {
   init() {
@@ -816,17 +891,25 @@ const paypal = {
     script.id = 'paypal-sdk';
     script.src = `https://www.paypal.com/sdk/js?client-id=${CONFIG.paypal.clientId}&currency=${CONFIG.paypal.currency}&locale=${CONFIG.paypal.locale}`;
     script.onload = () => this.renderButton();
+    script.onerror = () => {
+      console.error('Error loading PayPal SDK');
+      ui.showNotification('Error al cargar PayPal. Intenta de nuevo.', 'error');
+    };
     document.head.appendChild(script);
   },
 
   renderButton() {
     if (typeof window.paypal === 'undefined') {
       console.error('PayPal SDK not loaded');
+      ui.showNotification('Error: PayPal no está disponible', 'error');
       return;
     }
 
     const container = document.getElementById('paypal-button-container');
-    if (!container) return;
+    if (!container) {
+      console.error('PayPal button container not found');
+      return;
+    }
 
     container.innerHTML = '';
 
@@ -880,7 +963,7 @@ const paypal = {
               },
               address: {
                 address_line_1: state.checkoutData.address,
-                address_line_2: state.checkoutData.apartment,
+                address_line_2: state.checkoutData.apartment || '',
                 admin_area_2: state.checkoutData.city,
                 postal_code: state.checkoutData.postalCode || '000000',
                 country_code: 'EC'
@@ -889,8 +972,8 @@ const paypal = {
           }],
           application_context: {
             shipping_preference: 'GET_FROM_FILE',
-            brand_name: 'Mawewe',
-            locale: CONFIG.paypal.locale
+            brand_name: 'Mawewe'
+            // REMOVED locale - this was causing the error
           }
         });
       },
@@ -899,7 +982,7 @@ const paypal = {
         try {
           const order = await actions.order.capture();
           
-          console.log('Order completed:', {
+          console.log('✅ Order completed:', {
             orderId: order.id,
             customer: state.checkoutData,
             items: state.cart,
@@ -908,24 +991,22 @@ const paypal = {
           
           ui.showNotification('¡Pago completado exitosamente!');
           
-          // Clear data
           storage.clearCart();
           state.checkoutData = {};
           storage.saveCheckoutData();
           
-          // Close modal and refresh
           ui.toggleCart();
           render.cartBadge();
           
         } catch (error) {
-          console.error('Error processing payment:', error);
+          console.error('❌ Error processing payment:', error);
           ui.showNotification('Error al procesar el pago', 'error');
         }
       },
 
       onError: (err) => {
-        console.error('PayPal error:', err);
-        ui.showNotification('Error con PayPal', 'error');
+        console.error('❌ PayPal error:', err);
+        ui.showNotification('Error con PayPal. Intenta de nuevo.', 'error');
       },
 
       onCancel: () => {
@@ -939,7 +1020,6 @@ const paypal = {
 // EVENT LISTENERS
 // ==============================================
 function setupEventListeners() {
-  // Search
   const searchInput = document.getElementById('search-input');
   if (searchInput) {
     searchInput.addEventListener('input', 
@@ -947,7 +1027,6 @@ function setupEventListeners() {
     );
   }
 
-  // Cart overlay
   const overlay = document.getElementById('cart-overlay');
   if (overlay) {
     overlay.addEventListener('click', () => {
@@ -957,14 +1036,16 @@ function setupEventListeners() {
     });
   }
 
-  // ESC key
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && state.ui.isCartOpen) {
-      if (state.ui.currentStep === 'cart') {
-        ui.toggleCart();
-      } else {
-        checkout.goBack();
+    if (e.key === 'Escape') {
+      if (state.ui.isCartOpen) {
+        if (state.ui.currentStep === 'cart') {
+          ui.toggleCart();
+        } else {
+          checkout.goBack();
+        }
       }
+      productDetails.close();
     }
   });
 }
@@ -984,24 +1065,23 @@ async function init() {
     
     setupEventListeners();
     
-    console.log('Mawewe E-commerce initialized');
+    console.log('✅ Mawewe E-commerce v3.0 initialized successfully');
   } catch (error) {
-    console.error('Initialization error:', error);
+    console.error('❌ Initialization error:', error);
   }
 }
 
-// Start
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {
   init();
 }
 
-// Global exports
 window.mawewe = {
   cart,
   checkout,
   productFilters,
+  productDetails,
   ui,
   state
 };
