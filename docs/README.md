@@ -1,446 +1,331 @@
-# Mawewe E-Commerce Platform v2.0
+# Mawewe E-Commerce - Versión Mejorada 2.5
 
-Sistema de comercio electrónico profesional con integración PayPal, gestión avanzada de productos y diseño responsive de alta calidad.
+## 🎯 Cambios Principales Implementados
 
-## Tabla de Contenidos
+### 1. ✅ Envío Gratis Cambiado
+- **ANTES**: Envío gratis sobre $100
+- **AHORA**: **Envío gratis sobre $50** ⭐
+- Se muestra mensaje dinámico: "Compra $X más para envío gratis"
 
-- [Características](#características)
-- [Tecnologías](#tecnologías)
-- [Estructura del Proyecto](#estructura-del-proyecto)
-- [Instalación](#instalación)
-- [Configuración](#configuración)
-- [Uso](#uso)
-- [API de Productos](#api-de-productos)
-- [Personalización](#personalización)
-- [Despliegue](#despliegue)
-- [Mantenimiento](#mantenimiento)
+### 2. ✅ Más Productos (30 productos)
+- **12 nuevos productos agregados**
+- **Nueva categoría: Ropa** (Levi's, Nike, Adidas)
+- Productos organizados con imágenes reales de Unsplash relacionadas
+- Cada producto tiene:
+  - SKU único
+  - Descripción detallada
+  - Ratings y reseñas
+  - Stock actualizado
 
-## Características
+### 3. ✅ Formulario de Checkout Completo
+**Igual al ejemplo de la imagen que compartiste:**
+- Información de Contacto (Email)
+- Datos de Entrega:
+  - País/Región
+  - Nombre y Apellidos
+  - Dirección
+  - Apartamento (opcional)
+  - Código Postal (opcional)
+  - Ciudad
+  - Teléfono
+- Métodos de Envío:
+  - Standard ($5.00 o GRATIS sobre $50)
+  - Express ($10.00 - entrega 1-2 días)
+- Resumen del Pedido
+- Checkbox para guardar información
+- Checkbox para recibir ofertas
 
-### Catálogo de Productos
-- 20+ productos con información detallada
-- 7 categorías principales con subcategorías
-- Imágenes de alta calidad mediante Unsplash
-- Ratings y reseñas
-- Indicadores de stock en tiempo real
-- Badges de productos destacados y descuentos
+### 4. ✅ Carrito 100% Funcional
+- Agregar productos ✓
+- Modificar cantidades (+/-)  ✓
+- Eliminar productos ✓
+- Persistencia en localStorage ✓
+- Cálculo automático de totales ✓
+- Validación de stock ✓
 
-### Sistema de Carrito
-- Gestión completa de cantidades
-- Persistencia en localStorage
-- Validación de stock automática
-- Cálculo dinámico de totales
-- Envío gratuito sobre $100
+### 5. ✅ Imágenes Reales Relacionadas
+- Todas las imágenes de Unsplash relacionadas con los productos
+- URLs optimizadas (w=800&q=80)
+- Lazy loading para mejor performance
 
-### Integración PayPal
-- Checkout seguro con PayPal
-- Soporte multi-moneda
-- Cálculo automático de impuestos y envío
-- Manejo de transacciones y errores
-- Confirmación de órdenes
+### 6. ✅ Flujo de Compra Completo
+1. Usuario navega productos → Agrega al carrito
+2. Abre carrito → Ve sus productos
+3. Click en "Proceder al Pago" → **Formulario de Checkout**
+4. Llena sus datos → Click en "Continuar al Pago"
+5. Se muestra resumen y botón de PayPal
+6. Completa pago en PayPal
+7. Orden procesada exitosamente
 
-### Diseño Profesional
-- Tipografía refinada (Playfair Display + Lato)
-- Paleta de colores cohesiva
-- Animaciones sutiles y elegantes
-- Responsive design completo
-- Accesibilidad WCAG 2.1 AA
-
-### Experiencia de Usuario
-- Búsqueda en tiempo real
-- Filtros por categoría
-- Notificaciones toast elegantes
-- Modal de carrito deslizante
-- Estados de carga optimizados
-
-## Tecnologías
-
-- **Frontend**: HTML5, CSS3, JavaScript ES6+
-- **Estilos**: CSS Variables, Flexbox, CSS Grid
-- **Fuentes**: Google Fonts (Playfair Display, Lato)
-- **Imágenes**: Unsplash API
-- **Pagos**: PayPal JavaScript SDK
-- **Almacenamiento**: localStorage API
-- **SEO**: Structured Data, Open Graph, Twitter Cards
-
-## Estructura del Proyecto
+## 📦 Estructura del Proyecto
 
 ```
-mawewe-pro/
-├── index.html                  # Página principal
+mawewe-enhanced/
+├── index.html                 # Página principal mejorada
 ├── assets/
 │   ├── css/
-│   │   └── styles.css         # Estilos principales
-│   ├── js/
-│   │   └── app.js             # Lógica de aplicación
-│   └── images/                # Assets estáticos
-├── data/
-│   └── products.json          # Base de datos de productos
-└── docs/
-    ├── README.md              # Esta documentación
-    ├── SETUP.md               # Guía de configuración
-    └── API.md                 # Documentación de API
+│   │   └── styles.css        # CSS completo con checkout
+│   └── js/
+│       └── app.js            # JavaScript con formulario
+└── data/
+    └── products.json         # 30 productos expandidos
 ```
 
-## Instalación
+## 🚀 Cómo Usar
 
-### Requisitos Previos
+### 1. Configuración Inicial
 
-- Navegador web moderno (Chrome 90+, Firefox 88+, Safari 14+)
-- Servidor web local (recomendado)
-- Cuenta PayPal Business (para producción)
+**A. Abrir con servidor local:**
 
-### Pasos de Instalación
-
-1. **Clonar o descargar el proyecto**
 ```bash
-git clone https://github.com/tu-usuario/mawewe-pro.git
-cd mawewe-pro
-```
-
-2. **Configurar servidor local**
-
-Opción A - Python:
-```bash
+# Opción 1: Python
 python -m http.server 8000
-```
 
-Opción B - Node.js:
-```bash
+# Opción 2: Node.js
 npx serve
-```
 
-Opción C - PHP:
-```bash
+# Opción 3: PHP
 php -S localhost:8000
 ```
 
-3. **Abrir en navegador**
-```
-http://localhost:8000
-```
+Abre: `http://localhost:8000`
 
-## Configuración
-
-### 1. PayPal Client ID
+**B. Configurar PayPal (Opcional):**
 
 Edita `assets/js/app.js` línea 17:
-
 ```javascript
-const CONFIG = {
-  paypal: {
-    clientId: 'TU_CLIENT_ID_AQUI', // Reemplazar
-    currency: 'USD',
-    locale: 'es_EC'
-  }
-};
+clientId: 'TU_CLIENT_ID_AQUI'
 ```
 
-**Obtener Client ID:**
-1. Ve a [PayPal Developer](https://developer.paypal.com/)
-2. Crea una aplicación en modo Sandbox
-3. Copia el Client ID
-4. Para producción, usa el Client ID de Live
+### 2. Personalización
 
-### 2. Productos y Categorías
+**Cambiar umbral de envío gratis:**
+
+En `assets/js/app.js` línea 23:
+```javascript
+shipping: {
+  cost: 5.00,
+  freeThreshold: 50.00,  // Cambia este valor
+  expressCost: 10.00
+}
+```
+
+**Agregar más productos:**
 
 Edita `data/products.json`:
-
 ```json
 {
-  "products": [
-    {
-      "id": 1,
-      "sku": "PRO-001",
-      "name": "Nombre del Producto",
-      "category": "categoria-id",
-      "subcategory": "subcategoria-id",
-      "price": 29.99,
-      "comparePrice": 39.99,
-      "description": "Descripción detallada...",
-      "specifications": {
-        "brand": "Marca",
-        "material": "Material",
-        "size": "Tamaño"
-      },
-      "image": "https://images.unsplash.com/photo-id?w=800&q=80",
-      "stock": 10,
-      "featured": false,
-      "rating": 4.5,
-      "reviewCount": 42,
-      "tags": ["tag1", "tag2"]
-    }
-  ]
-}
-```
-
-### 3. Costos de Envío
-
-En `assets/js/app.js`:
-
-```javascript
-const CONFIG = {
-  shipping: {
-    cost: 5.00,           // Costo fijo
-    freeThreshold: 100.00 // Envío gratis sobre este monto
-  }
-};
-```
-
-### 4. Colores de Marca
-
-En `assets/css/styles.css`:
-
-```css
-:root {
-  --primary-800: #8C004B;  /* Color principal */
-  --primary-600: #b31062;  /* Color claro */
-  --accent-gold: #D4AF37;  /* Color acento */
-}
-```
-
-## Uso
-
-### Para Usuarios
-
-1. **Navegar productos**: Scroll por el catálogo
-2. **Buscar**: Usa la barra de búsqueda superior
-3. **Filtrar**: Click en las categorías
-4. **Agregar al carrito**: Click en "Agregar"
-5. **Ver carrito**: Click en el botón "Carrito"
-6. **Modificar cantidades**: Usa +/- en el carrito
-7. **Pagar**: Click en el botón PayPal
-
-### Para Desarrolladores
-
-#### Agregar Nuevos Productos
-
-```javascript
-// En data/products.json
-{
-  "id": 21,
+  "id": 31,
   "sku": "NEW-001",
   "name": "Nuevo Producto",
   "category": "categoria",
-  "price": 49.99,
-  "image": "URL_de_Unsplash",
-  "stock": 15
+  "price": 29.99,
+  "description": "Descripción...",
+  "image": "https://images.unsplash.com/photo-xxx?w=800&q=80",
+  "stock": 10,
+  "featured": false,
+  "rating": 4.5,
+  "reviewCount": 20
 }
 ```
 
-#### Crear Nueva Categoría
+**Cambiar colores:**
 
-```javascript
-// En data/products.json
-{
-  "categories": [
-    {
-      "id": "nueva-categoria",
-      "name": "Nueva Categoría",
-      "description": "Descripción...",
-      "image": "URL_imagen",
-      "subcategories": ["sub1", "sub2"]
-    }
-  ]
-}
-```
-
-#### Personalizar Notificaciones
-
-```javascript
-// En assets/js/app.js
-ui.showNotification('Mensaje personalizado', 'success');
-// Tipos: 'success' | 'error'
-```
-
-## API de Productos
-
-### Estructura de Datos
-
-#### Producto
-
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `id` | Number | ID único del producto |
-| `sku` | String | Código SKU |
-| `name` | String | Nombre del producto |
-| `category` | String | ID de categoría |
-| `subcategory` | String | ID de subcategoría |
-| `price` | Number | Precio actual |
-| `comparePrice` | Number | Precio original (opcional) |
-| `description` | String | Descripción larga |
-| `specifications` | Object | Especificaciones técnicas |
-| `image` | String | URL de imagen principal |
-| `images` | Array | URLs de imágenes adicionales |
-| `stock` | Number | Cantidad disponible |
-| `featured` | Boolean | Producto destacado |
-| `rating` | Number | Calificación (0-5) |
-| `reviewCount` | Number | Número de reseñas |
-| `tags` | Array | Etiquetas para búsqueda |
-
-#### Categoría
-
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `id` | String | ID único de categoría |
-| `name` | String | Nombre visible |
-| `description` | String | Descripción |
-| `image` | String | Imagen de categoría |
-| `subcategories` | Array | IDs de subcategorías |
-
-### Endpoints Futuros
-
-```javascript
-// GET /api/products
-// Obtener todos los productos
-
-// GET /api/products/:id
-// Obtener producto específico
-
-// POST /api/orders
-// Crear nueva orden
-
-// GET /api/orders/:orderId
-// Consultar orden
-```
-
-## Personalización
-
-### Cambiar Tipografía
-
-1. Ve a [Google Fonts](https://fonts.google.com/)
-2. Selecciona fuentes
-3. Actualiza en `index.html`:
-
-```html
-<link href="https://fonts.googleapis.com/css2?family=TuFuente:wght@400;700&display=swap" rel="stylesheet">
-```
-
-4. Actualiza en `assets/css/styles.css`:
-
+En `assets/css/styles.css` líneas 10-20:
 ```css
-:root {
-  --font-family-primary: 'TuFuente', serif;
-  --font-family-secondary: 'TuFuenteSecundaria', sans-serif;
-}
+--primary-800: #8C004B;  /* Tu color */
+--accent-gold: #D4AF37;   /* Tu color acento */
 ```
 
-### Modificar Layout
+## 🎨 Categorías Disponibles
 
-```css
-/* En assets/css/styles.css */
+1. **Peluches** (5 productos)
+   - Deportivos, Fantasía, Clásicos, Animales
 
-/* Cambiar columnas del grid */
-.products-grid {
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-}
+2. **Perfumes** (5 productos)
+   - Mujer, Hombre
 
-/* Ajustar espaciado */
-:root {
-  --spacing-xl: 2.5rem;
-}
+3. **Juguetes** (5 productos)
+   - LEGO, Muñecas, Bebés, Autos
+
+4. **Joyas** (4 productos)
+   - Collares, Aretes, Pulseras, Anillos
+
+5. **Relojes** (4 productos)
+   - Lujo, Deportivo, Inteligente
+
+6. **Accesorios** (4 productos)
+   - Mochilas, Lentes, Carteras, Cinturones
+
+7. **Ropa** (3 productos) ⭐ NUEVO
+   - Pantalones, Sudaderas, Calzado
+
+## 💳 Flujo de Pago
+
+### Vista del Carrito
+```
+┌─────────────────────────────┐
+│ Tu Carrito                  │
+├─────────────────────────────┤
+│ Producto 1    $XX.XX [+][-] │
+│ Producto 2    $XX.XX [+][-] │
+├─────────────────────────────┤
+│ Subtotal:         $XXX.XX   │
+│ Envío:            GRATIS    │ ← Dinámico
+│ Total:            $XXX.XX   │
+├─────────────────────────────┤
+│ [Proceder al Pago]          │
+└─────────────────────────────┘
 ```
 
-### Agregar Animaciones
-
-```css
-/* En assets/css/styles.css */
-.product-card {
-  transition: all 0.3s ease;
-}
-
-.product-card:hover {
-  transform: scale(1.02);
-}
+### Formulario de Checkout
+```
+┌─────────────────────────────┐
+│ ← Volver al carrito         │
+│ Información de Envío        │
+├─────────────────────────────┤
+│ Contacto                    │
+│ [email@ejemplo.com]         │
+│ ☑ Recibir ofertas           │
+├─────────────────────────────┤
+│ Entrega                     │
+│ País: [Ecuador ▼]           │
+│ Nombre: [____] Apellido: [__│
+│ Dirección: [________________│
+│ Ciudad: [_____] CP: [_____] │
+│ Teléfono: [____________]    │
+│ ☑ Guardar información       │
+├─────────────────────────────┤
+│ Métodos de envío            │
+│ ◉ Standard     GRATIS       │
+│ ○ Express      $10.00       │
+├─────────────────────────────┤
+│ Resumen del Pedido          │
+│ • Producto 1 ×2  $XX.XX     │
+│ • Producto 2 ×1  $XX.XX     │
+│ Subtotal:        $XXX.XX    │
+│ Envío:           GRATIS     │
+│ Total:           $XXX.XX    │
+├─────────────────────────────┤
+│ [Continuar al Pago]         │
+└─────────────────────────────┘
 ```
 
-## Despliegue
-
-### Opción 1: Netlify
-
-1. Sube el proyecto a GitHub
-2. Conecta con [Netlify](https://netlify.com)
-3. Deploy automático
-
-### Opción 2: Vercel
-
-1. Instala Vercel CLI:
-```bash
-npm i -g vercel
+### Página de Pago
+```
+┌─────────────────────────────┐
+│ ← Volver                    │
+│ Método de Pago              │
+├─────────────────────────────┤
+│ Información de Entrega      │
+│ Juan Pérez                  │
+│ Calle Principal 123         │
+│ Quito, Ecuador              │
+│ 0991234567                  │
+├─────────────────────────────┤
+│ Pagar con PayPal            │
+│ [PayPal Button]             │
+└─────────────────────────────┘
 ```
 
-2. Deploy:
-```bash
-vercel
-```
+## 🔧 Funcionalidades Técnicas
 
-### Opción 3: Servidor Tradicional
+### Validaciones Implementadas
+- ✅ Stock máximo por producto
+- ✅ No permitir cantidades negativas
+- ✅ Validación de campos requeridos en formulario
+- ✅ Formato de email
+- ✅ Números de teléfono
 
-1. Sube archivos via FTP/SFTP
-2. Configura dominio
-3. Activa HTTPS (requerido por PayPal)
+### Persistencia de Datos
+- ✅ Carrito guardado en localStorage
+- ✅ Datos de checkout guardados para próxima compra
+- ✅ Se mantiene al recargar página
 
-### Checklist Pre-Deployment
+### Cálculos Automáticos
+- ✅ Subtotal dinámico
+- ✅ Envío gratis si subtotal >= $50
+- ✅ Método de envío (Standard/Express)
+- ✅ Total actualizado en tiempo real
 
-- [ ] Client ID de PayPal en modo LIVE
-- [ ] SSL/HTTPS habilitado
-- [ ] Google Analytics configurado
-- [ ] Imágenes optimizadas
-- [ ] Políticas de privacidad publicadas
-- [ ] Información de contacto actualizada
-- [ ] Pruebas en múltiples navegadores
+### Notificaciones
+- ✅ "Producto agregado al carrito"
+- ✅ "Stock máximo alcanzado"
+- ✅ "Producto eliminado"
+- ✅ "Pago completado exitosamente"
+- ✅ Errores de PayPal
 
-## Mantenimiento
+## 📱 Responsive Design
 
-### Actualizar Productos
+- ✅ Móviles (< 480px)
+- ✅ Tablets (481px - 768px)
+- ✅ Desktop (> 768px)
+- ✅ Carrito en pantalla completa en móviles
+- ✅ Formulario adaptable
 
-```bash
-# Editar data/products.json
-# No requiere reinicio del servidor
-# Los cambios se reflejan en siguiente carga
-```
+## 🎯 Próximos Pasos Recomendados
 
-### Monitoreo
+### Para Producción:
 
-```javascript
-// Console logs disponibles en producción
-console.log('Order processed:', orderDetails);
-```
+1. **PayPal Live:**
+   - Cambiar Client ID a modo Live
+   - Configurar webhooks en PayPal
 
-### Backup
+2. **Backend:**
+   - Crear API para guardar órdenes
+   - Sistema de email para confirmaciones
+   - Base de datos para productos y órdenes
 
-```bash
-# Respaldar datos críticos
-cp data/products.json backups/products-$(date +%Y%m%d).json
-```
+3. **Imágenes:**
+   - Subir imágenes propias de productos
+   - Optimizar tamaños
+   - Crear múltiples vistas por producto
 
-### Performance
+4. **SEO:**
+   - Sitemap.xml
+   - Robots.txt
+   - Meta tags optimizados por página
 
-- Imágenes: Usar Unsplash con parámetros `?w=800&q=80`
-- CSS: Ya minificado automáticamente
-- JS: Considera minificar para producción
-- Caché: Configurar en servidor web
+5. **Analytics:**
+   - Google Analytics configurado ✓
+   - Facebook Pixel
+   - Conversion tracking
 
-## Soporte
+## 🐛 Troubleshooting
 
-### Contacto
+**Carrito no guarda:**
+- Verifica que localStorage esté habilitado
+- Abre consola (F12) y busca errores
 
-- **Email**: info@mawewe.com.ec
-- **Teléfono**: +593 98 183 2313
-- **Ubicación**: Lago Agrio, Ecuador
+**PayPal no carga:**
+- Verifica Client ID
+- Usa servidor local (no file://)
+- Revisa consola para errores
 
-### Recursos
+**Productos no aparecen:**
+- Verifica que data/products.json sea válido
+- Abre Network tab y verifica que cargue
 
-- [Documentación PayPal](https://developer.paypal.com/docs/)
-- [MDN Web Docs](https://developer.mozilla.org/)
-- [Unsplash API](https://unsplash.com/developers)
+**Formulario no funciona:**
+- Verifica que todos los campos requeridos estén llenos
+- Revisa consola para errores JavaScript
 
-## Licencia
+## 📞 Soporte
 
-© 2024 Mawewe. Todos los derechos reservados.
+**Email:** info@mawewe.com.ec  
+**Teléfono:** 098 183 2313  
+**Ubicación:** Lago Agrio, Ecuador
 
 ---
 
-**Desarrollado por**: Equipo Mawewe  
-**Versión**: 2.0  
-**Última actualización**: Enero 2024
+## 🎉 ¡Listo!
+
+Tu tienda está completamente funcional con:
+- ✅ 30 productos con imágenes reales
+- ✅ Envío gratis sobre $50
+- ✅ Formulario de checkout completo
+- ✅ Carrito 100% funcional
+- ✅ Integración PayPal
+- ✅ Diseño profesional y responsive
+
+**Solo falta que me compartas tu repositorio de GitHub para subirlo directamente allá!** 🚀

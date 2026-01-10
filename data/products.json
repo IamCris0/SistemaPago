@@ -3,560 +3,477 @@
     {
       "id": 1,
       "sku": "PLH-BCN-001",
-      "name": "Peluche Oso Barcelona Oficial",
+      "name": "Peluche Oso FC Barcelona",
       "category": "peluches",
-      "subcategory": "equipos-futbol",
+      "subcategory": "deportivos",
       "price": 25.99,
-      "comparePrice": 32.99,
-      "description": "Peluche oficial del FC Barcelona. Fabricado con materiales de alta calidad, suave al tacto y perfecto para coleccionistas y fanáticos del equipo.",
-      "specifications": {
-        "material": "Poliéster premium",
-        "size": "30cm",
-        "weight": "250g",
-        "careInstructions": "Lavado a mano con agua fría"
-      },
-      "image": "https://images.unsplash.com/photo-1530325553241-4f6e7690cf36?w=800&q=80",
-      "images": [
-        "https://images.unsplash.com/photo-1530325553241-4f6e7690cf36?w=800&q=80",
-        "https://images.unsplash.com/photo-1563291074-2bf8677ac0e5?w=800&q=80"
-      ],
+      "description": "Peluche oficial del FC Barcelona. Suave, de alta calidad y perfecto para fanáticos del Barça.",
+      "image": "https://images.unsplash.com/photo-1563291074-2bf8677ac0e5?w=800&q=80",
       "stock": 15,
       "featured": true,
       "rating": 4.8,
-      "reviewCount": 24,
-      "tags": ["barcelona", "futbol", "coleccionable", "regalo"]
+      "reviewCount": 24
     },
     {
       "id": 2,
       "sku": "PLH-RMA-001",
-      "name": "Peluche Oso Real Madrid Oficial",
+      "name": "Peluche Oso Real Madrid",
       "category": "peluches",
-      "subcategory": "equipos-futbol",
+      "subcategory": "deportivos",
       "price": 25.99,
-      "comparePrice": 32.99,
-      "description": "Peluche oficial del Real Madrid. Producto licenciado de alta calidad, ideal para aficionados merengues de todas las edades.",
-      "specifications": {
-        "material": "Poliéster premium",
-        "size": "30cm",
-        "weight": "250g",
-        "careInstructions": "Lavado a mano con agua fría"
-      },
-      "image": "https://images.unsplash.com/photo-1551099488-f906b2c97c1c?w=800&q=80",
-      "images": [
-        "https://images.unsplash.com/photo-1551099488-f906b2c97c1c?w=800&q=80"
-      ],
+      "description": "Peluche oficial del Real Madrid. Ideal para aficionados merengues.",
+      "image": "https://images.unsplash.com/photo-1530325553241-4f6e7690cf36?w=800&q=80",
       "stock": 12,
       "featured": true,
       "rating": 4.9,
-      "reviewCount": 31,
-      "tags": ["real-madrid", "futbol", "coleccionable", "regalo"]
+      "reviewCount": 31
     },
     {
       "id": 3,
-      "sku": "PLH-OSI-001",
-      "name": "Peluche Osito con Corazón Bordado",
+      "sku": "PLH-UNI-001",
+      "name": "Peluche Unicornio Grande",
       "category": "peluches",
-      "subcategory": "romanticos",
-      "price": 19.99,
-      "comparePrice": 24.99,
-      "description": "Tierno osito de peluche con corazón bordado en el pecho. Ideal para ocasiones especiales como San Valentín, aniversarios o cumpleaños.",
-      "specifications": {
-        "material": "Felpa ultra suave",
-        "size": "25cm",
-        "weight": "200g",
-        "careInstructions": "Lavable en máquina, ciclo delicado"
-      },
-      "image": "https://images.unsplash.com/photo-1563291074-2bf8677ac0e5?w=800&q=80",
-      "images": [
-        "https://images.unsplash.com/photo-1563291074-2bf8677ac0e5?w=800&q=80"
-      ],
+      "subcategory": "fantasia",
+      "price": 35.99,
+      "description": "Unicornio gigante de colores pastel. Perfecto para decoración infantil.",
+      "image": "https://images.unsplash.com/photo-1591088398332-8a7791972843?w=800&q=80",
       "stock": 20,
       "featured": true,
       "rating": 4.7,
-      "reviewCount": 18,
-      "tags": ["romantico", "san-valentin", "regalo", "amor"]
+      "reviewCount": 45
     },
     {
       "id": 4,
-      "sku": "PLH-UNI-001",
-      "name": "Peluche Unicornio Gigante Premium",
+      "sku": "PLH-OSO-001",
+      "name": "Osito de Peluche Clásico",
       "category": "peluches",
-      "subcategory": "fantasia",
-      "price": 45.99,
-      "comparePrice": 59.99,
-      "description": "Majestuoso peluche de unicornio de tamaño grande con detalles brillantes y colores vibrantes. Perfecto para decoración infantil y abrazo terapéutico.",
-      "specifications": {
-        "material": "Felpa premium con detalles satinados",
-        "size": "60cm",
-        "weight": "800g",
-        "careInstructions": "Limpieza en seco recomendada"
-      },
-      "image": "https://images.unsplash.com/photo-1591088398332-8a7791972843?w=800&q=80",
-      "images": [
-        "https://images.unsplash.com/photo-1591088398332-8a7791972843?w=800&q=80"
-      ],
-      "stock": 8,
+      "subcategory": "clasicos",
+      "price": 19.99,
+      "description": "Osito clásico suave y tierno. Perfecto para regalo.",
+      "image": "https://images.unsplash.com/photo-1551099488-f906b2c97c1c?w=800&q=80",
+      "stock": 30,
       "featured": false,
-      "rating": 4.9,
-      "reviewCount": 42,
-      "tags": ["unicornio", "gigante", "decoracion", "infantil"]
+      "rating": 4.6,
+      "reviewCount": 18
     },
     {
       "id": 5,
-      "sku": "PLH-FAM-001",
-      "name": "Set Familia de Peluches Clásicos",
+      "sku": "PLH-PAN-001",
+      "name": "Peluche Panda Gigante",
       "category": "peluches",
-      "subcategory": "sets",
-      "price": 59.99,
-      "comparePrice": 79.99,
-      "description": "Colección completa de 4 peluches de diferentes tamaños representando una familia. Perfectos para juego simbólico y desarrollo emocional infantil.",
-      "specifications": {
-        "material": "Algodón orgánico y poliéster",
-        "sizes": "20cm, 25cm, 30cm, 35cm",
-        "weight": "1.2kg (set completo)",
-        "careInstructions": "Lavado a mano recomendado"
-      },
+      "subcategory": "animales",
+      "price": 45.99,
+      "description": "Panda gigante de 80cm. Súper suave y adorable.",
       "image": "https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?w=800&q=80",
-      "images": [
-        "https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?w=800&q=80"
-      ],
-      "stock": 10,
-      "featured": false,
-      "rating": 4.6,
-      "reviewCount": 15,
-      "tags": ["familia", "set", "coleccion", "infantil"]
+      "stock": 8,
+      "featured": true,
+      "rating": 5.0,
+      "reviewCount": 67
     },
     {
       "id": 6,
       "sku": "PRF-CHE-001",
-      "name": "Carolina Herrera Good Girl EDP",
+      "name": "Carolina Herrera Good Girl",
       "category": "perfumes",
       "subcategory": "mujer",
       "price": 89.99,
-      "comparePrice": 120.00,
-      "description": "Eau de Parfum 80ml. Fragancia icónica y seductora con notas de jazmín, almendra y café. Presentación en botella de tacón distintiva.",
-      "specifications": {
-        "brand": "Carolina Herrera",
-        "volume": "80ml",
-        "concentration": "Eau de Parfum",
-        "notes": "Jazmín, Almendra, Café, Cacao, Vainilla"
-      },
+      "description": "Eau de Parfum 80ml. Fragancia sensual y moderna para mujer.",
       "image": "https://images.unsplash.com/photo-1541643600914-78b084683601?w=800&q=80",
-      "images": [
-        "https://images.unsplash.com/photo-1541643600914-78b084683601?w=800&q=80"
-      ],
       "stock": 15,
       "featured": true,
       "rating": 4.8,
-      "reviewCount": 67,
-      "tags": ["carolina-herrera", "femenino", "elegante", "sofisticado"]
+      "reviewCount": 134
     },
     {
       "id": 7,
-      "sku": "PRF-BOS-001",
-      "name": "Hugo Boss Bottled EDT",
+      "sku": "PRF-DIO-001",
+      "name": "Dior Sauvage EDT",
       "category": "perfumes",
       "subcategory": "hombre",
-      "price": 79.99,
-      "comparePrice": 95.00,
-      "description": "Eau de Toilette 100ml. Fragancia masculina clásica y sofisticada con notas de manzana, canela y vainilla. Para el hombre moderno y seguro de sí mismo.",
-      "specifications": {
-        "brand": "Hugo Boss",
-        "volume": "100ml",
-        "concentration": "Eau de Toilette",
-        "notes": "Manzana, Canela, Geranio, Sándalo, Vainilla"
-      },
-      "image": "https://images.unsplash.com/photo-1587017539504-67cfbddac569?w=800&q=80",
-      "images": [
-        "https://images.unsplash.com/photo-1587017539504-67cfbddac569?w=800&q=80"
-      ],
-      "stock": 12,
+      "price": 95.99,
+      "description": "Eau de Toilette 100ml. Fragancia masculina fresca e intensa.",
+      "image": "https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=800&q=80",
+      "stock": 20,
       "featured": true,
-      "rating": 4.7,
-      "reviewCount": 89,
-      "tags": ["hugo-boss", "masculino", "clasico", "elegante"]
+      "rating": 4.9,
+      "reviewCount": 298
     },
     {
       "id": 8,
-      "sku": "PRF-DIO-001",
-      "name": "Dior Sauvage Parfum",
-      "category": "perfumes",
-      "subcategory": "hombre",
-      "price": 125.99,
-      "comparePrice": 155.00,
-      "description": "Parfum 100ml. Fragancia masculina intensa y refinada. Con notas de bergamota de Calabria, pimienta de Sichuan y ámbar gris.",
-      "specifications": {
-        "brand": "Dior",
-        "volume": "100ml",
-        "concentration": "Parfum",
-        "notes": "Bergamota, Pimienta, Lavanda, Ámbar Gris"
-      },
-      "image": "https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=800&q=80",
-      "images": [
-        "https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=800&q=80"
-      ],
-      "stock": 8,
-      "featured": true,
-      "rating": 4.9,
-      "reviewCount": 124,
-      "tags": ["dior", "masculino", "premium", "intenso"]
-    },
-    {
-      "id": 9,
       "sku": "PRF-CHA-001",
       "name": "Chanel N°5 EDP",
       "category": "perfumes",
       "subcategory": "mujer",
       "price": 145.99,
-      "comparePrice": 180.00,
-      "description": "Eau de Parfum 100ml. El perfume más icónico del mundo. Composición floral aldehídica atemporal con notas de rosa, jazmín e ylang-ylang.",
-      "specifications": {
-        "brand": "Chanel",
-        "volume": "100ml",
-        "concentration": "Eau de Parfum",
-        "notes": "Aldehídos, Rosa, Jazmín, Ylang-Ylang, Vainilla"
-      },
+      "description": "Eau de Parfum 100ml. El perfume más icónico del mundo.",
       "image": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=800&q=80",
-      "images": [
-        "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=800&q=80"
-      ],
       "stock": 10,
       "featured": true,
       "rating": 5.0,
-      "reviewCount": 201,
-      "tags": ["chanel", "femenino", "iconico", "lujo"]
+      "reviewCount": 421
+    },
+    {
+      "id": 9,
+      "sku": "PRF-VER-001",
+      "name": "Versace Eros Pour Homme",
+      "category": "perfumes",
+      "subcategory": "hombre",
+      "price": 79.99,
+      "description": "EDT 100ml. Fragancia seductora con notas de menta y vainilla.",
+      "image": "https://images.unsplash.com/photo-1587017539504-67cfbddac569?w=800&q=80",
+      "stock": 18,
+      "featured": false,
+      "rating": 4.7,
+      "reviewCount": 156
     },
     {
       "id": 10,
-      "sku": "JUG-FIP-001",
-      "name": "Fisher-Price Gimnasio Piano Pataditas",
-      "category": "juguetes",
-      "subcategory": "bebes",
-      "price": 65.99,
-      "comparePrice": 85.00,
-      "description": "Centro de actividades 3 en 1 con gimnasio, piano musical y modo portátil. Estimula el desarrollo sensorial y motor del bebé con luces y sonidos.",
-      "specifications": {
-        "brand": "Fisher-Price",
-        "ageRange": "0-12 meses",
-        "dimensions": "68 x 45 x 7 cm",
-        "batteries": "3 x AA (incluidas)"
-      },
-      "image": "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=800&q=80",
-      "images": [
-        "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=800&q=80"
-      ],
-      "stock": 7,
+      "sku": "PRF-LAN-001",
+      "name": "Lancôme La Vie Est Belle",
+      "category": "perfumes",
+      "subcategory": "mujer",
+      "price": 99.99,
+      "description": "EDP 75ml. Fragancia gourmand floral femenina.",
+      "image": "https://images.unsplash.com/photo-1619994121345-b8a0766a7e3c?w=800&q=80",
+      "stock": 14,
       "featured": false,
       "rating": 4.8,
-      "reviewCount": 156,
-      "tags": ["fisher-price", "bebe", "gimnasio", "educativo"]
+      "reviewCount": 187
     },
     {
       "id": 11,
-      "sku": "JUG-BAR-001",
-      "name": "Barbie Dreamhouse Casa de Muñecas",
+      "sku": "JUG-LEG-001",
+      "name": "LEGO Star Wars Millennium Falcon",
       "category": "juguetes",
-      "subcategory": "munecas",
-      "price": 189.99,
-      "comparePrice": 249.99,
-      "description": "Casa de ensueño de 3 pisos con 8 habitaciones, ascensor funcional, tobogán y más de 70 accesorios. La casa de muñecas definitiva.",
-      "specifications": {
-        "brand": "Mattel",
-        "ageRange": "3+ años",
-        "dimensions": "119 x 84 x 36 cm",
-        "includes": "Casa + 70 accesorios"
-      },
-      "image": "https://images.unsplash.com/photo-1572696499389-7b8f9f4cf8c5?w=800&q=80",
-      "images": [
-        "https://images.unsplash.com/photo-1572696499389-7b8f9f4cf8c5?w=800&q=80"
-      ],
-      "stock": 4,
+      "subcategory": "lego",
+      "price": 159.99,
+      "description": "Set de 1351 piezas. Incluye 7 minifiguras.",
+      "image": "https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=800&q=80",
+      "stock": 12,
       "featured": true,
-      "rating": 4.9,
-      "reviewCount": 234,
-      "tags": ["barbie", "casa", "munecas", "interactivo"]
+      "rating": 5.0,
+      "reviewCount": 234
     },
     {
       "id": 12,
-      "sku": "LEG-CRE-001",
-      "name": "LEGO Creator Expert Taj Mahal",
-      "category": "legos",
-      "subcategory": "experto",
-      "price": 299.99,
-      "comparePrice": 369.99,
-      "description": "Set de construcción épico con 5,923 piezas. Réplica detallada del Taj Mahal con cúpulas, minaretes y jardines ornamentados. Para constructores expertos.",
-      "specifications": {
-        "brand": "LEGO",
-        "pieces": 5923,
-        "ageRange": "16+ años",
-        "dimensions": "51 x 41 x 20 cm (armado)"
-      },
-      "image": "https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=800&q=80",
-      "images": [
-        "https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=800&q=80"
-      ],
-      "stock": 3,
-      "featured": true,
-      "rating": 5.0,
-      "reviewCount": 412,
-      "tags": ["lego", "creator", "experto", "arquitectura"]
+      "sku": "JUG-LEG-002",
+      "name": "LEGO Creator Casa Familiar",
+      "category": "juguetes",
+      "subcategory": "lego",
+      "price": 89.99,
+      "description": "Set de 969 piezas. Casa modular con detalles increíbles.",
+      "image": "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=800&q=80",
+      "stock": 20,
+      "featured": false,
+      "rating": 4.8,
+      "reviewCount": 145
     },
     {
       "id": 13,
-      "sku": "LEG-STA-001",
-      "name": "LEGO Star Wars Millennium Falcon",
-      "category": "legos",
-      "subcategory": "star-wars",
-      "price": 849.99,
-      "comparePrice": 999.99,
-      "description": "El set LEGO Ultimate Collector Series más grande jamás creado. 7,541 piezas con detalles interiores completos, minifiguras y soporte de exhibición.",
-      "specifications": {
-        "brand": "LEGO",
-        "pieces": 7541,
-        "ageRange": "16+ años",
-        "dimensions": "84 x 56 x 21 cm (armado)"
-      },
-      "image": "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=800&q=80",
-      "images": [
-        "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=800&q=80"
-      ],
-      "stock": 2,
+      "sku": "JUG-BAR-001",
+      "name": "Barbie Dreamhouse",
+      "category": "juguetes",
+      "subcategory": "munecas",
+      "price": 199.99,
+      "description": "Casa de ensueño de 3 pisos con ascensor y tobogán.",
+      "image": "https://images.unsplash.com/photo-1572696499389-7b8f9f4cf8c5?w=800&q=80",
+      "stock": 8,
       "featured": true,
-      "rating": 5.0,
-      "reviewCount": 891,
-      "tags": ["lego", "star-wars", "coleccionable", "premium"]
+      "rating": 4.9,
+      "reviewCount": 312
     },
     {
       "id": 14,
-      "sku": "JOY-COL-001",
-      "name": "Collar Plata 925 con Circonitas",
-      "category": "joyas",
-      "subcategory": "collares",
-      "price": 149.99,
-      "comparePrice": 199.99,
-      "description": "Elegante collar de plata de ley 925 con dije de corazón engastado con circonitas AAA. Incluye certificado de autenticidad y estuche de regalo.",
-      "specifications": {
-        "material": "Plata 925",
-        "stone": "Circonitas AAA",
-        "length": "45cm ajustable",
-        "weight": "12g"
-      },
-      "image": "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&q=80",
-      "images": [
-        "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&q=80"
-      ],
-      "stock": 10,
+      "sku": "JUG-FIS-001",
+      "name": "Fisher-Price Gimnasio Bebé",
+      "category": "juguetes",
+      "subcategory": "bebes",
+      "price": 65.99,
+      "description": "Gimnasio con piano y luces. Para bebés de 0-12 meses.",
+      "image": "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=800&q=80",
+      "stock": 15,
       "featured": false,
       "rating": 4.7,
-      "reviewCount": 34,
-      "tags": ["plata", "collar", "elegante", "regalo"]
+      "reviewCount": 89
     },
     {
       "id": 15,
-      "sku": "JOY-ARE-001",
-      "name": "Aretes Oro 18K con Diamantes",
-      "category": "joyas",
-      "subcategory": "aretes",
-      "price": 389.99,
-      "comparePrice": 499.99,
-      "description": "Sofisticados aretes de oro 18K con diamantes naturales de 0.25ct. Diseño clásico tipo dormilonas, perfectos para uso diario o especial.",
-      "specifications": {
-        "material": "Oro 18K",
-        "stone": "Diamantes 0.25ct",
-        "type": "Dormilonas",
-        "weight": "4g"
-      },
-      "image": "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&q=80",
-      "images": [
-        "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&q=80"
-      ],
-      "stock": 6,
-      "featured": true,
-      "rating": 4.9,
-      "reviewCount": 52,
-      "tags": ["oro", "diamantes", "aretes", "lujo"]
+      "sku": "JUG-HOT-001",
+      "name": "Hot Wheels Pista Mega Loop",
+      "category": "juguetes",
+      "subcategory": "autos",
+      "price": 45.99,
+      "description": "Pista con doble loop y 3 carritos incluidos.",
+      "image": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80",
+      "stock": 22,
+      "featured": false,
+      "rating": 4.6,
+      "reviewCount": 76
     },
     {
       "id": 16,
-      "sku": "REL-ROL-001",
-      "name": "Reloj Rolex Submariner Automático",
-      "category": "relojes",
-      "subcategory": "lujo",
-      "price": 8999.99,
-      "comparePrice": 12000.00,
-      "description": "Icónico reloj de buceo profesional con movimiento automático, resistente al agua hasta 300m. Caja de acero inoxidable 904L y cristal de zafiro.",
-      "specifications": {
-        "brand": "Rolex",
-        "movement": "Automático perpetuo",
-        "waterResistance": "300m",
-        "material": "Acero inoxidable 904L"
-      },
-      "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80",
-      "images": [
-        "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80"
-      ],
-      "stock": 1,
-      "featured": true,
-      "rating": 5.0,
-      "reviewCount": 178,
-      "tags": ["rolex", "lujo", "automatico", "premium"]
+      "sku": "JOY-COL-001",
+      "name": "Collar Plata 925",
+      "category": "joyas",
+      "subcategory": "collares",
+      "price": 149.99,
+      "description": "Collar de plata con circonitas. Incluye estuche.",
+      "image": "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&q=80",
+      "stock": 10,
+      "featured": false,
+      "rating": 4.7,
+      "reviewCount": 45
     },
     {
       "id": 17,
-      "sku": "REL-TAG-001",
-      "name": "TAG Heuer Carrera Cronógrafo",
-      "category": "relojes",
-      "subcategory": "deportivo",
-      "price": 3499.99,
-      "comparePrice": 4200.00,
-      "description": "Cronógrafo deportivo con movimiento automático Calibre 16. Caja de acero, esfera negra y brazalete de acero integrado. Resistente al agua 100m.",
-      "specifications": {
-        "brand": "TAG Heuer",
-        "movement": "Automático Calibre 16",
-        "waterResistance": "100m",
-        "material": "Acero inoxidable"
-      },
-      "image": "https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=800&q=80",
-      "images": [
-        "https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=800&q=80"
-      ],
-      "stock": 4,
+      "sku": "JOY-ARE-001",
+      "name": "Aretes Oro 18K",
+      "category": "joyas",
+      "subcategory": "aretes",
+      "price": 389.99,
+      "description": "Aretes de oro con diamantes naturales 0.25ct.",
+      "image": "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&q=80",
+      "stock": 6,
       "featured": true,
-      "rating": 4.8,
-      "reviewCount": 96,
-      "tags": ["tag-heuer", "cronografo", "deportivo", "premium"]
+      "rating": 4.9,
+      "reviewCount": 67
     },
     {
       "id": 18,
-      "sku": "ACC-NIK-001",
-      "name": "Mochila Nike Air Max Premium",
-      "category": "accesorios",
-      "subcategory": "mochilas",
+      "sku": "JOY-PUL-001",
+      "name": "Pulsera Pandora Charm",
+      "category": "joyas",
+      "subcategory": "pulseras",
       "price": 89.99,
-      "comparePrice": 120.00,
-      "description": "Mochila deportiva de alta capacidad con compartimento acolchado para laptop de 15', bolsillos organizadores y sistema de ventilación en la espalda.",
-      "specifications": {
-        "brand": "Nike",
-        "capacity": "30L",
-        "laptopSize": "15 pulgadas",
-        "material": "Poliéster resistente al agua"
-      },
-      "image": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&q=80",
-      "images": [
-        "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&q=80"
-      ],
+      "description": "Pulsera de plata con 3 charms incluidos.",
+      "image": "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&q=80",
       "stock": 14,
       "featured": false,
-      "rating": 4.6,
-      "reviewCount": 187,
-      "tags": ["nike", "mochila", "deportivo", "laptop"]
+      "rating": 4.8,
+      "reviewCount": 92
     },
     {
       "id": 19,
-      "sku": "ACC-LV-001",
-      "name": "Cartera Louis Vuitton Monogram",
-      "category": "accesorios",
-      "subcategory": "carteras",
+      "sku": "JOY-ANI-001",
+      "name": "Anillo Compromiso Oro Blanco",
+      "category": "joyas",
+      "subcategory": "anillos",
       "price": 1299.99,
-      "comparePrice": 1650.00,
-      "description": "Icónica cartera de lujo en canvas monogram con detalles en cuero natural. Múltiples compartimentos, cierre de broche dorado y acabados impecables.",
-      "specifications": {
-        "brand": "Louis Vuitton",
-        "material": "Canvas Monogram + Cuero",
-        "dimensions": "19 x 10 x 2 cm",
-        "pockets": "8 ranuras para tarjetas"
-      },
-      "image": "https://images.unsplash.com/photo-1591561954555-607968c989ab?w=800&q=80",
-      "images": [
-        "https://images.unsplash.com/photo-1591561954555-607968c989ab?w=800&q=80"
-      ],
+      "description": "Anillo de oro blanco 18K con diamante 0.50ct.",
+      "image": "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&q=80",
       "stock": 3,
       "featured": true,
-      "rating": 4.9,
-      "reviewCount": 143,
-      "tags": ["louis-vuitton", "cartera", "lujo", "moda"]
+      "rating": 5.0,
+      "reviewCount": 23
     },
     {
       "id": 20,
+      "sku": "REL-ROL-001",
+      "name": "Reloj Rolex Submariner",
+      "category": "relojes",
+      "subcategory": "lujo",
+      "price": 12999.99,
+      "description": "Reloj automático resistente al agua 300m.",
+      "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80",
+      "stock": 2,
+      "featured": true,
+      "rating": 5.0,
+      "reviewCount": 156
+    },
+    {
+      "id": 21,
+      "sku": "REL-TAG-001",
+      "name": "TAG Heuer Carrera",
+      "category": "relojes",
+      "subcategory": "deportivo",
+      "price": 3499.99,
+      "description": "Cronógrafo automático con esfera negra.",
+      "image": "https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=800&q=80",
+      "stock": 5,
+      "featured": true,
+      "rating": 4.9,
+      "reviewCount": 89
+    },
+    {
+      "id": 22,
+      "sku": "REL-CAS-001",
+      "name": "Casio G-Shock Digital",
+      "category": "relojes",
+      "subcategory": "deportivo",
+      "price": 149.99,
+      "description": "Reloj resistente a golpes e impermeable 200m.",
+      "image": "https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?w=800&q=80",
+      "stock": 25,
+      "featured": false,
+      "rating": 4.7,
+      "reviewCount": 234
+    },
+    {
+      "id": 23,
+      "sku": "REL-APP-001",
+      "name": "Apple Watch Series 9",
+      "category": "relojes",
+      "subcategory": "inteligente",
+      "price": 399.99,
+      "description": "Smartwatch con GPS y pantalla Always-On.",
+      "image": "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=800&q=80",
+      "stock": 18,
+      "featured": true,
+      "rating": 4.8,
+      "reviewCount": 567
+    },
+    {
+      "id": 24,
+      "sku": "ACC-NIK-001",
+      "name": "Mochila Nike Air Max",
+      "category": "accesorios",
+      "subcategory": "mochilas",
+      "price": 89.99,
+      "description": "Mochila deportiva 30L con compartimento para laptop.",
+      "image": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&q=80",
+      "stock": 30,
+      "featured": false,
+      "rating": 4.6,
+      "reviewCount": 178
+    },
+    {
+      "id": 25,
       "sku": "ACC-RAY-001",
-      "name": "Lentes Ray-Ban Wayfarer Classic",
+      "name": "Lentes Ray-Ban Aviator",
       "category": "accesorios",
       "subcategory": "lentes",
       "price": 159.99,
-      "comparePrice": 199.99,
-      "description": "Gafas de sol icónicas con montura de acetato y lentes polarizadas con protección UV400. Estilo atemporal que nunca pasa de moda.",
-      "specifications": {
-        "brand": "Ray-Ban",
-        "material": "Acetato",
-        "lenses": "Cristal polarizado",
-        "protection": "UV400"
-      },
+      "description": "Gafas de sol clásicas con lentes polarizadas.",
       "image": "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=800&q=80",
-      "images": [
-        "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=800&q=80"
-      ],
-      "stock": 18,
+      "stock": 22,
       "featured": false,
       "rating": 4.8,
-      "reviewCount": 267,
-      "tags": ["ray-ban", "lentes", "sol", "moda"]
+      "reviewCount": 345
+    },
+    {
+      "id": 26,
+      "sku": "ACC-LV-001",
+      "name": "Cartera Louis Vuitton",
+      "category": "accesorios",
+      "subcategory": "carteras",
+      "price": 1299.99,
+      "description": "Cartera de lujo en canvas monogram con cuero.",
+      "image": "https://images.unsplash.com/photo-1591561954555-607968c989ab?w=800&q=80",
+      "stock": 4,
+      "featured": true,
+      "rating": 4.9,
+      "reviewCount": 87
+    },
+    {
+      "id": 27,
+      "sku": "ACC-GUC-001",
+      "name": "Cinturón Gucci GG",
+      "category": "accesorios",
+      "subcategory": "cinturones",
+      "price": 450.99,
+      "description": "Cinturón de cuero con hebilla GG dorada.",
+      "image": "https://images.unsplash.com/photo-1624222247344-550fb60583c2?w=800&q=80",
+      "stock": 12,
+      "featured": false,
+      "rating": 4.7,
+      "reviewCount": 56
+    },
+    {
+      "id": 28,
+      "sku": "ROP-LEV-001",
+      "name": "Jeans Levi's 501 Original",
+      "category": "ropa",
+      "subcategory": "pantalones",
+      "price": 89.99,
+      "description": "Jeans clásicos de corte recto. 100% algodón.",
+      "image": "https://images.unsplash.com/photo-1542272604-787c3835535d?w=800&q=80",
+      "stock": 40,
+      "featured": false,
+      "rating": 4.6,
+      "reviewCount": 234
+    },
+    {
+      "id": 29,
+      "sku": "ROP-NIK-001",
+      "name": "Sudadera Nike Sportswear",
+      "category": "ropa",
+      "subcategory": "sudaderas",
+      "price": 65.99,
+      "description": "Sudadera con capucha de algodón francés.",
+      "image": "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&q=80",
+      "stock": 35,
+      "featured": false,
+      "rating": 4.7,
+      "reviewCount": 156
+    },
+    {
+      "id": 30,
+      "sku": "ROP-ADA-001",
+      "name": "Zapatillas Adidas Ultraboost",
+      "category": "ropa",
+      "subcategory": "calzado",
+      "price": 180.99,
+      "description": "Zapatillas running con tecnología Boost.",
+      "image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80",
+      "stock": 28,
+      "featured": true,
+      "rating": 4.9,
+      "reviewCount": 423
     }
   ],
   "categories": [
     {
       "id": "peluches",
       "name": "Peluches",
-      "description": "Colección de peluches suaves y adorables para todas las edades",
-      "image": "https://images.unsplash.com/photo-1530325553241-4f6e7690cf36?w=400&q=80",
-      "subcategories": ["equipos-futbol", "romanticos", "fantasia", "sets"]
+      "description": "Peluches suaves y adorables para todas las edades",
+      "subcategories": ["deportivos", "fantasia", "clasicos", "animales"]
     },
     {
       "id": "perfumes",
       "name": "Perfumes",
-      "description": "Fragancias exclusivas de las mejores marcas internacionales",
-      "image": "https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&q=80",
+      "description": "Fragancias exclusivas de marcas premium",
       "subcategories": ["mujer", "hombre"]
     },
     {
       "id": "juguetes",
       "name": "Juguetes",
-      "description": "Juguetes educativos y de entretenimiento para el desarrollo infantil",
-      "image": "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=400&q=80",
-      "subcategories": ["bebes", "munecas", "accion", "educativos"]
-    },
-    {
-      "id": "legos",
-      "name": "LEGO",
-      "description": "Sets de construcción LEGO para creatividad sin límites",
-      "image": "https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=400&q=80",
-      "subcategories": ["experto", "star-wars", "arquitectura", "technic"]
+      "description": "Juguetes educativos y de entretenimiento",
+      "subcategories": ["lego", "munecas", "bebes", "autos"]
     },
     {
       "id": "joyas",
       "name": "Joyería",
-      "description": "Piezas elegantes en oro, plata y piedras preciosas",
-      "image": "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&q=80",
-      "subcategories": ["collares", "aretes", "anillos", "pulseras"]
+      "description": "Joyas elegantes en oro, plata y piedras preciosas",
+      "subcategories": ["collares", "aretes", "pulseras", "anillos"]
     },
     {
       "id": "relojes",
       "name": "Relojes",
-      "description": "Relojes de lujo y deportivos de marcas reconocidas mundialmente",
-      "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&q=80",
-      "subcategories": ["lujo", "deportivo", "casual", "inteligente"]
+      "description": "Relojes de lujo y deportivos",
+      "subcategories": ["lujo", "deportivo", "inteligente"]
     },
     {
       "id": "accesorios",
       "name": "Accesorios",
-      "description": "Complementos de moda y funcionales para tu estilo de vida",
-      "image": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&q=80",
-      "subcategories": ["mochilas", "carteras", "lentes", "cinturones"]
+      "description": "Complementos de moda y funcionales",
+      "subcategories": ["mochilas", "lentes", "carteras", "cinturones"]
+    },
+    {
+      "id": "ropa",
+      "name": "Ropa",
+      "description": "Prendas de vestir de marcas reconocidas",
+      "subcategories": ["pantalones", "sudaderas", "calzado"]
     }
   ],
+  "shippingConfig": {
+    "freeShippingThreshold": 50.00,
+    "standardShippingCost": 5.00,
+    "expressShippingCost": 10.00
+  },
   "metadata": {
-    "lastUpdated": "2024-01-09",
-    "version": "2.0",
-    "totalProducts": 20,
+    "lastUpdated": "2024-01-10",
+    "version": "2.5",
+    "totalProducts": 30,
     "currency": "USD"
   }
 }
