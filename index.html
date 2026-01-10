@@ -5,144 +5,289 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     
-    <!-- SEO -->
-    <title>Mawewe - Tienda Online Premium | Envío Gratis sobre $50</title>
-    <meta name="description" content="Compra productos premium en Ecuador. Peluches, perfumes, LEGO, joyas y más. Envío gratis en compras sobre $50. Pago seguro con PayPal.">
-    <meta name="keywords" content="tienda online Ecuador, regalos, peluches, perfumes, juguetes, joyas, relojes, envío gratis">
+    <!-- Primary Meta Tags -->
+    <title>Mawewe | Tienda Online Premium en Ecuador - Envío Gratis sobre $50</title>
+    <meta name="title" content="Mawewe | Tienda Online Premium en Ecuador - Envío Gratis sobre $50">
+    <meta name="description" content="Descubre productos premium en Ecuador: peluches, perfumes de lujo, LEGO, joyas y más. Envío gratis en compras sobre $50. Pago 100% seguro con PayPal. ¡Compra ahora!">
+    <meta name="keywords" content="tienda online Ecuador, comprar regalos Ecuador, peluches originales, perfumes importados, LEGO Ecuador, joyas plata oro, relojes marca, envío gratis Ecuador, pago seguro PayPal, Lago Agrio">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="Spanish">
+    <meta name="author" content="Mawewe">
     
-    <!-- Fonts -->
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://mawewe.com.ec/">
+    <meta property="og:title" content="Mawewe | Tienda Online Premium - Envío Gratis sobre $50">
+    <meta property="og:description" content="Productos premium con envío gratis en compras sobre $50. Pago seguro con PayPal. ¡Descubre nuestro catálogo!">
+    <meta property="og:image" content="https://mawewe.com.ec/assets/images/og-image.jpg">
+    <meta property="og:locale" content="es_EC">
+    <meta property="og:site_name" content="Mawewe">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://mawewe.com.ec/">
+    <meta property="twitter:title" content="Mawewe | Tienda Online Premium Ecuador">
+    <meta property="twitter:description" content="Productos premium con envío gratis sobre $50. Pago seguro con PayPal.">
+    <meta property="twitter:image" content="https://mawewe.com.ec/assets/images/twitter-card.jpg">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+    <link rel="manifest" href="./site.webmanifest">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mawewe.com.ec/">
+    
+    <!-- Preconnect for Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://www.paypal.com">
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+    
+    <!-- Fonts - Optimized Loading -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Lato:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- CSS -->
     <link rel="stylesheet" href="./assets/css/styles.css">
     
-    <!-- Google Analytics -->
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#8C004B">
+    <meta name="msapplication-TileColor" content="#8C004B">
+    
+    <!-- Schema.org Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Store",
+      "name": "Mawewe",
+      "description": "Tienda online premium en Ecuador con envío gratis sobre $50",
+      "url": "https://mawewe.com.ec",
+      "logo": "https://mawewe.com.ec/assets/images/logo.png",
+      "image": "https://mawewe.com.ec/assets/images/store.jpg",
+      "telephone": "+593981832313",
+      "email": "info@mawewe.com.ec",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Jorge Añazco y 12 de Febrero",
+        "addressLocality": "Lago Agrio",
+        "addressRegion": "Sucumbíos",
+        "addressCountry": "EC"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": "0.0896",
+        "longitude": "-76.8880"
+      },
+      "priceRange": "$5 - $13,000",
+      "openingHours": "Mo-Su 00:00-24:00",
+      "paymentAccepted": "PayPal, Credit Card",
+      "currenciesAccepted": "USD"
+    }
+    </script>
+    
+    <!-- Google Analytics - Enhanced -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-FHRFVTPYFQ"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
-        gtag('config', 'G-FHRFVTPYFQ');
+        gtag('config', 'G-FHRFVTPYFQ', {
+            'send_page_view': true,
+            'anonymize_ip': true
+        });
+        
+        // Enhanced E-commerce Events
+        function trackAddToCart(productName, price, category) {
+            gtag('event', 'add_to_cart', {
+                'currency': 'USD',
+                'value': price,
+                'items': [{
+                    'item_name': productName,
+                    'item_category': category,
+                    'price': price,
+                    'quantity': 1
+                }]
+            });
+        }
+        
+        function trackPurchase(orderId, total, items) {
+            gtag('event', 'purchase', {
+                'transaction_id': orderId,
+                'value': total,
+                'currency': 'USD',
+                'items': items
+            });
+        }
     </script>
 </head>
 <body>
     
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="skip-to-main">Ir al contenido principal</a>
+    
     <!-- HEADER -->
-    <header class="site-header">
+    <header class="site-header" role="banner">
         <div class="header-container">
             <div class="site-branding">
-                <h1 class="site-logo">Mawewe</h1>
-                <p class="site-tagline">Despierta tu Imaginación</p>
+                <a href="/" aria-label="Mawewe - Inicio">
+                    <h1 class="site-logo">Mawewe</h1>
+                    <p class="site-tagline">Despierta tu Imaginación</p>
+                </a>
             </div>
             
-            <nav class="header-actions">
+            <nav class="header-actions" role="navigation" aria-label="Acciones principales">
                 <button 
                     class="btn-cart" 
                     onclick="mawewe.ui.toggleCart()"
-                    aria-label="Ver carrito"
+                    aria-label="Ver carrito de compras"
+                    aria-expanded="false"
+                    aria-controls="cart-modal"
                 >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <circle cx="9" cy="21" r="1"></circle>
                         <circle cx="20" cy="21" r="1"></circle>
                         <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
                     </svg>
                     <span>Carrito</span>
-                    <span class="cart-badge" id="cart-count" style="display: none;">0</span>
+                    <span class="cart-badge" id="cart-count" style="display: none;" aria-live="polite">0</span>
                 </button>
             </nav>
         </div>
     </header>
 
     <!-- MAIN CONTENT -->
-    <main class="site-main">
+    <main class="site-main" id="main-content" role="main">
         
         <!-- Hero Section -->
-        <section class="hero-section">
+        <section class="hero-section" aria-labelledby="hero-title">
             <div class="container">
                 <div class="hero-content">
-                    <h2 class="hero-title">Encuentra el Regalo Perfecto</h2>
+                    <h2 class="hero-title" id="hero-title">Encuentra el Regalo Perfecto</h2>
                     <p class="hero-subtitle">
                         Productos premium con envío gratis en compras sobre $50. 
-                        Pago seguro con PayPal y entrega en todo Ecuador.
+                        Pago 100% seguro con PayPal y entrega en todo Ecuador.
                     </p>
                 </div>
             </div>
         </section>
 
         <!-- Products Section -->
-        <section class="section">
+        <section class="section products-section" aria-labelledby="products-heading">
             <div class="container">
                 
+                <h2 id="products-heading" class="visually-hidden">Nuestros Productos</h2>
+                
                 <!-- Filters -->
-                <div class="filters-container">
+                <div class="filters-container" role="search" aria-label="Filtros de productos">
+                    <label for="search-input" class="visually-hidden">Buscar productos</label>
                     <input 
                         type="search" 
                         id="search-input" 
                         class="search-bar" 
                         placeholder="Buscar productos..."
-                        aria-label="Buscar productos"
+                        aria-label="Buscar productos por nombre o descripción"
+                        autocomplete="off"
                     />
                     
-                    <div id="category-filters" class="category-filters">
+                    <div id="category-filters" class="category-filters" role="group" aria-label="Filtrar por categoría">
                         <!-- Categories rendered by JS -->
                     </div>
                 </div>
 
                 <!-- Products Grid -->
-                <div id="products-grid" class="products-grid">
+                <div id="products-grid" class="products-grid" role="list" aria-label="Lista de productos">
                     <!-- Products rendered by JS -->
+                    <noscript>
+                        <div style="grid-column: 1/-1; text-align: center; padding: 4rem;">
+                            <p>Por favor, habilita JavaScript para ver nuestros productos.</p>
+                        </div>
+                    </noscript>
                 </div>
             </div>
         </section>
 
         <!-- Features Section -->
-        <section class="section" style="background-color: var(--gray-100);">
+        <section class="section features-section" style="background-color: var(--gray-100);" aria-labelledby="features-heading">
             <div class="container">
                 <div style="text-align: center; margin-bottom: var(--spacing-2xl);">
-                    <h2>¿Por Qué Elegir Mawewe?</h2>
+                    <h2 id="features-heading">¿Por Qué Elegir Mawewe?</h2>
                     <p style="color: var(--gray-600); max-width: 800px; margin: var(--spacing-lg) auto 0;">
                         Tu tienda de confianza en Ecuador
                     </p>
                 </div>
                 
                 <div class="footer-grid">
-                    <div style="text-align: center;">
-                        <div style="font-size: 48px; margin-bottom: var(--spacing-md); color: var(--primary-700);">
+                    <article class="feature-item" style="text-align: center;">
+                        <div style="font-size: 48px; margin-bottom: var(--spacing-md); color: var(--primary-700);" aria-hidden="true">
                             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                             </svg>
                         </div>
                         <h3 class="footer-section-title">Pago Seguro</h3>
                         <p style="color: var(--gray-600);">
-                            Transacciones protegidas con PayPal
+                            Transacciones 100% protegidas con PayPal y encriptación SSL
                         </p>
-                    </div>
+                    </article>
                     
-                    <div style="text-align: center;">
-                        <div style="font-size: 48px; margin-bottom: var(--spacing-md); color: var(--primary-700);">
+                    <article class="feature-item" style="text-align: center;">
+                        <div style="font-size: 48px; margin-bottom: var(--spacing-md); color: var(--primary-700);" aria-hidden="true">
                             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                                <circle cx="12" cy="7" r="4"/>
+                                <rect x="1" y="3" width="15" height="13"></rect>
+                                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                                <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                <circle cx="18.5" cy="18.5" r="2.5"></circle>
                             </svg>
                         </div>
                         <h3 class="footer-section-title">Envío Gratis sobre $50</h3>
                         <p style="color: var(--gray-600);">
-                            Entrega en todo Ecuador
+                            Entrega rápida en todo Ecuador. Rastreo en tiempo real
                         </p>
-                    </div>
+                    </article>
                     
-                    <div style="text-align: center;">
-                        <div style="font-size: 48px; margin-bottom: var(--spacing-md); color: var(--primary-700);">
+                    <article class="feature-item" style="text-align: center;">
+                        <div style="font-size: 48px; margin-bottom: var(--spacing-md); color: var(--primary-700);" aria-hidden="true">
                             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                             </svg>
                         </div>
-                        <h3 class="footer-section-title">Atención 24/7</h3>
+                        <h3 class="footer-section-title">Atención al Cliente</h3>
                         <p style="color: var(--gray-600);">
-                            Siempre listos para ayudarte
+                            Soporte rápido y amigable. Estamos aquí para ayudarte
                         </p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- Trust Badges Section -->
+        <section class="section trust-section" aria-labelledby="trust-heading">
+            <div class="container">
+                <h2 id="trust-heading" class="visually-hidden">Garantías y Certificaciones</h2>
+                <div class="trust-badges">
+                    <div class="trust-badge">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 6L9 17l-5-5"/>
+                        </svg>
+                        <span>Productos Auténticos</span>
+                    </div>
+                    <div class="trust-badge">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 6L9 17l-5-5"/>
+                        </svg>
+                        <span>Garantía de Satisfacción</span>
+                    </div>
+                    <div class="trust-badge">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 6L9 17l-5-5"/>
+                        </svg>
+                        <span>Devoluciones Fáciles</span>
+                    </div>
+                    <div class="trust-badge">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 6L9 17l-5-5"/>
+                        </svg>
+                        <span>Embalaje Seguro</span>
                     </div>
                 </div>
             </div>
@@ -150,78 +295,114 @@
     </main>
 
     <!-- FOOTER -->
-    <footer class="site-footer">
+    <footer class="site-footer" role="contentinfo">
         <div class="container">
             <div class="footer-grid">
                 <div>
                     <h3 class="footer-section-title">Acerca de Mawewe</h3>
                     <p style="color: var(--gray-400); line-height: 1.75;">
-                        Tu tienda de confianza en Ecuador. Productos premium con envío a todo el país.
+                        Tu tienda de confianza en Ecuador. Productos premium con envío a todo el país. 
+                        Calidad garantizada y atención personalizada.
                     </p>
+                    <div class="social-links" style="margin-top: var(--spacing-lg);">
+                        <a href="#" aria-label="Facebook" class="social-link">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+                            </svg>
+                        </a>
+                        <a href="#" aria-label="Instagram" class="social-link">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                            </svg>
+                        </a>
+                        <a href="#" aria-label="WhatsApp" class="social-link">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                            </svg>
+                        </a>
+                    </div>
                 </div>
                 
-                <div>
-                    <h3 class="footer-section-title">Categorías</h3>
+                <nav aria-labelledby="footer-nav-categories">
+                    <h3 class="footer-section-title" id="footer-nav-categories">Categorías</h3>
                     <ul class="footer-links">
                         <li><a href="#peluches">Peluches</a></li>
                         <li><a href="#perfumes">Perfumes</a></li>
                         <li><a href="#juguetes">Juguetes</a></li>
                         <li><a href="#joyas">Joyería</a></li>
+                        <li><a href="#relojes">Relojes</a></li>
+                        <li><a href="#accesorios">Accesorios</a></li>
                     </ul>
-                </div>
+                </nav>
                 
-                <div>
-                    <h3 class="footer-section-title">Servicio al Cliente</h3>
+                <nav aria-labelledby="footer-nav-support">
+                    <h3 class="footer-section-title" id="footer-nav-support">Servicio al Cliente</h3>
                     <ul class="footer-links">
                         <li><a href="#envios">Información de Envíos</a></li>
-                        <li><a href="#devoluciones">Devoluciones</a></li>
+                        <li><a href="#devoluciones">Política de Devoluciones</a></li>
+                        <li><a href="#garantia">Garantía de Productos</a></li>
+                        <li><a href="#privacidad">Política de Privacidad</a></li>
+                        <li><a href="#terminos">Términos y Condiciones</a></li>
                         <li><a href="#contacto">Contáctanos</a></li>
                     </ul>
-                </div>
+                </nav>
                 
                 <div>
                     <h3 class="footer-section-title">Contacto</h3>
                     <address style="font-style: normal; color: var(--gray-400); line-height: 1.75;">
-                        <p>Jorge Añazco y 12 de Febrero<br>
-                        Lago Agrio, Ecuador</p>
-                        <p>Tel: 098 183 2313<br>
-                        Email: info@mawewe.com.ec</p>
+                        <p><strong>Dirección:</strong><br>
+                        Jorge Añazco y 12 de Febrero<br>
+                        Lago Agrio, Sucumbíos, Ecuador</p>
+                        
+                        <p><strong>Teléfono:</strong><br>
+                        <a href="tel:+593981832313" style="color: var(--gray-400); text-decoration: none;">+593 98 183 2313</a></p>
+                        
+                        <p><strong>Email:</strong><br>
+                        <a href="mailto:info@mawewe.com.ec" style="color: var(--gray-400); text-decoration: none;">info@mawewe.com.ec</a></p>
+                        
+                        <p><strong>Horario:</strong><br>
+                        Lun - Dom: 24/7 (Online)</p>
                     </address>
                 </div>
             </div>
             
             <div class="footer-bottom">
-                <p>© 2024 Mawewe. Todos los derechos reservados.</p>
+                <p>© 2024-2025 Mawewe. Todos los derechos reservados. | Desarrollado con ❤️ en Ecuador</p>
+                <div class="payment-methods" style="margin-top: var(--spacing-md);">
+                    <img src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_37x23.jpg" alt="PayPal" loading="lazy" style="height: 24px; opacity: 0.7;">
+                </div>
             </div>
         </div>
     </footer>
 
     <!-- CART MODAL -->
-    <div class="cart-overlay" id="cart-overlay"></div>
+    <div class="cart-overlay" id="cart-overlay" role="presentation"></div>
     
-    <aside class="cart-modal" id="cart-modal">
+    <aside class="cart-modal" id="cart-modal" role="dialog" aria-labelledby="cart-title" aria-modal="true">
         <header class="cart-header">
-            <h2 class="cart-title">Tu Carrito</h2>
+            <h2 class="cart-title" id="cart-title">Tu Carrito</h2>
             <button 
                 class="btn-close-cart" 
                 onclick="mawewe.ui.toggleCart()"
-                aria-label="Cerrar"
+                aria-label="Cerrar carrito"
             >
                 &times;
             </button>
         </header>
         
         <!-- Cart Items Container -->
-        <div class="cart-items" id="cart-items">
+        <div class="cart-items" id="cart-items" role="list" aria-label="Productos en el carrito">
             <!-- Cart items rendered by JS -->
         </div>
         
-        <!-- Checkout Form Container (shown when proceeding to checkout) -->
+        <!-- Checkout Form Container -->
         <div id="checkout-form-container" style="display: none; flex: 1; overflow-y: auto;">
             <!-- Checkout form rendered by JS -->
         </div>
         
-        <!-- Cart Footer (visible in cart view) -->
+        <!-- Cart Footer -->
         <footer class="cart-footer" id="cart-footer">
             <div class="cart-summary" id="cart-summary">
                 <!-- Summary rendered by JS -->
@@ -230,42 +411,65 @@
             <button 
                 class="checkout-btn" 
                 onclick="mawewe.checkout.openCheckout()"
+                aria-label="Proceder al pago"
             >
                 Proceder al Pago
             </button>
             
             <p style="text-align: center; font-size: var(--font-size-xs); color: var(--gray-600); margin-top: var(--spacing-md);">
-                Pago seguro con PayPal
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                Pago 100% seguro con PayPal
             </p>
         </footer>
     </aside>
 
+    <!-- Loading Spinner (hidden by default) -->
+    <div id="loading-spinner" class="loading-spinner" style="display: none;" role="status" aria-live="polite">
+        <div class="spinner"></div>
+        <p>Cargando productos...</p>
+    </div>
+
     <!-- SCRIPTS -->
     <script src="./assets/js/app.js"></script>
     
-    <!-- Script para manejar visibilidad del footer del carrito -->
+    <!-- Cart Footer Visibility Handler -->
     <script>
-        // Observer para mostrar/ocultar footer del carrito
         const observer = new MutationObserver(() => {
             const checkoutContainer = document.getElementById('checkout-form-container');
             const cartFooter = document.getElementById('cart-footer');
             const cartItems = document.getElementById('cart-items');
             
             if (checkoutContainer && cartFooter && cartItems) {
-                if (checkoutContainer.style.display === 'none') {
-                    cartFooter.style.display = 'block';
-                    cartItems.style.display = 'block';
-                } else {
-                    cartFooter.style.display = 'none';
-                    cartItems.style.display = 'none';
+                const isCheckoutVisible = checkoutContainer.style.display !== 'none';
+                cartFooter.style.display = isCheckoutVisible ? 'none' : 'block';
+                cartItems.style.display = isCheckoutVisible ? 'none' : 'block';
+                
+                // Update ARIA attributes
+                const cartBtn = document.querySelector('.btn-cart');
+                if (cartBtn) {
+                    cartBtn.setAttribute('aria-expanded', isCheckoutVisible ? 'true' : 'false');
                 }
             }
         });
         
-        if (document.getElementById('checkout-form-container')) {
-            observer.observe(document.getElementById('checkout-form-container'), {
+        const checkoutContainer = document.getElementById('checkout-form-container');
+        if (checkoutContainer) {
+            observer.observe(checkoutContainer, {
                 attributes: true,
                 attributeFilter: ['style']
+            });
+        }
+    </script>
+    
+    <!-- Service Worker Registration (PWA) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('✅ Service Worker registered'))
+                    .catch(err => console.log('❌ Service Worker registration failed:', err));
             });
         }
     </script>

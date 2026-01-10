@@ -1,0 +1,54 @@
+{
+  "name": "Mawewe - Tienda Online Premium",
+  "short_name": "Mawewe",
+  "description": "Tienda online premium en Ecuador con envío gratis sobre $50",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#8C004B",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["shopping", "lifestyle"],
+  "lang": "es-EC",
+  "dir": "ltr",
+  "scope": "/",
+  "shortcuts": [
+    {
+      "name": "Ver Productos",
+      "short_name": "Productos",
+      "description": "Ver todos los productos disponibles",
+      "url": "/#products",
+      "icons": [
+        {
+          "src": "/icons/products-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Mi Carrito",
+      "short_name": "Carrito",
+      "description": "Ver carrito de compras",
+      "url": "/?cart=open",
+      "icons": [
+        {
+          "src": "/icons/cart-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+}

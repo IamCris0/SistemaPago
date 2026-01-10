@@ -1,0 +1,46 @@
+# robots.txt para Mawewe E-commerce
+
+User-agent: *
+Allow: /
+Allow: /assets/
+Allow: /data/
+
+Disallow: /admin/
+Disallow: /checkout/
+Disallow: /cart/
+Disallow: /*.json$
+
+# Sitemaps
+Sitemap: https://mawewe.com.ec/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 10
+
+# Popular bots
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 5
+
+User-agent: Googlebot-Image
+Allow: /assets/images/
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 5
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 10
+
+# Block bad bots
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
