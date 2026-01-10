@@ -1,22 +1,42 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-EC">
 <head>
+    <!-- Meta Tags -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Tienda Online Mawewe - Peluches, Perfumes, Juguetes y más. Envíos a todo Ecuador.">
-    <meta name="keywords" content="peluches, perfumes, juguetes, regalos, Ecuador, Lago Agrio, Mawewe">
-    <title>Tienda Mawewe - Obsequios & Regalos Personalizados</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <!-- SEO Meta Tags -->
+    <title>Mawewe - Tienda de Regalos Premium | Peluches, Perfumes, Joyas y Más</title>
+    <meta name="description" content="Descubre la mejor selección de productos premium en Ecuador. Peluches exclusivos, perfumes de marca, juguetes LEGO, joyas y relojes de lujo. Envíos a todo el país.">
+    <meta name="keywords" content="tienda online Ecuador, regalos premium, peluches, perfumes, LEGO, joyas, relojes, Lago Agrio">
+    <meta name="author" content="Mawewe Ecuador">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Mawewe - Tienda de Regalos Premium">
+    <meta property="og:description" content="Los mejores productos para regalar. Envíos a todo Ecuador.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.mawewe.com.ec">
+    <meta property="og:image" content="https://www.mawewe.com.ec/assets/images/og-image.jpg">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mawewe - Tienda de Regalos Premium">
+    <meta name="twitter:description" content="Los mejores productos para regalar. Envíos a todo Ecuador.">
     
     <!-- Favicon -->
-    <link rel="shortcut icon" type="image/x-icon" href="images/fav5.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./assets/images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./assets/images/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./assets/images/apple-touch-icon.png">
     
-    <!-- Google Fonts -->
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Lato:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/shop.css">
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="./assets/css/styles.css">
     
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-FHRFVTPYFQ"></script>
@@ -26,136 +46,259 @@
         gtag('js', new Date());
         gtag('config', 'G-FHRFVTPYFQ');
     </script>
+    
+    <!-- Schema.org Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Store",
+        "name": "Mawewe",
+        "description": "Tienda de regalos premium en Ecuador",
+        "url": "https://www.mawewe.com.ec",
+        "telephone": "+593-98-183-2313",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Jorge Añazco y 12 de Febrero",
+            "addressLocality": "Lago Agrio",
+            "addressRegion": "Sucumbíos",
+            "postalCode": "210150",
+            "addressCountry": "EC"
+        },
+        "priceRange": "$$",
+        "paymentAccepted": "PayPal, Cash"
+    }
+    </script>
 </head>
 <body>
-    
-    <!-- Cart Button (Fixed) -->
-    <button class="cart-button" onclick="toggleCart()">
-        🛒 Carrito
-        <span class="cart-badge" id="cart-count">0</span>
-    </button>
-    
-    <!-- Main Container -->
-    <div class="shop-container">
-        
-        <!-- Header -->
-        <header class="shop-header">
-            <h1>🎁 Tienda Mawewe</h1>
-            <p>Despierta tu Imaginación - Obsequios & Regalos Personalizados</p>
-        </header>
-        
-        <!-- Filters Section -->
-        <section class="filters">
-            <div id="category-filters">
-                <!-- Categories will be loaded here -->
+    <!-- ========================================
+         HEADER & NAVIGATION
+         ======================================== -->
+    <header class="site-header">
+        <div class="header-container">
+            <div class="site-branding">
+                <h1 class="site-logo">Mawewe</h1>
+                <p class="site-tagline">Despierta tu Imaginación</p>
             </div>
-            <div class="search-box">
-                <input 
-                    type="text" 
-                    id="search-input" 
-                    placeholder="Buscar productos..."
-                    aria-label="Buscar productos"
-                />
+            
+            <nav class="header-actions" aria-label="Acciones principales">
+                <button 
+                    class="btn-cart" 
+                    onclick="mawewe.ui.toggleCart()" 
+                    aria-label="Ver carrito de compras"
+                    aria-expanded="false"
+                >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span>Carrito</span>
+                    <span class="cart-badge" id="cart-count" style="display: none;">0</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- ========================================
+         MAIN CONTENT
+         ======================================== -->
+    <main class="site-main">
+        
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="container">
+                <div class="hero-content">
+                    <h2 class="hero-title">Encuentra el Regalo Perfecto</h2>
+                    <p class="hero-subtitle">
+                        Explora nuestra colección exclusiva de productos premium. 
+                        Desde peluches adorables hasta relojes de lujo, tenemos 
+                        todo lo que necesitas para sorprender a tus seres queridos.
+                    </p>
+                </div>
             </div>
         </section>
-        
-        <!-- Products Grid -->
-        <section class="products-grid" id="products-grid">
-            <!-- Products will be loaded here -->
+
+        <!-- Products Section -->
+        <section class="section">
+            <div class="container">
+                
+                <!-- Filters -->
+                <div class="filters-container">
+                    <input 
+                        type="search" 
+                        id="search-input" 
+                        class="search-bar" 
+                        placeholder="Buscar productos por nombre, categoría o marca..."
+                        aria-label="Buscar productos"
+                    />
+                    
+                    <div id="category-filters" class="category-filters">
+                        <!-- Categories will be rendered here -->
+                    </div>
+                </div>
+
+                <!-- Products Grid -->
+                <div id="products-grid" class="products-grid">
+                    <!-- Products will be rendered here -->
+                </div>
+            </div>
         </section>
-        
+
         <!-- Info Section -->
-        <section class="shop-info" style="background: linear-gradient(135deg, #8C004B 0%, #b31062 100%); color: white; padding: 3rem 2rem; border-radius: 20px; text-align: center; margin-top: 3rem;">
-            <h2 style="font-size: 2rem; margin-bottom: 1rem;">🚚 Envíos a Todo el País</h2>
-            <p style="font-size: 1.1rem; opacity: 0.95; max-width: 800px; margin: 0 auto 2rem;">
-                Entregamos tus productos favoritos de forma segura en todo Ecuador. 
-                Realizamos envíos rápidos desde nuestra matriz en Lago Agrio.
-            </p>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; max-width: 1000px; margin: 0 auto;">
-                <div style="background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 12px;">
-                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📍</div>
-                    <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem;">Ubicación</h3>
-                    <p>Jorge Añazco y 12 de Febrero<br>Lago Agrio - Ecuador</p>
+        <section class="section" style="background-color: var(--gray-100);">
+            <div class="container">
+                <div class="text-center mb-xl">
+                    <h2>¿Por Qué Elegir Mawewe?</h2>
+                    <p style="color: var(--text-secondary); max-width: 800px; margin: var(--spacing-lg) auto 0;">
+                        Somos más que una tienda. Somos tu aliado en cada ocasión especial.
+                    </p>
                 </div>
-                <div style="background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 12px;">
-                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📞</div>
-                    <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem;">Teléfonos</h3>
-                    <p>098 183 2313<br>0997146750 / 0968021028</p>
-                </div>
-                <div style="background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 12px;">
-                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">💳</div>
-                    <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem;">Pagos Seguros</h3>
-                    <p>Aceptamos PayPal<br>Transacciones 100% seguras</p>
+                
+                <div class="footer-grid">
+                    <div class="text-center">
+                        <div style="font-size: var(--font-size-4xl); margin-bottom: var(--spacing-md); color: var(--primary-700);">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            </svg>
+                        </div>
+                        <h3 class="footer-section-title">Compra Segura</h3>
+                        <p style="color: var(--text-secondary);">
+                            Pagos protegidos con PayPal. Tu información siempre segura.
+                        </p>
+                    </div>
+                    
+                    <div class="text-center">
+                        <div style="font-size: var(--font-size-4xl); margin-bottom: var(--spacing-md); color: var(--primary-700);">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                                <line x1="1" y1="10" x2="23" y2="10"/>
+                            </svg>
+                        </div>
+                        <h3 class="footer-section-title">Envíos Nacionales</h3>
+                        <p style="color: var(--text-secondary);">
+                            Entregamos en todo Ecuador. Envío gratis en compras sobre $100.
+                        </p>
+                    </div>
+                    
+                    <div class="text-center">
+                        <div style="font-size: var(--font-size-4xl); margin-bottom: var(--spacing-md); color: var(--primary-700);">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                            </svg>
+                        </div>
+                        <h3 class="footer-section-title">Atención Personalizada</h3>
+                        <p style="color: var(--text-secondary);">
+                            Nuestro equipo está listo para ayudarte en cada paso.
+                        </p>
+                    </div>
                 </div>
             </div>
         </section>
-        
-    </div>
-    
-    <!-- Cart Modal -->
-    <div class="cart-overlay" id="cart-overlay"></div>
-    <aside class="cart-modal" id="cart-modal">
-        <div class="cart-header">
-            <h2>🛒 Tu Carrito</h2>
-            <button class="close-cart" onclick="toggleCart()">✕</button>
-        </div>
-        
-        <div class="cart-items" id="cart-items">
-            <!-- Cart items will be loaded here -->
-        </div>
-        
-        <div class="cart-footer">
-            <div class="cart-total">
-                <span>Total:</span>
-                <span class="total-amount" id="cart-total">$0.00</span>
-            </div>
-            
-            <div style="background: #f3f4f6; padding: 1rem; border-radius: 12px; margin-bottom: 1rem; font-size: 0.9rem; color: #6b7280;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                    <span>Subtotal:</span>
-                    <span id="cart-total">$0.00</span>
+    </main>
+
+    <!-- ========================================
+         FOOTER
+         ======================================== -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <!-- About Section -->
+                <div>
+                    <h3 class="footer-section-title">Acerca de Mawewe</h3>
+                    <p style="color: var(--gray-400); line-height: 1.75;">
+                        Empresa líder en Ecuador especializada en artículos de regalo premium. 
+                        Comprometidos con la calidad y satisfacción de nuestros clientes desde 2010.
+                    </p>
                 </div>
-                <div style="display: flex; justify-content: space-between; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">
-                    <span>Envío:</span>
-                    <span>$5.00</span>
+                
+                <!-- Quick Links -->
+                <div>
+                    <h3 class="footer-section-title">Enlaces Rápidos</h3>
+                    <ul class="footer-links">
+                        <li><a href="#productos">Productos</a></li>
+                        <li><a href="#categorias">Categorías</a></li>
+                        <li><a href="#ofertas">Ofertas Especiales</a></li>
+                        <li><a href="#nosotros">Nosotros</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Customer Service -->
+                <div>
+                    <h3 class="footer-section-title">Servicio al Cliente</h3>
+                    <ul class="footer-links">
+                        <li><a href="#envios">Información de Envíos</a></li>
+                        <li><a href="#devoluciones">Devoluciones</a></li>
+                        <li><a href="#garantia">Garantía</a></li>
+                        <li><a href="#contacto">Contáctanos</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Contact Info -->
+                <div>
+                    <h3 class="footer-section-title">Contáctanos</h3>
+                    <address style="font-style: normal; color: var(--gray-400); line-height: 1.75;">
+                        <p><strong>Dirección:</strong><br>
+                        Jorge Añazco y 12 de Febrero<br>
+                        Lago Agrio, Ecuador</p>
+                        
+                        <p><strong>Teléfonos:</strong><br>
+                        098 183 2313<br>
+                        0997146750 / 0968021028</p>
+                        
+                        <p><strong>Email:</strong><br>
+                        <a href="mailto:info@mawewe.com.ec" style="color: var(--gray-400);">info@mawewe.com.ec</a></p>
+                    </address>
                 </div>
             </div>
             
-            <!-- PayPal Button Container -->
-            <div id="paypal-button-container"></div>
-            
-            <p style="font-size: 0.85rem; color: var(--text-secondary); text-align: center; margin-top: 1rem;">
-                🔒 Pago seguro procesado por PayPal
-            </p>
-        </div>
-    </aside>
-    
-    <!-- Footer -->
-    <footer style="background: #1f2937; color: white; padding: 3rem 2rem; margin-top: 4rem; text-align: center;">
-        <div style="max-width: 1200px; margin: 0 auto;">
-            <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Mawewe - Despierta tu Imaginación</h3>
-            <p style="opacity: 0.8; margin-bottom: 1.5rem;">
-                Empresa líder en venta de artículos deportivos, cosméticos, juguetes, muebles y prendas de vestir.
-            </p>
-            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem;">
-                <a href="https://www.facebook.com/MaweweDespiertaTuImaginacion" target="_blank" style="color: white; text-decoration: none; padding: 0.5rem 1rem; background: rgba(255,255,255,0.1); border-radius: 50px; transition: all 0.3s;">
-                    📘 Facebook
-                </a>
-                <a href="https://twitter.com/Mawewe_Ec" target="_blank" style="color: white; text-decoration: none; padding: 0.5rem 1rem; background: rgba(255,255,255,0.1); border-radius: 50px; transition: all 0.3s;">
-                    🐦 Twitter
-                </a>
-                <a href="mailto:info@mawewe.com.ec" style="color: white; text-decoration: none; padding: 0.5rem 1rem; background: rgba(255,255,255,0.1); border-radius: 50px; transition: all 0.3s;">
-                    📧 Email
-                </a>
+            <!-- Footer Bottom -->
+            <div class="footer-bottom">
+                <p>
+                    &copy; 2024 Mawewe. Todos los derechos reservados. | 
+                    <a href="#privacidad" style="color: var(--gray-500);">Política de Privacidad</a> | 
+                    <a href="#terminos" style="color: var(--gray-500);">Términos y Condiciones</a>
+                </p>
             </div>
-            <p style="opacity: 0.6; font-size: 0.9rem;">
-                © 2024 MAWËWË. Todos los derechos reservados.
-            </p>
         </div>
     </footer>
+
+    <!-- ========================================
+         CART MODAL
+         ======================================== -->
+    <div class="cart-overlay" id="cart-overlay"></div>
     
-    <!-- Main JavaScript -->
-    <script src="js/shop.js"></script>
-    
+    <aside class="cart-modal" id="cart-modal" role="dialog" aria-labelledby="cart-title" aria-modal="true">
+        <header class="cart-header">
+            <h2 id="cart-title" class="cart-title">Tu Carrito</h2>
+            <button 
+                class="btn-close-cart" 
+                onclick="mawewe.ui.toggleCart()" 
+                aria-label="Cerrar carrito"
+            >
+                &times;
+            </button>
+        </header>
+        
+        <div class="cart-items" id="cart-items">
+            <!-- Cart items will be rendered here -->
+        </div>
+        
+        <footer class="cart-footer">
+            <div class="cart-summary" id="cart-summary">
+                <!-- Summary will be rendered here -->
+            </div>
+            
+            <div id="paypal-button-container"></div>
+            
+            <p class="payment-note">
+                Pago seguro procesado por PayPal
+            </p>
+        </footer>
+    </aside>
+
+    <!-- ========================================
+         SCRIPTS
+         ======================================== -->
+    <script src="./assets/js/app.js"></script>
 </body>
 </html>
