@@ -570,6 +570,20 @@ body {
   margin-bottom: var(--spacing-xs);
 }
 
+.product-subcategory {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--gray-600);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: var(--spacing-sm);
+  padding: 0.25rem 0.5rem;
+  background: linear-gradient(135deg, var(--gray-100), var(--gray-200));
+  border-radius: var(--radius-sm);
+  display: inline-block;
+  border-left: 3px solid var(--primary-600);
+}
+
 .product-title {
   font-family: var(--font-family-primary);
   font-size: var(--font-size-xl);

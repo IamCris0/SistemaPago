@@ -295,6 +295,7 @@ const render = {
         
         <div class="product-content">
           <div class="product-category">${this.getCategoryName(product.category)}</div>
+          ${product.subcategory ? `<div class="product-subcategory">${product.subcategory.toUpperCase()}</div>` : ''}
           <h3 class="product-title">${product.name}</h3>
           <p class="product-description">${product.description}</p>
           
