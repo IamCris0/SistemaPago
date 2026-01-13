@@ -239,7 +239,7 @@ body {
   grid-template-columns: 1fr 1.5fr;
   gap: var(--spacing-lg);
   align-items: center;
-  max-width: 900px;
+  max-width: 500px;
   margin: 0 auto;
 }
 
