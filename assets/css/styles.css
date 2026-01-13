@@ -260,28 +260,15 @@ body {
   margin: 0 auto;
 }
 
-/* Lado Izquierdo - WhatsApp */
 .hero-left {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
-  align-items: flex-start;
+  align-items: center;  
+  text-align: center;
 }
 
-.hero-question {
-  font-size: var(--font-size-sm);
-  font-weight: 400;
-  color: var(--gray-800);
-  margin: 0 0 var(--spacing-xs) 0;
-  line-height: 1.4;
-}
 
-.hero-question strong {
-  color: var(--primary-800);
-  font-weight: 700;
-}
-
-/* Botón de WhatsApp en Hero */
 .hero-whatsapp-btn {
   display: inline-flex;
   align-items: center;
@@ -316,11 +303,11 @@ body {
   white-space: nowrap;
 }
 
-/* Lado Derecho - Título */
 .hero-right {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
+  
 }
 
 .hero-title-wrapper {
