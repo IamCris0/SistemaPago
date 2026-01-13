@@ -183,7 +183,7 @@
       "reviewCount": 56
     },
     {
-      "id": 45,
+      "id": 46,
       "sku": "ROP-CHE-006",
       "name": "Camiseta Tipo Polo para Hombre REF: 609G003",
       "category": "ropa",
@@ -191,6 +191,34 @@
       "price": 55.99,
       "description": "Camiseta tipo polo para hombre, perfecta para un estilo casual y deportivo.",
       "image": "assets\\img\\ropa\\CHEVIGNON\\camiseta2.jpg",
+      "stock": 20,
+      "featured": false,
+      "rating": 4.6,
+      "reviewCount": 56
+    },
+    {
+      "id": 47,
+      "sku": "ROP-CHE-007",
+      "name": "Camisa Slim Fit Manga Larga Esencial para Hombre REF: 612G000",
+      "category": "ropa",
+      "subcategory": "chevignon",
+      "price": 55.99,
+      "description": "Camisa slim fit manga larga esencial para hombre, perfecta para un estilo casual y deportivo.",
+      "image": "assets\\img\\ropa\\CHEVIGNON\\camiseta3.jpg",
+      "stock": 20,
+      "featured": false,
+      "rating": 4.6,
+      "reviewCount": 56
+    },
+    {
+      "id": 48,
+      "sku": "ROP-CHE-008",
+      "name": "Camiseta Classic Fit Cuello Redondo con Bordado y Estampado para Hombre REF: 642G019",
+      "category": "ropa",
+      "subcategory": "chevignon",
+      "price": 55.99,
+      "description": "Camiseta classic fit cuello redondo con bordado y estampado para hombre, perfecta para un estilo casual y deportivo.",
+      "image": "assets\\img\\ropa\\CHEVIGNON\\camiseta4.jpg",
       "stock": 20,
       "featured": false,
       "rating": 4.6,
