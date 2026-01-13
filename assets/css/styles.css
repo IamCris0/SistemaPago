@@ -1207,25 +1207,41 @@ body {
 
 .notification {
   position: fixed;
-  top: var(--spacing-xl);
-  right: var(--spacing-xl);
-  max-width: 400px;
-  padding: var(--spacing-md) var(--spacing-lg);
-  background-color: var(--success-light);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) translateY(20px);
+  max-width: 320px;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background-color: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
   color: white;
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-2xl);
+  border-radius: var(--radius-full);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   z-index: 1500;
-  animation: slideInFromRight var(--transition-base);
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.notification.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) translateY(0);
 }
 
 .notification.error {
-  background-color: var(--error-light);
+  background-color: rgba(220, 38, 38, 0.95);
 }
 
+.notification svg {
+  flex-shrink: 0;
+}
+
+/* Animación alternativa (opcional) */
 @keyframes slideInFromRight {
   from {
     transform: translateX(400px);
@@ -1703,4 +1719,3 @@ img[loading="lazy"].loaded {
   scrollbar-width: thin;
   scrollbar-color: var(--primary-600) var(--gray-100);
 }
-

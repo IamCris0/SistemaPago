@@ -762,7 +762,7 @@ const ui = {
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
     notification.innerHTML = `
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         ${type === 'success' ? 
           '<path d="M20 6L9 17l-5-5"/>' : 
           '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'
@@ -773,10 +773,16 @@ const ui = {
 
     document.body.appendChild(notification);
 
+    // Animar entrada
     setTimeout(() => {
-      notification.style.animation = 'slideInFromRight 250ms ease-out reverse';
-      setTimeout(() => notification.remove(), 250);
-    }, 3000);
+      notification.classList.add('show');
+    }, 5);
+
+    // Animar salida
+    setTimeout(() => {
+      notification.classList.remove('show');
+      setTimeout(() => notification.remove(), 150);
+    }, 2000);
   }
 };
 
