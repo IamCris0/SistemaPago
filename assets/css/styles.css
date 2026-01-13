@@ -1427,7 +1427,7 @@ body {
 .footer-section-title {
   font-size: var(--font-size-lg);
   font-weight: 600;
-  color: white;
+  color: rgb(0, 0, 0);
   margin-bottom: var(--spacing-md);
 }
 
