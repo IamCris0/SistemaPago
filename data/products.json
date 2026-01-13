@@ -169,6 +169,34 @@
       "reviewCount": 56
     },
     {
+      "id": 45,
+      "sku": "ROP-CHE-005",
+      "name": "Camisa Manga Corta para Hombre",
+      "category": "ropa",
+      "subcategory": "chevignon",
+      "price": 55.99,
+      "description": "Camisa de manga corta para hombre, ideal para un look casual y fresco en días cálidos.",
+      "image": "assets\\img\\ropa\\CHEVIGNON\\camiseta1.jpg",
+      "stock": 20,
+      "featured": false,
+      "rating": 4.6,
+      "reviewCount": 56
+    },
+    {
+      "id": 45,
+      "sku": "ROP-CHE-006",
+      "name": "Camiseta Tipo Polo para Hombre REF: 609G003",
+      "category": "ropa",
+      "subcategory": "chevignon",
+      "price": 55.99,
+      "description": "Camiseta tipo polo para hombre, perfecta para un estilo casual y deportivo.",
+      "image": "assets\\img\\ropa\\CHEVIGNON\\camiseta2.jpg",
+      "stock": 20,
+      "featured": false,
+      "rating": 4.6,
+      "reviewCount": 56
+    },
+    {
       "id": 35,
       "sku": "ROP-OFF-001",
       "name": "Denim super slim para niño",
