@@ -419,6 +419,90 @@
       "featured": true,
       "rating": 4.9,
       "reviewCount": 423
+    },
+    {
+      "id": 31,
+      "sku": "ROP-AME-001",
+      "name": "Camisa Americanino Casual",
+      "category": "ropa",
+      "subcategory": "americanino",
+      "price": 45.99,
+      "description": "Camisa casual de algodón con diseño moderno. Perfecta para uso diario.",
+      "image": "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800&h=800&fit=crop&q=85",
+      "stock": 25,
+      "featured": false,
+      "rating": 4.5,
+      "reviewCount": 89
+    },
+    {
+      "id": 32,
+      "sku": "ROP-AME-002",
+      "name": "Jeans Americanino Slim Fit",
+      "category": "ropa",
+      "subcategory": "americanino",
+      "price": 69.99,
+      "description": "Jeans de corte slim fit con elasticidad. Comodidad y estilo.",
+      "image": "https://images.unsplash.com/photo-1542272604-787c3835535d?w=800&h=800&fit=crop&q=85",
+      "stock": 30,
+      "featured": true,
+      "rating": 4.7,
+      "reviewCount": 145
+    },
+    {
+      "id": 33,
+      "sku": "ROP-CHE-001",
+      "name": "Chaqueta Chevignon Clásica",
+      "category": "ropa",
+      "subcategory": "chevignon",
+      "price": 129.99,
+      "description": "Chaqueta deportiva de alta calidad. Diseño icónico Chevignon.",
+      "image": "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800&h=800&fit=crop&q=85",
+      "stock": 15,
+      "featured": true,
+      "rating": 4.8,
+      "reviewCount": 78
+    },
+    {
+      "id": 34,
+      "sku": "ROP-CHE-002",
+      "name": "Polo Chevignon Premium",
+      "category": "ropa",
+      "subcategory": "chevignon",
+      "price": 55.99,
+      "description": "Polo de algodón premium con bordado de marca. Elegancia casual.",
+      "image": "https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=800&h=800&fit=crop&q=85",
+      "stock": 20,
+      "featured": false,
+      "rating": 4.6,
+      "reviewCount": 56
+    },
+    {
+      "id": 35,
+      "sku": "ROP-OFF-001",
+      "name": "Hoodie Offcors Urban",
+      "category": "ropa",
+      "subcategory": "offcors",
+      "price": 59.99,
+      "description": "Sudadera con capucha de estilo urbano. Diseño moderno y cómodo.",
+      "image": "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&h=800&fit=crop&q=85",
+      "stock": 40,
+      "featured": false,
+      "rating": 4.5,
+      "reviewCount": 112
+    },
+    {
+      "id": 36,
+      "sku": "ROP-OFF-002",
+      "name": "Camiseta Offcors Graphic",
+      "category": "ropa",
+      "subcategory": "offcors",
+      "price": 29.99,
+      "description": "Camiseta con diseño gráfico exclusivo. Algodón de alta calidad.",
+      "image": "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&h=800&fit=crop&q=85",
+      "stock": 50,
+      "featured": false,
+      "rating": 4.4,
+      "reviewCount": 98
     }
   ],
   "categories": [
@@ -471,9 +555,9 @@
     "expressShippingCost": 10.00
   },
   "metadata": {
-    "lastUpdated": "2025-01-10",
-    "version": "3.0",
-    "totalProducts": 30,
+    "lastUpdated": "2025-01-13",
+    "version": "3.1",
+    "totalProducts": 36,
     "currency": "USD"
   }
 }

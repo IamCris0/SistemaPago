@@ -1,3 +1,12 @@
+/**
+ * MAWEWE E-COMMERCE - PROFESSIONAL VERSION 3.0
+ * With PayPal Fixed, Enhanced Product Details & Premium Design
+ * Version: 3.0
+ */
+
+// ==============================================
+// CONFIGURATION
+// ==============================================
 const CONFIG = {
   api: {
     productsUrl: './data/products.json'
@@ -27,6 +36,7 @@ const state = {
   cart: [],
   filters: {
     category: 'all',
+    subcategory: null,
     searchQuery: ''
   },
   ui: {
@@ -249,6 +259,11 @@ const render = {
       filteredProducts = filteredProducts.filter(p => p.category === state.filters.category);
     }
 
+    // Filtrar por subcategoría si está seleccionada
+    if (state.filters.subcategory) {
+      filteredProducts = filteredProducts.filter(p => p.subcategory === state.filters.subcategory);
+    }
+
     if (state.filters.searchQuery) {
       const query = state.filters.searchQuery.toLowerCase();
       filteredProducts = filteredProducts.filter(p =>
@@ -327,7 +342,7 @@ const render = {
     const orderedCategories = categoryOrder
       .map(id => state.categories.find(cat => cat.id === id))
       .filter(Boolean); // Eliminar categorías no encontradas
-    
+
     const categories = [
       { id: 'all', name: 'Todos' },
       ...orderedCategories
@@ -341,6 +356,39 @@ const render = {
         ${cat.name}
       </button>
     `).join('');
+    
+    // Renderizar subcategorías si la categoría es ropa
+    this.subcategories();
+  },
+
+  subcategories() {
+    const subcategoryContainer = document.getElementById('subcategory-container');
+    const subcategoryFilters = document.getElementById('subcategory-filters');
+    
+    if (!subcategoryContainer || !subcategoryFilters) return;
+    
+    // Mostrar subcategorías solo si la categoría ropa está seleccionada
+    if (state.filters.category === 'ropa') {
+      subcategoryContainer.classList.add('active');
+      
+      const subcategories = [
+        { id: 'americanino', name: 'Americanino' },
+        { id: 'chevignon', name: 'Chevignon' },
+        { id: 'offcors', name: 'Offcors' }
+      ];
+      
+      subcategoryFilters.innerHTML = subcategories.map(sub => `
+        <button 
+          class="subcategory-button ${state.filters.subcategory === sub.id ? 'active' : ''}" 
+          onclick="productFilters.setSubcategory('${sub.id}')"
+        >
+          ${sub.name}
+        </button>
+      `).join('');
+    } else {
+      subcategoryContainer.classList.remove('active');
+      state.filters.subcategory = null;
+    }
   },
 
   cart() {
@@ -725,8 +773,20 @@ const productDetails = {
 const productFilters = {
   setCategory(categoryId) {
     state.filters.category = categoryId;
+    state.filters.subcategory = null; // Resetear subcategoría al cambiar de categoría
     render.products();
     render.categories();
+  },
+
+  setSubcategory(subcategoryId) {
+    // Si se hace clic en la misma subcategoría, la deselecciona
+    if (state.filters.subcategory === subcategoryId) {
+      state.filters.subcategory = null;
+    } else {
+      state.filters.subcategory = subcategoryId;
+    }
+    render.products();
+    render.subcategories();
   },
 
   setSearchQuery(query) {

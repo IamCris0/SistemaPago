@@ -53,8 +53,8 @@
     <link rel="stylesheet" href="./assets/css/features-advanced.css">
     
     <!-- Theme Color -->
-    <meta name="theme-color" content="#8C004B">
-    <meta name="msapplication-TileColor" content="#8C004B">
+    <meta name="theme-color" content="#d51f88">
+    <meta name="msapplication-TileColor" content="#d51f88">
     
     <!-- Schema.org Structured Data -->
     <script type="application/ld+json">
@@ -131,9 +131,8 @@
     <header class="site-header" role="banner">
         <div class="header-container">
             <div class="site-branding">
-                <a href="/" aria-label="Mawewe - Inicio">
-                    <h1 class="site-logo">Mawewe</h1>
-                    <p class="site-tagline">Despierta tu Imaginación</p>
+                <a href="/" aria-label="Mawewe - Inicio" class="logo-link">
+                    <img src="assets/img/logo.jpg" alt="Mawewe Logo" class="site-logo-img">
                 </a>
             </div>
             
@@ -193,6 +192,13 @@
                     
                     <div id="category-filters" class="category-filters" role="group" aria-label="Filtrar por categoría">
                         <!-- Categories rendered by JS -->
+                    </div>
+                    
+                    <div id="subcategory-container" class="subcategory-container">
+                        <span class="subcategory-label">Marcas de Ropa:</span>
+                        <div id="subcategory-filters" class="subcategory-filters">
+                            <!-- Subcategories rendered by JS -->
+                        </div>
                     </div>
                 </div>
 
@@ -329,9 +335,10 @@
                 <nav aria-labelledby="footer-nav-categories">
                     <h3 class="footer-section-title" id="footer-nav-categories">Categorías</h3>
                     <ul class="footer-links">
+                        <li><a href="#ropa">Ropa</a></li>
                         <li><a href="#peluches">Peluches</a></li>
-                        <li><a href="#perfumes">Perfumes</a></li>
                         <li><a href="#juguetes">Juguetes</a></li>
+                        <li><a href="#perfumes">Perfumes</a></li>
                         <li><a href="#joyas">Joyería</a></li>
                         <li><a href="#relojes">Relojes</a></li>
                         <li><a href="#accesorios">Accesorios</a></li>
@@ -469,11 +476,10 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('✅ Service Worker registered'))
-                    .catch(err => console.log('❌ Service Worker registration failed:', err));
+                    .then(reg => console.log('✅ Service Worker registrado'))
+                    .catch(err => console.log('❌ Error al registrar Service Worker:', err));
             });
         }
     </script>
-    <script src="./assets/js/features-advanced.js"></script>
 </body>
 </html>
