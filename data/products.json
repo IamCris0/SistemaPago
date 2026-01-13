@@ -462,7 +462,7 @@
       "id": "ropa",
       "name": "Ropa",
       "description": "Prendas de vestir de marcas reconocidas",
-      "subcategories": ["pantalones", "sudaderas", "calzado"]
+      "subcategories": ["pantalones", "sudaderas", "calzado", "americanino", "chevignon", "offcors"]
     }
   ],
   "shippingConfig": {

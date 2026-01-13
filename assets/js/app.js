@@ -1,12 +1,3 @@
-/**
- * MAWEWE E-COMMERCE - PROFESSIONAL VERSION 3.0
- * With PayPal Fixed, Enhanced Product Details & Premium Design
- * Version: 3.0
- */
-
-// ==============================================
-// CONFIGURATION
-// ==============================================
 const CONFIG = {
   api: {
     productsUrl: './data/products.json'
@@ -329,9 +320,17 @@ const render = {
     const container = document.getElementById('category-filters');
     if (!container) return;
 
+    // Orden personalizado de categorías
+    const categoryOrder = ['ropa', 'peluches', 'juguetes', 'perfumes', 'joyas', 'relojes', 'accesorios'];
+    
+    // Ordenar categorías según el orden especificado
+    const orderedCategories = categoryOrder
+      .map(id => state.categories.find(cat => cat.id === id))
+      .filter(Boolean); // Eliminar categorías no encontradas
+    
     const categories = [
       { id: 'all', name: 'Todos' },
-      ...state.categories
+      ...orderedCategories
     ];
 
     container.innerHTML = categories.map(cat => `
