@@ -233,10 +233,11 @@ body {
 .hero-section {
   background: #e7d9c8;
   color: var(--gray-900);
-  padding: var(--spacing-md) 0;
+  padding: var(--spacing-sm) 0; /* ⬅ más pegado al header */
   position: relative;
   overflow: hidden;
 }
+
 
 .hero-section::before {
   content: '';
