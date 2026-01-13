@@ -284,7 +284,7 @@ const render = {
         ${product.featured ? '<div class="product-badge">Destacado</div>' : ''}
         
         <div class="product-image-container" onclick="productDetails.show(${product.id})">
-          <img src="${product.image}" alt="${product.name}" class="product-image" loading="lazy" />
+          <img src="${product.image}" alt="${product.name}" class="product-image" />
         </div>
         
         <div class="product-content">
