@@ -143,7 +143,7 @@ body {
 }
 
 .site-logo-img {
-  height: 100px;
+  height: 120px;
   width: auto;
   object-fit: contain;
   transition: transform var(--transition-base);
@@ -178,7 +178,7 @@ body {
 .site-logo {
   font-family: var(--font-family-primary);
   font-size: var(--font-size-2xl);
-  font-weight: 700;
+  font-weight: 900;
   color: var(--primary-800);
   letter-spacing: -0.02em;
   line-height: 1;
