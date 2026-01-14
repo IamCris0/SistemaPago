@@ -289,8 +289,26 @@ const render = {
       <article class="product-card" data-product-id="${product.id}">
         ${product.featured ? '<div class="product-badge">Destacado</div>' : ''}
         
-        <div class="product-image-container" onclick="productDetails.show(${product.id})">
-          <img src="${product.image}" alt="${product.name}" class="product-image" />
+        <div class="product-image-container">
+          <!-- Carrusel de imágenes -->
+          <div class="product-carousel" data-product-id="${product.id}">
+            <button class="carousel-btn prev" onclick="event.stopPropagation(); mawewe.carousel.prev(${product.id})">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </button>
+            <img src="${product.image}" alt="${product.name}" class="product-image" onclick="productDetails.show(${product.id})" />
+            <button class="carousel-btn next" onclick="event.stopPropagation(); mawewe.carousel.next(${product.id})">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+            <div class="carousel-dots">
+              <span class="dot active" onclick="event.stopPropagation(); mawewe.carousel.goTo(${product.id}, 0)"></span>
+              <span class="dot" onclick="event.stopPropagation(); mawewe.carousel.goTo(${product.id}, 1)"></span>
+              <span class="dot" onclick="event.stopPropagation(); mawewe.carousel.goTo(${product.id}, 2)"></span>
+            </div>
+          </div>
         </div>
         
         <div class="product-content">
@@ -298,13 +316,6 @@ const render = {
           ${product.subcategory ? `<div class="product-subcategory">${product.subcategory.toUpperCase()}</div>` : ''}
           <h3 class="product-title">${product.name}</h3>
           <p class="product-description">${product.description}</p>
-          
-          ${product.rating ? `
-            <div class="product-rating">
-              <span class="rating-stars">${this.renderStars(product.rating)}</span>
-              <span class="rating-count">(${product.reviewCount || 0})</span>
-            </div>
-          ` : ''}
           
           <div class="product-footer">
             <div class="product-price-container">
@@ -702,9 +713,14 @@ const render = {
 // PRODUCT DETAILS MODAL
 // ==============================================
 const productDetails = {
+  currentImageIndex: 0,
+  
   show(productId) {
     const product = state.products.find(p => p.id === productId);
     if (!product) return;
+
+    this.currentImageIndex = 0;
+    const images = product.images || [product.image, product.image, product.image];
 
     const modal = document.createElement('div');
     modal.className = 'product-modal-overlay';
@@ -712,16 +728,37 @@ const productDetails = {
       <div class="product-modal">
         <button class="modal-close" onclick="productDetails.close()">×</button>
         <div class="modal-content">
-          <div class="modal-image">
-            <img src="${product.image}" alt="${product.name}" />
+          <div class="modal-image-section">
+            <!-- Imagen principal -->
+            <div class="modal-main-image">
+              <img id="modal-main-img" src="${images[0]}" alt="${product.name}" />
+              <button class="modal-carousel-btn prev" onclick="productDetails.changeMainImage(-1)">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </button>
+              <button class="modal-carousel-btn next" onclick="productDetails.changeMainImage(1)">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
+            <!-- Miniaturas -->
+            <div class="modal-thumbnails">
+              ${images.map((img, index) => `
+                <img 
+                  src="${img}" 
+                  alt="${product.name} - imagen ${index + 1}" 
+                  class="thumbnail ${index === 0 ? 'active' : ''}"
+                  onclick="productDetails.selectImage(${index})"
+                />
+              `).join('')}
+            </div>
           </div>
           <div class="modal-info">
             <div class="product-category">${render.getCategoryName(product.category)}</div>
+            ${product.subcategory ? `<div class="product-subcategory">${product.subcategory.toUpperCase()}</div>` : ''}
             <h2 class="modal-title">${product.name}</h2>
-            <div class="product-rating">
-              <span class="rating-stars">${render.renderStars(product.rating || 0)}</span>
-              <span class="rating-count">(${product.reviewCount || 0} reseñas)</span>
-            </div>
             <div class="modal-price">${utils.formatPrice(product.price)}</div>
             <p class="modal-description">${product.description}</p>
             
@@ -757,6 +794,30 @@ const productDetails = {
         this.close();
       }
     });
+  },
+
+  selectImage(index) {
+    const product = state.products.find(p => p.id);
+    const images = product?.images || [product?.image, product?.image, product?.image];
+    
+    this.currentImageIndex = index;
+    const mainImg = document.getElementById('modal-main-img');
+    if (mainImg) {
+      mainImg.src = images[index];
+    }
+    
+    // Actualizar thumbnails activos
+    document.querySelectorAll('.thumbnail').forEach((thumb, i) => {
+      thumb.classList.toggle('active', i === index);
+    });
+  },
+
+  changeMainImage(direction) {
+    const product = state.products.find(p => p.id);
+    const images = product?.images || [product?.image, product?.image, product?.image];
+    
+    this.currentImageIndex = (this.currentImageIndex + direction + images.length) % images.length;
+    this.selectImage(this.currentImageIndex);
   },
 
   close() {
@@ -1137,6 +1198,63 @@ async function init() {
   }
 }
 
+// ==============================================
+// CAROUSEL FOR PRODUCT CARDS
+// ==============================================
+const carousel = {
+  currentIndexes: {},
+  
+  init(productId) {
+    if (!this.currentIndexes[productId]) {
+      this.currentIndexes[productId] = 0;
+    }
+  },
+  
+  getImages(productId) {
+    const product = state.products.find(p => p.id === productId);
+    return product?.images || [product?.image, product?.image, product?.image];
+  },
+  
+  prev(productId) {
+    this.init(productId);
+    const images = this.getImages(productId);
+    this.currentIndexes[productId] = (this.currentIndexes[productId] - 1 + images.length) % images.length;
+    this.updateImage(productId);
+  },
+  
+  next(productId) {
+    this.init(productId);
+    const images = this.getImages(productId);
+    this.currentIndexes[productId] = (this.currentIndexes[productId] + 1) % images.length;
+    this.updateImage(productId);
+  },
+  
+  goTo(productId, index) {
+    this.init(productId);
+    this.currentIndexes[productId] = index;
+    this.updateImage(productId);
+  },
+  
+  updateImage(productId) {
+    const carouselEl = document.querySelector(`.product-carousel[data-product-id="${productId}"]`);
+    if (!carouselEl) return;
+    
+    const images = this.getImages(productId);
+    const currentIndex = this.currentIndexes[productId];
+    
+    const img = carouselEl.querySelector('.product-image');
+    if (img) {
+      img.src = images[currentIndex];
+    }
+    
+    // Actualizar dots
+    const dots = carouselEl.querySelectorAll('.dot');
+    dots.forEach((dot, index) => {
+      dot.classList.toggle('active', index === currentIndex);
+    });
+  }
+};
+
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {
@@ -1149,5 +1267,6 @@ window.mawewe = {
   productFilters,
   productDetails,
   ui,
-  state
+  state,
+  carousel
 };

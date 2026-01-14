@@ -525,22 +525,107 @@ body {
   padding-top: 100%;
   background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-200) 100%);
   overflow: hidden;
-  cursor: pointer;
 }
 
-.product-image {
+.product-carousel {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-image {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   transition: transform var(--transition-slow);
+  cursor: pointer;
 }
 
 .product-card:hover .product-image {
   transform: scale(1.08);
 }
+
+/* Botones del carrusel */
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  z-index: 10;
+  opacity: 0;
+  box-shadow: var(--shadow-md);
+}
+
+.product-card:hover .carousel-btn {
+  opacity: 1;
+}
+
+.carousel-btn:hover {
+  background: white;
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: var(--shadow-lg);
+}
+
+.carousel-btn.prev {
+  left: 8px;
+}
+
+.carousel-btn.next {
+  right: 8px;
+}
+
+.carousel-btn svg {
+  width: 18px;
+  height: 18px;
+  color: var(--gray-700);
+}
+
+/* Indicadores de carrusel (dots) */
+.carousel-dots {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 10;
+}
+
+.carousel-dots .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.carousel-dots .dot:hover {
+  background: rgba(255, 255, 255, 0.8);
+  transform: scale(1.2);
+}
+
+.carousel-dots .dot.active {
+  background: white;
+  width: 24px;
+  border-radius: 4px;
+}
+
 
 .product-badge {
   position: absolute;
@@ -604,6 +689,7 @@ body {
   line-height: 1.6;
 }
 
+/* RATING STYLES - DESHABILITADO
 .product-rating {
   display: flex;
   align-items: center;
@@ -621,6 +707,7 @@ body {
   font-size: var(--font-size-xs);
   color: var(--gray-500);
 }
+*/
 
 .product-footer {
   display: flex;
@@ -775,6 +862,102 @@ body {
   padding: var(--spacing-2xl);
 }
 
+/* Sección de imágenes del modal */
+.modal-image-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.modal-main-image {
+  position: relative;
+  width: 100%;
+  padding-top: 100%;
+  background-color: var(--gray-100);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+.modal-main-image img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.3s ease;
+}
+
+/* Botones del carrusel del modal */
+.modal-carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  z-index: 10;
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-carousel-btn:hover {
+  background: white;
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: var(--shadow-xl);
+}
+
+.modal-carousel-btn.prev {
+  left: 16px;
+}
+
+.modal-carousel-btn.next {
+  right: 16px;
+}
+
+.modal-carousel-btn svg {
+  width: 24px;
+  height: 24px;
+  color: var(--gray-700);
+}
+
+/* Miniaturas del modal */
+.modal-thumbnails {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-sm);
+}
+
+.modal-thumbnails .thumbnail {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: all var(--transition-fast);
+  opacity: 0.6;
+}
+
+.modal-thumbnails .thumbnail:hover {
+  opacity: 1;
+  border-color: var(--primary-200);
+  transform: scale(1.05);
+}
+
+.modal-thumbnails .thumbnail.active {
+  opacity: 1;
+  border-color: var(--primary-600);
+  box-shadow: var(--shadow-md);
+}
+
+/* Estilos antiguos para compatibilidad */
 .modal-image {
   position: relative;
   width: 100%;
@@ -792,6 +975,7 @@ body {
   height: 100%;
   object-fit: cover;
 }
+
 
 .modal-info {
   display: flex;
