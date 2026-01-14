@@ -1491,6 +1491,12 @@ body {
   margin-bottom: var(--spacing-md);
 }
 
+.footer-section-inferior {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: rgb(255, 255, 255);
+  margin-bottom: var(--spacing-md);
+}
 .footer-links {
   list-style: none;
 }
