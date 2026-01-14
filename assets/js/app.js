@@ -293,13 +293,13 @@ const render = {
           <!-- Carrusel de imágenes -->
           <div class="product-carousel" data-product-id="${product.id}">
             <button class="carousel-btn prev" onclick="event.stopPropagation(); mawewe.carousel.prev(${product.id})">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <polyline points="15 18 9 12 15 6"></polyline>
               </svg>
             </button>
-            <img src="${product.image}" alt="${product.name}" class="product-image" onclick="productDetails.show(${product.id})" />
+            <img src="${product.image}" alt="${product.name}" class="product-image" loading="eager" decoding="async" onclick="productDetails.show(${product.id})" />
             <button class="carousel-btn next" onclick="event.stopPropagation(); mawewe.carousel.next(${product.id})">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <polyline points="9 18 15 12 9 6"></polyline>
               </svg>
             </button>
@@ -1203,6 +1203,8 @@ async function init() {
 // ==============================================
 const carousel = {
   currentIndexes: {},
+  productCache: {},
+  elementCache: {}, // Cache de elementos DOM para máximo rendimiento
   
   init(productId) {
     if (!this.currentIndexes[productId]) {
@@ -1211,47 +1213,73 @@ const carousel = {
   },
   
   getImages(productId) {
-    const product = state.products.find(p => p.id === productId);
-    return product?.images || [product?.image, product?.image, product?.image];
+    if (!this.productCache[productId]) {
+      const product = state.products.find(p => p.id === productId);
+      this.productCache[productId] = {
+        images: product?.images || [product?.image, product?.image, product?.image]
+      };
+    }
+    return this.productCache[productId].images;
+  },
+  
+  // Cache de elementos DOM para evitar querySelector repetidos
+  getElements(productId) {
+    if (!this.elementCache[productId]) {
+      const carouselEl = document.querySelector(`.product-carousel[data-product-id="${productId}"]`);
+      if (carouselEl) {
+        this.elementCache[productId] = {
+          carousel: carouselEl,
+          img: carouselEl.querySelector('.product-image'),
+          dots: Array.from(carouselEl.querySelectorAll('.dot'))
+        };
+      }
+    }
+    return this.elementCache[productId];
   },
   
   prev(productId) {
     this.init(productId);
     const images = this.getImages(productId);
     this.currentIndexes[productId] = (this.currentIndexes[productId] - 1 + images.length) % images.length;
-    this.updateImage(productId);
+    this.updateImageInstant(productId);
   },
   
   next(productId) {
     this.init(productId);
     const images = this.getImages(productId);
     this.currentIndexes[productId] = (this.currentIndexes[productId] + 1) % images.length;
-    this.updateImage(productId);
+    this.updateImageInstant(productId);
   },
   
   goTo(productId, index) {
     this.init(productId);
     this.currentIndexes[productId] = index;
-    this.updateImage(productId);
+    this.updateImageInstant(productId);
   },
   
-  updateImage(productId) {
-    const carouselEl = document.querySelector(`.product-carousel[data-product-id="${productId}"]`);
-    if (!carouselEl) return;
+  // Versión ultra-optimizada - cambio instantáneo
+  updateImageInstant(productId) {
+    const elements = this.getElements(productId);
+    if (!elements) return;
     
     const images = this.getImages(productId);
     const currentIndex = this.currentIndexes[productId];
     
-    const img = carouselEl.querySelector('.product-image');
-    if (img) {
-      img.src = images[currentIndex];
+    // Cambio instantáneo de imagen
+    if (elements.img) {
+      elements.img.src = images[currentIndex];
     }
     
-    // Actualizar dots
-    const dots = carouselEl.querySelectorAll('.dot');
-    dots.forEach((dot, index) => {
-      dot.classList.toggle('active', index === currentIndex);
+    // Actualizar dots de forma ultra-rápida
+    elements.dots.forEach((dot, index) => {
+      dot.className = index === currentIndex ? 'dot active' : 'dot';
     });
+  },
+  
+  // Limpiar cache cuando sea necesario
+  clearCache() {
+    this.productCache = {};
+    this.elementCache = {};
   }
 };
 
