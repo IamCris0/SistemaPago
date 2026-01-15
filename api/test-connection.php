@@ -3,7 +3,7 @@
  * Script de Prueba de Conexión MySQL
  * Mawewe E-commerce
  * 
- * Para probar: http://192.99.84.47/api/test-connection.php
+ * Para probar: https://mawewe.com.ec/api/test-connection.php
  */
 
 // Headers
@@ -19,6 +19,7 @@ echo "<pre>";
 echo "\n📊 INFORMACIÓN DEL SERVIDOR:\n";
 echo "PHP Version: " . PHP_VERSION . "\n";
 echo "Server Software: " . $_SERVER['SERVER_SOFTWARE'] . "\n";
+echo "Server Name: " . $_SERVER['SERVER_NAME'] . "\n";
 echo "Document Root: " . $_SERVER['DOCUMENT_ROOT'] . "\n";
 echo "Current Script: " . __FILE__ . "\n";
 
@@ -38,14 +39,14 @@ if (!extension_loaded('pdo') || !extension_loaded('pdo_mysql')) {
 // ========================================
 // 3. DATOS DE CONEXIÓN
 // ========================================
-$host = "192.99.84.47";
+$host = "mawewe.com.ec";  // ✅ Usando dominio
 $db_name = "maweweco_tienda_db";
 $username = "maweweco_admin";
 $password = "Tr~RcW\$bIE(U";
 $port = "3306";
 
 echo "\n🔐 CONFIGURACIÓN DE CONEXIÓN:\n";
-echo "Host: {$host}\n";
+echo "Host: {$host} (usando dominio) ✅\n";
 echo "Puerto: {$port}\n";
 echo "Base de datos: {$db_name}\n";
 echo "Usuario: {$username}\n";
@@ -73,7 +74,7 @@ try {
         ]
     );
     
-    echo "✅ CONEXIÓN EXITOSA!\n\n";
+    echo "✅ CONEXIÓN EXITOSA CON DOMINIO!\n\n";
     
     // ========================================
     // 5. INFORMACIÓN DE LA BASE DE DATOS
@@ -135,6 +136,7 @@ try {
     }
     
     echo "\n✅ TODAS LAS PRUEBAS COMPLETADAS EXITOSAMENTE!\n";
+    echo "\n🎉 CONEXIÓN USANDO DOMINIO mawewe.com.ec FUNCIONANDO PERFECTAMENTE!\n";
     echo "\n🚀 Tu API está lista para funcionar.\n";
     
 } catch (PDOException $e) {
@@ -142,11 +144,12 @@ try {
     echo "Mensaje: " . $e->getMessage() . "\n";
     echo "Código: " . $e->getCode() . "\n";
     echo "\n💡 POSIBLES SOLUCIONES:\n";
-    echo "1. Verifica que el host '192.99.84.47' sea accesible\n";
-    echo "2. Verifica que el puerto 3306 esté abierto\n";
-    echo "3. Verifica que las credenciales sean correctas\n";
-    echo "4. Verifica que el usuario tenga permisos en la base de datos\n";
-    echo "5. Consulta con tu proveedor de hosting\n";
+    echo "1. Verifica que el dominio 'mawewe.com.ec' esté apuntando a tu servidor\n";
+    echo "2. Verifica que el DNS esté propagado correctamente\n";
+    echo "3. Verifica que el puerto 3306 esté abierto\n";
+    echo "4. Verifica que las credenciales sean correctas\n";
+    echo "5. Verifica que el usuario tenga permisos en la base de datos\n";
+    echo "6. Prueba usando 'localhost' en lugar del dominio si estás en el mismo servidor\n";
 }
 
 echo "</pre>";

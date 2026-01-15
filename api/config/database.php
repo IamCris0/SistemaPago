@@ -2,7 +2,7 @@
 /**
  * Configuración de Base de Datos MySQL
  * Mawewe E-commerce
- * ✅ Credenciales verificadas desde phpMyAdmin
+ * ✅ Usando dominio mawewe.com.ec
  */
 
 // Headers CORS
@@ -18,11 +18,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 class Database {
-    // ✅ CREDENCIALES EXACTAS DE TU IMAGEN
-    private $host = "192.99.84.47";
+    // ✅ CONFIGURACIÓN CON DOMINIO
+    private $host = "mawewe.com.ec";        // ✅ Dominio
     private $db_name = "maweweco_tienda_db";
     private $username = "maweweco_admin";
-    private $password = "Tr~RcW\$bIE(U";  // Nota: escapamos el $ con \
+    private $password = "Tr~RcW\$bIE(U";
     private $port = "3306";
     public $conn;
 
@@ -58,7 +58,7 @@ class Database {
                 'success' => false,
                 'message' => 'Error de conexión a la base de datos',
                 'error' => 'No se pudo conectar a MySQL',
-                'details' => $e->getMessage(), // Solo para desarrollo
+                'details' => $e->getMessage(),
                 'config' => [
                     'host' => $this->host,
                     'database' => $this->db_name,
