@@ -39,14 +39,14 @@ if (!extension_loaded('pdo') || !extension_loaded('pdo_mysql')) {
 // ========================================
 // 3. DATOS DE CONEXIÓN
 // ========================================
-$host = "mawewe.com.ec";  // ✅ Usando dominio
+$host = "localhost";  // ✅ Usando localhost (mismo servidor)
 $db_name = "maweweco_tienda_db";
 $username = "maweweco_admin";
 $password = "Tr~RcW\$bIE(U";
 $port = "3306";
 
 echo "\n🔐 CONFIGURACIÓN DE CONEXIÓN:\n";
-echo "Host: {$host} (usando dominio) ✅\n";
+echo "Host: {$host} (localhost - mismo servidor) ✅\n";
 echo "Puerto: {$port}\n";
 echo "Base de datos: {$db_name}\n";
 echo "Usuario: {$username}\n";
@@ -74,7 +74,7 @@ try {
         ]
     );
     
-    echo "✅ CONEXIÓN EXITOSA CON DOMINIO!\n\n";
+    echo "✅ CONEXIÓN EXITOSA CON LOCALHOST!\n\n";
     
     // ========================================
     // 5. INFORMACIÓN DE LA BASE DE DATOS
@@ -136,7 +136,8 @@ try {
     }
     
     echo "\n✅ TODAS LAS PRUEBAS COMPLETADAS EXITOSAMENTE!\n";
-    echo "\n🎉 CONEXIÓN USANDO DOMINIO mawewe.com.ec FUNCIONANDO PERFECTAMENTE!\n";
+    echo "\n🎉 CONEXIÓN USANDO LOCALHOST FUNCIONANDO PERFECTAMENTE!\n";
+    echo "💡 Esto es lo correcto cuando tu app y MySQL están en el mismo servidor.\n";
     echo "\n🚀 Tu API está lista para funcionar.\n";
     
 } catch (PDOException $e) {

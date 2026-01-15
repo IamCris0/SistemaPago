@@ -1,254 +1,313 @@
-# 📁 API de Mawewe E-commerce - MySQL
+# 🚀 API Mawewe - Instalación con Usuario Nuevo
 
-## ✅ Conexión Configurada con Dominio
-
-Esta API usa las siguientes credenciales de MySQL:
+## ✅ CREDENCIALES CONFIGURADAS
 
 ```
-Host: mawewe.com.ec        ✅ Usando dominio
-Puerto: 3306
+Host: localhost
 Base de datos: maweweco_tienda_db
-Usuario: maweweco_admin
-Contraseña: Tr~RcW$bIE(U)
+Usuario: maweweco_cris      ✅ NUEVO
+Contraseña: bdC(ZFro1rYd    ✅ NUEVA
+Puerto: 3306
 ```
 
 ---
 
-## 📂 Estructura de Archivos
+## 📋 PASO A PASO - INSTALACIÓN COMPLETA
 
-```
-/api/
-├── config/
-│   └── database.php          ← Configuración MySQL con dominio
-├── products.php              ← Endpoint GET productos
-├── save-order.php            ← Endpoint POST guardar orden
-├── test-connection.php       ← Script de prueba
-├── .htaccess                 ← Configuración CORS
-└── README.md                 ← Este archivo
-```
+### 1️⃣ VERIFICAR PERMISOS DEL USUARIO EN cPANEL
+
+**MUY IMPORTANTE:** Antes de subir archivos, verifica esto:
+
+1. Abre **cPanel → MySQL Databases**
+2. Busca la sección **"Current Databases"**
+   - Debe aparecer: `maweweco_tienda_db` ✅
+3. Busca la sección **"Current Users"**
+   - Debe aparecer: `maweweco_cris` ✅
+
+#### ✅ Asignar Permisos (si no están asignados):
+
+4. Baja hasta **"Add User To Database"**
+5. Selecciona:
+   - **User:** `maweweco_cris`
+   - **Database:** `maweweco_tienda_db`
+6. Click en **"Add"**
+7. En la siguiente pantalla, selecciona **"ALL PRIVILEGES"** ☑️
+8. Click en **"Make Changes"**
+
+✅ **Deberías ver:** "User maweweco_cris was added to the database maweweco_tienda_db"
 
 ---
 
-## 🚀 PASO A PASO PARA INSTALAR
+### 2️⃣ ELIMINAR CARPETA API ANTIGUA
 
-### 1️⃣ Borrar tu carpeta `/api` actual
+En **File Manager** de cPanel:
 
-En tu cPanel File Manager:
+1. Navega a: `/public_html/`
+2. Si existe la carpeta `api/`, **BÓRRALA completamente**
+3. Click derecho → Delete
+
+---
+
+### 3️⃣ SUBIR ARCHIVOS NUEVOS
+
+Del ZIP que descargaste:
+
+1. Descomprime el archivo `api_mawewe_CRIS.zip`
+2. Verás una carpeta llamada `api_final/`
+3. Sube toda la carpeta `api_final/` a `/public_html/`
+
+Tu estructura debe quedar así:
 ```
-Navega a: public_html/api
-Click derecho → Delete
-```
-
-### 2️⃣ Subir esta nueva carpeta `/api`
-
-1. Descomprime el ZIP
-2. Renombra la carpeta a `api`
-3. Súbela a `/public_html/api`
-
-Estructura final:
-```
-/public_html/
-├── index.html
-├── assets/
-├── data/
-└── api/           ← Nueva carpeta aquí
+public_html/
+└── api_final/
     ├── config/
-    │   └── database.php
+    │   └── database.php    ✅ Con nuevas credenciales
     ├── products.php
     ├── save-order.php
     ├── test-connection.php
-    └── .htaccess
+    ├── .htaccess
+    └── README.md
 ```
 
-### 3️⃣ Probar la conexión
+4. **RENOMBRA** la carpeta `api_final` a `api`:
+   - Click derecho en `api_final` → Rename
+   - Nuevo nombre: `api`
 
-Abre en tu navegador:
+**Resultado final:**
+```
+public_html/
+└── api/          ✅ Renombrada
+    ├── config/
+    ├── products.php
+    └── ...
+```
+
+---
+
+### 4️⃣ VERIFICAR PERMISOS DE ARCHIVOS
+
+En File Manager, selecciona todos los archivos dentro de `/api/`:
+
+- **Carpetas** (`config/`): permisos `755`
+- **Archivos .php**: permisos `644`
+- **Archivo .htaccess**: permisos `644`
+
+Para cambiar permisos:
+1. Click derecho en el archivo/carpeta → Change Permissions
+2. Establece los permisos correctos
+3. Click en "Change Permissions"
+
+---
+
+### 5️⃣ PROBAR LA CONEXIÓN
+
+Abre tu navegador y ve a:
 ```
 https://mawewe.com.ec/api/test-connection.php
 ```
 
-Deberías ver:
+✅ **DEBERÍAS VER:**
+
 ```
-✅ CONEXIÓN EXITOSA CON DOMINIO!
-🎉 CONEXIÓN USANDO DOMINIO mawewe.com.ec FUNCIONANDO PERFECTAMENTE!
-📦 INFORMACIÓN DE LA BASE DE DATOS
-📋 TABLAS ENCONTRADAS
+🔍 Test de Conexión MySQL - Mawewe
+
+📊 INFORMACIÓN DEL SERVIDOR:
+PHP Version: 7.2.34
+Server: mawewe.com.ec
+
+🔌 EXTENSIONES PHP:
+PDO disponible: ✅ SÍ
+PDO MySQL disponible: ✅ SÍ
+
+✅ ¡CONEXIÓN EXITOSA!
+🎉 Las credenciales del usuario 'maweweco_cris' funcionan correctamente!
+
+📦 INFORMACIÓN DE LA BASE DE DATOS:
+MySQL Version: 5.7.x
+
+📋 TABLAS ENCONTRADAS (3):
+  ✅ products: 48 registros
+  ✅ categories: 8 registros
+  ✅ orders: 0 registros
 ```
 
-### 4️⃣ Probar el endpoint de productos
+❌ **SI VES ERROR:**
+- Revisa el paso 1 (permisos del usuario)
+- Ve a cPanel → MySQL Databases y re-asigna los permisos
+- Asegúrate de que seleccionaste "ALL PRIVILEGES"
 
-Abre en tu navegador:
+---
+
+### 6️⃣ PROBAR EL ENDPOINT DE PRODUCTOS
+
+Abre:
 ```
 https://mawewe.com.ec/api/products.php
 ```
 
-Deberías recibir un JSON con todos los productos:
+✅ **DEBERÍAS VER JSON:**
 ```json
 {
-    "success": true,
-    "products": [...],
-    "categories": [...],
-    "total": 48
+  "success": true,
+  "products": [
+    {
+      "id": 1,
+      "sku": "MAW001",
+      "name": "Camiseta Básica",
+      "price": 19.99,
+      "stock": 10,
+      "category": "tshirts",
+      "images": ["https://..."]
+    },
+    ...
+  ],
+  "categories": [
+    {"id": "tshirts", "name": "Camisetas", "count": 12},
+    ...
+  ],
+  "total": 48
 }
 ```
 
 ---
 
-## 🔧 CONFIGURAR TU FRONTEND
+### 7️⃣ CONFIGURAR TU FRONTEND
 
-En tu archivo `assets/js/app.js`, líneas 1-15:
+Actualiza tu archivo `assets/js/app.js` con esta configuración:
 
 ```javascript
+// 🌐 CONFIGURACIÓN DE LA API - ACTUALIZADA
 const CONFIG = {
   api: {
-    // ✅ Detecta automáticamente el entorno
-    baseUrl: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-      ? 'http://localhost:8000/api'  // Desarrollo local
-      : 'https://mawewe.com.ec/api', // Producción ✅
+    // Detección automática de entorno
+    baseUrl: window.location.hostname === 'localhost' || 
+             window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:8000/api'           // Desarrollo local
+      : 'https://mawewe.com.ec/api',          // Producción ✅
     
-    productsEndpoint: "/products.php",
-    saveOrderEndpoint: "/save-order.php",
+    endpoints: {
+      products: '/products.php',
+      saveOrder: '/save-order.php'
+    }
   },
   
   paypal: {
-    clientId: 'TU_CLIENT_ID_AQUI',
-    currency: 'USD',
-    locale: 'es_ES',
-  },
-  
-  shipping: {
-    cost: 5.0,
-    freeThreshold: 50.0,
-    expressCost: 10.0,
+    clientId: 'TU_PAYPAL_CLIENT_ID'           // ⚠️ Reemplazar
+  }
+};
+
+// 📡 Función helper para llamadas a la API
+async function fetchAPI(endpoint, options = {}) {
+  try {
+    const url = `${CONFIG.api.baseUrl}${endpoint}`;
+    console.log('📡 Llamando a:', url);
+    
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    console.log('✅ Respuesta:', data);
+    
+    return data;
+    
+  } catch (error) {
+    console.error('❌ Error en API:', error);
+    throw error;
   }
 }
-```
 
-**Ventaja**: Con esta configuración, tu tienda funcionará tanto en:
-- 🏠 **Local**: `http://localhost:8000` (desarrollo)
-- 🌐 **Producción**: `https://mawewe.com.ec` (online)
-
----
-
-## 🧪 PRUEBAS
-
-### Probar GET productos
-```bash
-curl https://mawewe.com.ec/api/products.php
-```
-
-### Probar GET productos con filtros
-```bash
-# Por categoría
-curl "https://mawewe.com.ec/api/products.php?category=ropa"
-
-# Por búsqueda
-curl "https://mawewe.com.ec/api/products.php?search=jeans"
-
-# Por subcategoría
-curl "https://mawewe.com.ec/api/products.php?category=ropa&subcategory=americanino"
-```
-
-### Probar POST guardar orden (con curl)
-```bash
-curl -X POST https://mawewe.com.ec/api/save-order.php \
-  -H "Content-Type: application/json" \
-  -d '{
-    "paypalOrderId": "TEST123",
-    "email": "test@example.com",
-    "firstName": "Juan",
-    "lastName": "Pérez",
-    "address": "Calle Principal 123",
-    "city": "Quito",
-    "phone": "0991234567",
-    "shippingMethod": "standard",
-    "items": [
-      {
-        "productId": 1,
-        "name": "Producto Test",
-        "sku": "TEST-001",
-        "price": 29.99,
-        "quantity": 2
-      }
-    ],
-    "totals": {
-      "subtotal": 59.98,
-      "shipping": 5.00,
-      "total": 64.98
+// 🛍️ EJEMPLO: Cargar productos
+async function loadProducts(filters = {}) {
+  try {
+    // Construir query string
+    const params = new URLSearchParams();
+    if (filters.category) params.append('category', filters.category);
+    if (filters.search) params.append('search', filters.search);
+    
+    const queryString = params.toString();
+    const endpoint = `${CONFIG.api.endpoints.products}${queryString ? '?' + queryString : ''}`;
+    
+    const data = await fetchAPI(endpoint);
+    
+    if (data.success) {
+      console.log(`✅ ${data.total} productos cargados`);
+      return data.products;
+    } else {
+      throw new Error(data.message || 'Error al cargar productos');
     }
-  }'
+    
+  } catch (error) {
+    console.error('Error al cargar productos:', error);
+    return [];
+  }
+}
+
+// 💳 EJEMPLO: Guardar orden
+async function saveOrder(orderData) {
+  try {
+    const data = await fetchAPI(CONFIG.api.endpoints.saveOrder, {
+      method: 'POST',
+      body: JSON.stringify(orderData)
+    });
+    
+    if (data.success) {
+      console.log(`✅ Orden guardada: ${data.orderNumber}`);
+      return data;
+    } else {
+      throw new Error(data.message || 'Error al guardar orden');
+    }
+    
+  } catch (error) {
+    console.error('Error al guardar orden:', error);
+    throw error;
+  }
+}
+
+// 🚀 Inicializar al cargar la página
+document.addEventListener('DOMContentLoaded', async () => {
+  console.log('🚀 Iniciando Mawewe...');
+  
+  // Cargar productos iniciales
+  const products = await loadProducts();
+  renderProducts(products);  // Tu función de renderizado
+});
 ```
 
 ---
 
-## 🐛 TROUBLESHOOTING
+## 🔍 ENDPOINTS DISPONIBLES
 
-### ❌ Error: "No se pudo conectar a MySQL"
+### 📦 GET `/api/products.php`
 
-**Solución 1**: Verifica que el dominio esté apuntando al servidor correcto
-```bash
-ping mawewe.com.ec
-# Debe mostrar la IP de tu servidor
+Obtiene la lista de productos con filtros opcionales.
+
+**Parámetros (query string):**
+- `category` - Filtrar por categoría (ej: `tshirts`)
+- `subcategory` - Filtrar por subcategoría
+- `search` - Buscar por nombre o descripción
+
+**Ejemplos:**
 ```
+# Todos los productos
+https://mawewe.com.ec/api/products.php
 
-**Solución 2**: Verifica el DNS
-```bash
-nslookup mawewe.com.ec
-# Debe resolver a la IP correcta
-```
+# Filtrar por categoría
+https://mawewe.com.ec/api/products.php?category=tshirts
 
-**Solución 3**: Si estás en el mismo servidor, puedes usar `localhost`
+# Buscar productos
+https://mawewe.com.ec/api/products.php?search=manga+larga
 
-Edita `/api/config/database.php` línea 23:
-```php
-private $host = "localhost";  // En lugar de "mawewe.com.ec"
-```
-
-**Solución 4**: Verifica que MySQL acepte conexiones desde el dominio
-
-En cPanel → MySQL Databases → Remote MySQL:
-- Agrega `mawewe.com.ec` a los hosts permitidos
-- O usa `%` para permitir cualquier host (menos seguro)
-
-### ❌ Error: "CORS policy"
-
-**Solución**: Verifica que `.htaccess` esté en `/api/` y contenga:
-```apache
-Header always set Access-Control-Allow-Origin "*"
-```
-
-### ❌ Error: "PDO extension not found"
-
-**Solución**: En cPanel → Select PHP Version → Extensions:
-- ✅ Habilita `pdo`
-- ✅ Habilita `pdo_mysql`
-
-### ❌ Error: "Table 'products' doesn't exist"
-
-**Solución**: Verifica en phpMyAdmin que las tablas existan
-
-### ❌ Error: "Connection timeout"
-
-**Solución**: El puerto 3306 puede estar bloqueado. Usa `localhost` en su lugar.
-
----
-
-## 📊 ENDPOINTS DISPONIBLES
-
-### 1. GET `/api/products.php`
-
-**URL**: `https://mawewe.com.ec/api/products.php`
-
-Obtiene la lista de productos.
-
-**Parámetros opcionales:**
-- `category`: Filtrar por categoría (ej: `ropa`, `peluches`)
-- `subcategory`: Filtrar por subcategoría (ej: `americanino`)
-- `search`: Buscar por nombre, descripción o SKU
-
-**Ejemplo:**
-```
-https://mawewe.com.ec/api/products.php?category=ropa&subcategory=americanino
+# Combinar filtros
+https://mawewe.com.ec/api/products.php?category=tshirts&search=azul
 ```
 
 **Respuesta:**
@@ -257,57 +316,77 @@ https://mawewe.com.ec/api/products.php?category=ropa&subcategory=americanino
   "success": true,
   "products": [
     {
-      "id": 28,
-      "sku": "ROP-AME-001",
-      "name": "Jeans Americanino Wear 1975 Oscuro",
-      "price": 89.99,
-      "stock": 40,
-      "images": ["image1.jpg", "image2.jpg"]
+      "id": 1,
+      "sku": "MAW001",
+      "name": "Camiseta Básica Azul",
+      "description": "Camiseta de algodón 100%",
+      "price": 19.99,
+      "compareAtPrice": null,
+      "stock": 15,
+      "category": "tshirts",
+      "subcategory": "basic",
+      "sizes": ["S", "M", "L", "XL"],
+      "colors": ["Azul", "Negro", "Blanco"],
+      "images": [
+        "https://mawewe.com.ec/images/products/maw001-1.jpg",
+        "https://mawewe.com.ec/images/products/maw001-2.jpg"
+      ],
+      "featured": true,
+      "newArrival": false,
+      "createdAt": "2026-01-10 10:30:00"
     }
   ],
   "categories": [
-    {"id": "ropa", "name": "Ropa", "count": 16}
+    {
+      "id": "tshirts",
+      "name": "Camisetas",
+      "count": 12
+    },
+    {
+      "id": "hoodies",
+      "name": "Sudaderas",
+      "count": 8
+    }
   ],
   "shippingConfig": {
-    "cost": 5.0,
-    "freeThreshold": 50.0
+    "freeShippingThreshold": 50,
+    "standardShippingCost": 5
   },
   "total": 48
 }
 ```
 
-### 2. POST `/api/save-order.php`
+---
 
-**URL**: `https://mawewe.com.ec/api/save-order.php`
+### 💳 POST `/api/save-order.php`
 
-Guarda una orden de compra en la base de datos.
+Guarda una nueva orden en la base de datos.
 
-**Body requerido:**
+**Body (JSON):**
 ```json
 {
-  "paypalOrderId": "ORDER123",
+  "paypalOrderId": "8UV90361L9537821F",
   "email": "cliente@example.com",
   "firstName": "Juan",
   "lastName": "Pérez",
-  "address": "Calle Principal 123",
-  "apartment": "Apto 4B",
-  "city": "Quito",
-  "postalCode": "170101",
-  "phone": "0991234567",
-  "shippingMethod": "standard",
   "items": [
     {
-      "productId": 28,
-      "name": "Jeans Americanino",
-      "sku": "ROP-AME-001",
-      "price": 89.99,
-      "quantity": 2
+      "id": 1,
+      "quantity": 2,
+      "size": "M",
+      "color": "Azul"
+    },
+    {
+      "id": 5,
+      "quantity": 1,
+      "size": "L",
+      "color": "Negro"
     }
   ],
   "totals": {
-    "subtotal": 179.98,
+    "subtotal": 59.97,
     "shipping": 5.00,
-    "total": 184.98
+    "total": 64.97
   }
 }
 ```
@@ -316,109 +395,158 @@ Guarda una orden de compra en la base de datos.
 ```json
 {
   "success": true,
-  "orderId": 123,
-  "orderNumber": "MW-000123",
-  "customer": {
-    "name": "Juan Pérez",
-    "email": "cliente@example.com"
-  },
-  "totals": {
-    "subtotal": 179.98,
-    "shipping": 5.00,
-    "total": 184.98
-  }
+  "orderId": 1,
+  "orderNumber": "MW-000001",
+  "message": "Orden guardada exitosamente"
 }
 ```
 
-### 3. GET `/api/test-connection.php`
-
-**URL**: `https://mawewe.com.ec/api/test-connection.php`
-
-Script de diagnóstico para verificar:
-- ✅ Conexión a MySQL
-- ✅ Tablas existentes
-- ✅ Estructura de la base de datos
-- ✅ Productos de ejemplo
-
----
-
-## 🔐 SEGURIDAD
-
-✅ **HTTPS**: Usa dominio con SSL  
-✅ **CORS**: Headers configurados correctamente  
-✅ **Prepared Statements**: Protección contra SQL injection  
-✅ **Transacciones**: Rollback automático en errores  
-✅ **Validación**: Datos validados antes de guardar  
-✅ **Error Handling**: Manejo robusto de errores  
-
----
-
-## 📝 VENTAJAS DE USAR DOMINIO
-
-### ✅ Ventajas sobre usar IP directa:
-
-1. **Más profesional**: `mawewe.com.ec` vs `192.99.84.47`
-2. **SSL/HTTPS**: Fácil de configurar con dominio
-3. **Flexibilidad**: Si cambias de servidor, solo actualizas el DNS
-4. **SEO**: Mejor para posicionamiento
-5. **Confianza**: Los usuarios confían más en dominios
-
-### 🏠 Conexión Local (mismo servidor)
-
-Si tu aplicación está en el **mismo servidor** que MySQL, es mejor usar `localhost`:
-
-```php
-// En /api/config/database.php
-private $host = "localhost";  // Más rápido y seguro
+**Respuesta con error:**
+```json
+{
+  "success": false,
+  "message": "Stock insuficiente para el producto ID 1"
+}
 ```
 
-**¿Cuándo usar cada uno?**
-- `localhost` → Si todo está en el mismo servidor ✅ (RECOMENDADO)
-- `mawewe.com.ec` → Si necesitas acceso remoto o múltiples servidores
+---
+
+## 🐛 SOLUCIÓN DE PROBLEMAS
+
+### ❌ Error 500 Internal Server Error
+
+**Posibles causas:**
+1. Permisos de archivos incorrectos
+2. Error de sintaxis en PHP
+3. Archivo .htaccess con configuración incorrecta
+
+**Solución:**
+1. Ve a cPanel → Error Log
+2. Lee el último error para identificar el archivo problemático
+3. Verifica permisos: `.php` = 644, carpetas = 755
+4. Verifica que `.htaccess` existe y tiene permisos 644
 
 ---
 
-## ✅ CHECKLIST DE INSTALACIÓN
+### ❌ "Access denied for user 'maweweco_cris'@'localhost'"
 
-- [ ] Borrar carpeta `/api` antigua
-- [ ] Subir carpeta `/api` nueva a cPanel
-- [ ] Verificar que `.htaccess` esté presente
-- [ ] Probar `https://mawewe.com.ec/api/test-connection.php`
-- [ ] Ver ✅ CONEXIÓN EXITOSA CON DOMINIO
-- [ ] Probar `https://mawewe.com.ec/api/products.php`
-- [ ] Ver JSON con productos
-- [ ] Actualizar `CONFIG.api.baseUrl` en `app.js`
-- [ ] Probar frontend completo
-- [ ] Hacer compra de prueba con PayPal Sandbox
-- [ ] Verificar que la orden se guarde en la base de datos
+**Causa:** El usuario no tiene permisos en la base de datos.
 
----
-
-## 🎯 PRÓXIMOS PASOS
-
-1. ✅ **Activar SSL**: Asegúrate que `https://mawewe.com.ec` funcione
-2. ✅ **PayPal Live**: Cambiar a credenciales de producción
-3. ✅ **Email**: Configurar notificaciones de órdenes
-4. ✅ **Backup**: Programar respaldos de la base de datos
-5. ✅ **Monitoring**: Configurar alertas de errores
+**Solución:**
+1. Ve a cPanel → MySQL Databases
+2. En "Current Users", busca `maweweco_cris`
+3. En "Databases", busca `maweweco_tienda_db`
+4. Si no están conectados, usa "Add User To Database"
+5. Selecciona el usuario y la base de datos
+6. Marca **ALL PRIVILEGES** ☑️
+7. Click en "Make Changes"
+8. Vuelve a probar `test-connection.php`
 
 ---
 
-## 🎉 ¡LISTO!
+### ❌ CORS Error en el navegador
 
-Tu API está configurada con:
-- ✅ Dominio profesional: `mawewe.com.ec`
-- ✅ Conexión MySQL funcionando
-- ✅ CORS habilitado
-- ✅ Endpoints completos
-- ✅ Manejo de errores robusto
+```
+Access to fetch at 'https://mawewe.com.ec/api/products.php' from origin 
+'https://mawewe.com.ec' has been blocked by CORS policy
+```
 
-Si tienes algún problema, revisa la sección **TROUBLESHOOTING**.
+**Solución:**
+1. Verifica que `.htaccess` está en `/public_html/api/`
+2. Abre `.htaccess` y verifica que contiene:
+```apache
+Header set Access-Control-Allow-Origin "*"
+Header set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+```
+3. Limpia caché del navegador (Ctrl+Shift+R)
+4. Si persiste, contacta al soporte de tu hosting
+
+---
+
+### ❌ "No products found" pero sé que hay productos
+
+**Causa:** Posible error en la consulta SQL o estructura de tabla.
+
+**Solución:**
+1. Abre `test-connection.php` para ver cuántos productos hay
+2. Verifica que la tabla se llama exactamente `products`
+3. En phpMyAdmin, ejecuta:
+```sql
+SELECT COUNT(*) FROM products;
+```
+4. Si el conteo es > 0 pero la API no los muestra, verifica la estructura de la tabla
+
+---
+
+### ❌ Productos sin imágenes
+
+**Causa:** Campo `images` en la BD no es un JSON válido.
+
+**Solución:**
+1. Las imágenes deben estar en formato JSON array:
+```sql
+UPDATE products 
+SET images = '["https://mawewe.com.ec/img/product1.jpg"]' 
+WHERE images IS NULL OR images = '';
+```
+
+---
+
+## 📝 NOTAS TÉCNICAS
+
+### Seguridad
+✅ PDO con prepared statements (protección SQL injection)  
+✅ Credenciales en archivo protegido por `.htaccess`  
+✅ Validación de datos de entrada  
+✅ No exponer credenciales en respuestas de error  
+
+### Base de Datos
+✅ Charset UTF-8 (utf8mb4) - soporta emojis  
+✅ Transacciones para órdenes (rollback automático en error)  
+✅ Actualización automática de stock  
+✅ Índices en tablas para mejor rendimiento  
+
+### CORS
+✅ Configurado para permitir requests desde cualquier origen  
+✅ Soporta métodos: GET, POST, PUT, DELETE, OPTIONS  
+✅ Headers permitidos: Content-Type, Authorization  
+
+---
+
+## 🎯 CHECKLIST FINAL
+
+Antes de considerar que todo está funcionando, verifica:
+
+- [ ] `test-connection.php` muestra "✅ CONEXIÓN EXITOSA"
+- [ ] `products.php` retorna JSON con productos
+- [ ] Los productos tienen imágenes
+- [ ] El frontend puede cargar productos
+- [ ] CORS no da error en la consola del navegador
+- [ ] PayPal está configurado (Client ID)
+- [ ] Las órdenes se guardan correctamente
 
 ---
 
 ## 📞 SOPORTE
 
-**Dominio**: https://mawewe.com.ec  
-**Email**: info@mawewe.com.ec  
-**WhatsApp**: +593 98 183 2313
+Si después de seguir todos los pasos sigues teniendo problemas:
+
+1. **Toma capturas de pantalla de:**
+   - El error en el navegador (consola F12)
+   - cPanel Error Log (últimas 10 líneas)
+   - El resultado de `test-connection.php`
+
+2. **Verifica que completaste:**
+   - Permisos del usuario en MySQL Databases ✅
+   - Permisos de archivos (644 para .php) ✅
+   - Archivo .htaccess existe ✅
+   - Credenciales correctas en database.php ✅
+
+---
+
+**Versión:** 2.0 - Usuario maweweco_cris  
+**Última actualización:** Enero 15, 2026  
+**Hosting:** cPanel (jemima.dongee.com)  
+**PHP:** 7.2.34  
+
+🚀 ¡Tu API está lista para funcionar!

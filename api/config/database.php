@@ -18,11 +18,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 class Database {
-    // ✅ CONFIGURACIÓN CON DOMINIO
-    private $host = "mawewe.com.ec";        // ✅ Dominio
+    // ✅ CREDENCIALES ACTUALIZADAS - Usuario: maweweco_cris
+    private $host = "localhost";              // ✅ localhost (más rápido y seguro)
     private $db_name = "maweweco_tienda_db";
-    private $username = "maweweco_admin";
-    private $password = "Tr~RcW\$bIE(U";
+    private $username = "maweweco_cris";      // ✅ Nuevo usuario que funciona
+    private $password = "bdC(ZFro1rYd";       // ✅ Nueva contraseña
     private $port = "3306";
     public $conn;
 
