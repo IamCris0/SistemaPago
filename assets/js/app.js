@@ -9,7 +9,11 @@
 // ==============================================
 const CONFIG = {
   api: {
-    productsUrl: './data/products.json'
+    baseUrl: window.location.hostname === '192.99.84.47' 
+      ? 'http://192.99.84.47/api'  
+      : 'https://sistema-pago.vercel.app/',  // ← CAMBIAR AQUÍ
+    productsEndpoint: '/products.php',
+    saveOrderEndpoint: '/save-order.php'
   },
   paypal: {
     clientId: 'AeKUZVm_-yxZRjygolPx21RgDuy3_K24uOrKWf3MpLAG8xErNCyu4S2GcIu27tJclkpabpv0HXAeBgrg',
