@@ -1,12 +1,3 @@
-/**
- * MAWEWE E-COMMERCE - PROFESSIONAL VERSION 3.0
- * With PayPal Fixed, Enhanced Product Details & Premium Design
- * Version: 3.0
- */
-
-// ==============================================
-// CONFIGURATION
-// ==============================================
 const CONFIG = {
   api: {
     productsUrl: './data/products.json'
