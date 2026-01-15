@@ -1,45 +1,19 @@
 const CONFIG = {
   api: {
-    // ✅ CONFIGURACIÓN ACTUALIZADA CON TUS URLs REALES
-    baseUrl: (() => {
-      const hostname = window.location.hostname;
-      const protocol = window.location.protocol;
-      
-      // Desarrollo local
-      if (hostname === "localhost" || hostname === "127.0.0.1") {
-        return "http://localhost:3000/api";
-      }
-      
-      // Producción en Vercel
-      if (hostname.includes("vercel.app") || hostname.includes("sistema-pago")) {
-        return "https://sistema-pago.vercel.app/api";
-      }
-      
-      // IP del servidor cPanel (192.99.84.47)
-      if (hostname === "192.99.84.47") {
-        return "http://192.99.84.47/api";
-      }
-      
-      // Dominio personalizado (cuando lo tengas)
-      return `${protocol}//${hostname}/api`;
-    })(),
-    
+    baseUrl: "http://192.99.84.47/api",  // ← USA EL API REMOTO
     productsEndpoint: "/products.php",
     saveOrderEndpoint: "/save-order.php",
   },
-  
   paypal: {
     clientId: "AeKUZVm_-yxZRjygolPx21RgDuy3_K24uOrKWf3MpLAG8xErNCyu4S2GcIu27tJclkpabpv0HXAeBgrg",
     currency: "USD",
     locale: "es_ES",
   },
-  
   shipping: {
     cost: 5.0,
     freeThreshold: 50.0,
     expressCost: 10.0,
   },
-  
   storage: {
     cartKey: "mawewe_cart_v3",
     checkoutKey: "mawewe_checkout_data_v3",

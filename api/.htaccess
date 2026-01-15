@@ -1,0 +1,30 @@
+# .htaccess para habilitar CORS en API
+# Colocar en: public_html/api/.htaccess
+
+# Habilitar CORS para todas las peticiones
+<IfModule mod_headers.c>
+    # Permitir peticiones desde cualquier origen
+    Header always set Access-Control-Allow-Origin "*"
+    
+    # Métodos HTTP permitidos
+    Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    
+    # Headers permitidos en las peticiones
+    Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+    
+    # Permitir credenciales
+    Header always set Access-Control-Allow-Credentials "true"
+    
+    # Cache de preflight por 1 hora
+    Header always set Access-Control-Max-Age "3600"
+</IfModule>
+
+# Responder automáticamente a OPTIONS (preflight)
+RewriteEngine On
+RewriteCond %{REQUEST_METHOD} OPTIONS
+RewriteRule ^(.*)$ $1 [R=200,L]
+
+# Habilitar PHP
+<Files "*.php">
+    SetHandler application/x-httpd-php
+</Files>
