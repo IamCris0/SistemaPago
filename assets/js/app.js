@@ -1,91 +1,29 @@
-// 🌐 CONFIGURACIÓN API - MAWEWE
 const CONFIG = {
   api: {
-    baseUrl: window.location.hostname === 'localhost' || 
-             window.location.hostname === '127.0.0.1'
-      ? 'http://localhost:3000/api'
-      : 'https://mawewe.com.ec/api',    // ✅ Tu API funcional
+    // ✅ SIEMPRE USA PRODUCCIÓN
+    baseUrl: 'https://mawewe.com.ec/api',
+    
     endpoints: {
       products: '/products.php',
       saveOrder: '/save-order.php'
     }
+  },
+  
+  paypal: {
+    clientId: 'AeKUZVm_-yxZRjygolPx21RgDuy3_K24uOrKWf3MpLAG8xErNCyu4S2GcIu27tJclkpabpv0HXAeBgrg',
+    currency: 'USD',
+    intent: 'capture',
+    locale: 'es_ES'
+  },
+  
+  shipping: {
+    cost: 5.00,
+    freeThreshold: 50.00,
+    expressCost: 10.00
   }
 };
 
-// 📡 Función para llamar a la API
-async function fetchAPI(endpoint, options = {}) {
-  try {
-    const url = `${CONFIG.api.baseUrl}${endpoint}`;
-    
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('❌ API Error:', error);
-    throw error;
-  }
-}
-
-// 🛍️ Cargar productos
-async function loadProducts(filters = {}) {
-  try {
-    const params = new URLSearchParams();
-    if (filters.category) params.append('category', filters.category);
-    if (filters.search) params.append('search', filters.search);
-    
-    const endpoint = `${CONFIG.api.endpoints.products}${params.toString() ? '?' + params.toString() : ''}`;
-    const data = await fetchAPI(endpoint);
-    
-    if (data.success) {
-      console.log(`✅ ${data.total} productos cargados`);
-      return data.products;
-    }
-  } catch (error) {
-    console.error('Error al cargar productos:', error);
-    return [];
-  }
-}
-
-// 💳 Guardar orden (después del pago de PayPal)
-async function saveOrder(orderData) {
-  try {
-    const data = await fetchAPI(CONFIG.api.endpoints.saveOrder, {
-      method: 'POST',
-      body: JSON.stringify(orderData)
-    });
-    
-    if (data.success) {
-      console.log(`✅ Orden ${data.orderNumber} guardada`);
-      return data;
-    } else {
-      throw new Error(data.message);
-    }
-  } catch (error) {
-    console.error('Error al guardar orden:', error);
-    throw error;
-  }
-}
-
-// 🚀 Inicializar
-document.addEventListener('DOMContentLoaded', async () => {
-  console.log('🚀 Cargando Mawewe...');
-  
-  // Cargar todos los productos
-  const products = await loadProducts();
-  
-  // Aquí renderizas tus productos en el DOM
-  renderProducts(products);
-});
+console.log('🚀 API URL:', CONFIG.api.baseUrl);
 
 // Agregar console.log para debug
 console.log("🔧 API Base URL:", CONFIG.api.baseUrl);
