@@ -1,8 +1,9 @@
 /**
- * MAWEWE E-COMMERCE - VERSIÓN CORREGIDA
- * ✅ Imágenes en grid principal
+ * MAWEWE E-COMMERCE - VERSIÓN CORREGIDA CON MODAL Y CARRUSEL
+ * ✅ Imágenes visibles en grid principal
+ * ✅ Sin spinner de carga molesto
+ * ✅ Modal de detalles con carrusel de 3 imágenes
  * ✅ Orden correcto de categorías
- * ✅ Sin badge "Destacado"
  * ✅ Sistema de stock funcional
  */
 
@@ -305,11 +306,172 @@ const ui = {
     }, 3000);
   },
   
+  // ✅ FUNCIÓN DE LOADING MEJORADA - NO MOLESTA
   showLoading(show = true) {
-    const spinner = document.getElementById('loading-spinner');
-    if (spinner) {
-      spinner.style.display = show ? 'flex' : 'none';
+    // Ya no mostramos el spinner global molesto
+    // Solo cambiamos el cursor si es necesario
+    if (show) {
+      document.body.style.cursor = 'wait';
+    } else {
+      document.body.style.cursor = '';
     }
+  }
+};
+
+// =============================================================================
+// PRODUCT MODAL CON CARRUSEL
+// =============================================================================
+
+const productModal = {
+  currentImageIndex: 0,
+  currentProduct: null,
+  
+  show(productId) {
+    const product = state.products.find(p => p.id === productId);
+    if (!product) return;
+    
+    this.currentProduct = product;
+    this.currentImageIndex = 0;
+    
+    // Obtener las 3 imágenes (o repetir la principal si solo hay una)
+    const images = product.images && Array.isArray(product.images) && product.images.length > 0
+      ? product.images.slice(0, 3)
+      : [product.image, product.image, product.image];
+    
+    // Crear modal
+    const modal = document.createElement('div');
+    modal.className = 'product-modal-overlay';
+    modal.id = 'product-detail-modal';
+    modal.innerHTML = `
+      <div class="product-modal">
+        <button class="modal-close" onclick="productModal.close()">&times;</button>
+        
+        <div class="modal-content">
+          <!-- Sección de imágenes con carrusel -->
+          <div class="modal-image-section">
+            <div class="modal-main-image">
+              <img id="modal-main-img" src="${images[0]}" alt="${product.name}">
+              
+              <!-- Botones de navegación del carrusel -->
+              <button class="modal-carousel-btn prev" onclick="productModal.prevImage()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </button>
+              <button class="modal-carousel-btn next" onclick="productModal.nextImage()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
+            
+            <!-- Miniaturas -->
+            <div class="modal-thumbnails">
+              ${images.map((img, index) => `
+                <img 
+                  src="${img}" 
+                  alt="${product.name} - imagen ${index + 1}"
+                  class="thumbnail ${index === 0 ? 'active' : ''}"
+                  onclick="productModal.selectImage(${index})"
+                >
+              `).join('')}
+            </div>
+          </div>
+          
+          <!-- Información del producto -->
+          <div class="modal-info">
+            <div class="product-category">${product.category}</div>
+            ${product.subcategory ? `<div class="product-subcategory">${product.subcategory.toUpperCase()}</div>` : ''}
+            
+            <h2 class="modal-title">${product.name}</h2>
+            <div class="modal-price">$${Number(product.price).toFixed(2)}</div>
+            
+            <p class="modal-description">${product.description}</p>
+            
+            <div class="product-details-list">
+              <h3>Detalles del Producto</h3>
+              <ul>
+                <li><strong>SKU:</strong> ${product.sku}</li>
+                <li><strong>Stock disponible:</strong> ${product.stock} unidades</li>
+                <li><strong>Categoría:</strong> ${product.category}</li>
+                ${product.subcategory ? `<li><strong>Subcategoría:</strong> ${product.subcategory}</li>` : ''}
+              </ul>
+            </div>
+            
+            <div class="modal-actions">
+              <button 
+                class="btn-add-to-cart-large" 
+                onclick="cart.addItem(${product.id}); productModal.close();"
+                ${product.stock === 0 ? 'disabled' : ''}
+              >
+                ${product.stock === 0 ? 'Sin Stock' : 'Agregar al Carrito'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    document.body.style.overflow = 'hidden';
+    
+    // Cerrar al hacer clic fuera
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        this.close();
+      }
+    });
+  },
+  
+  close() {
+    const modal = document.getElementById('product-detail-modal');
+    if (modal) {
+      modal.remove();
+      document.body.style.overflow = '';
+    }
+    this.currentProduct = null;
+    this.currentImageIndex = 0;
+  },
+  
+  selectImage(index) {
+    if (!this.currentProduct) return;
+    
+    const images = this.currentProduct.images && Array.isArray(this.currentProduct.images) && this.currentProduct.images.length > 0
+      ? this.currentProduct.images.slice(0, 3)
+      : [this.currentProduct.image, this.currentProduct.image, this.currentProduct.image];
+    
+    this.currentImageIndex = index;
+    const mainImg = document.getElementById('modal-main-img');
+    if (mainImg) {
+      mainImg.src = images[index];
+    }
+    
+    // Actualizar miniaturas activas
+    document.querySelectorAll('.modal-thumbnails .thumbnail').forEach((thumb, i) => {
+      thumb.classList.toggle('active', i === index);
+    });
+  },
+  
+  nextImage() {
+    if (!this.currentProduct) return;
+    
+    const images = this.currentProduct.images && Array.isArray(this.currentProduct.images) && this.currentProduct.images.length > 0
+      ? this.currentProduct.images.slice(0, 3)
+      : [this.currentProduct.image, this.currentProduct.image, this.currentProduct.image];
+    
+    this.currentImageIndex = (this.currentImageIndex + 1) % images.length;
+    this.selectImage(this.currentImageIndex);
+  },
+  
+  prevImage() {
+    if (!this.currentProduct) return;
+    
+    const images = this.currentProduct.images && Array.isArray(this.currentProduct.images) && this.currentProduct.images.length > 0
+      ? this.currentProduct.images.slice(0, 3)
+      : [this.currentProduct.image, this.currentProduct.image, this.currentProduct.image];
+    
+    this.currentImageIndex = (this.currentImageIndex - 1 + images.length) % images.length;
+    this.selectImage(this.currentImageIndex);
   }
 };
 
@@ -337,7 +499,7 @@ const render = {
     
     grid.innerHTML = products.map(product => `
       <article class="product-card" data-product-id="${product.id}">
-        <div class="product-image-container">
+        <div class="product-image-container" onclick="productModal.show(${product.id})" style="cursor: pointer;">
           <div class="product-carousel">
             <img src="${product.image}" alt="${product.name}" class="product-image" loading="lazy">
           </div>
@@ -349,7 +511,7 @@ const render = {
           <p class="product-description">${product.description.substring(0, 80)}...</p>
           
           <div class="product-footer">
-            <span class="product-price">$${product.price.toFixed(2)}</span>
+            <span class="product-price">$${Number(product.price).toFixed(2)}</span>
             <button 
               class="btn-add-to-cart" 
               onclick="cart.addItem(${product.id})"
@@ -368,6 +530,10 @@ const render = {
                   : `${product.stock} disponibles`
             }
           </div>
+          
+          <button class="btn-details" onclick="productModal.show(${product.id})">
+            Ver detalles
+          </button>
         </div>
       </article>
     `).join('');
@@ -515,6 +681,7 @@ const filters = {
   },
   
   apply() {
+    // ✅ NO MOSTRAR SPINNER MOLESTO
     ui.showLoading(true);
     
     api.fetchProducts({
@@ -565,6 +732,7 @@ async function init() {
   console.log('🌐 API URL:', CONFIG.api.baseUrl);
   
   try {
+    // ✅ NO MOSTRAR SPINNER MOLESTO
     ui.showLoading(true);
     
     const data = await api.fetchProducts();
@@ -634,6 +802,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
+  // Cerrar modal con ESC
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      productModal.close();
+    }
+  });
+  
   init();
 });
 
@@ -649,5 +824,7 @@ window.mawewe = {
   state,
   CONFIG
 };
+
+window.productModal = productModal;
 
 console.log('✅ Mawewe script loaded');

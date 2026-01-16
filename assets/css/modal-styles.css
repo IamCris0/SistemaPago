@@ -1,0 +1,350 @@
+/* ==============================================
+   ESTILOS ADICIONALES PARA MODAL DE PRODUCTO
+   Modal mejorado con carrusel de imágenes
+   ============================================== */
+
+/* ============================================== 
+   PRODUCT MODAL CON CARRUSEL 
+   ============================================== */
+
+.product-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 1500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.product-modal {
+  background-color: white;
+  border-radius: var(--radius-2xl);
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: var(--shadow-3xl);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-close {
+  position: absolute;
+  top: var(--spacing-lg);
+  right: var(--spacing-lg);
+  width: 40px;
+  height: 40px;
+  border: none;
+  background-color: white;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-2xl);
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: var(--shadow-lg);
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-700);
+}
+
+.modal-close:hover {
+  background-color: var(--error);
+  color: white;
+  transform: rotate(90deg);
+}
+
+.modal-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-2xl);
+  padding: var(--spacing-2xl);
+}
+
+/* ============================================== 
+   SECCIÓN DE IMÁGENES CON CARRUSEL
+   ============================================== */
+
+.modal-image-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.modal-main-image {
+  position: relative;
+  width: 100%;
+  padding-top: 100%; /* Aspecto 1:1 */
+  background-color: var(--gray-100);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+.modal-main-image img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.3s ease;
+}
+
+/* Botones del carrusel en el modal */
+.modal-carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  z-index: 10;
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-carousel-btn:hover {
+  background: white;
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: var(--shadow-xl);
+}
+
+.modal-carousel-btn.prev {
+  left: 16px;
+}
+
+.modal-carousel-btn.next {
+  right: 16px;
+}
+
+.modal-carousel-btn svg {
+  width: 24px;
+  height: 24px;
+  color: var(--gray-700);
+}
+
+/* Miniaturas */
+.modal-thumbnails {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-sm);
+}
+
+.modal-thumbnails .thumbnail {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: all var(--transition-fast);
+  opacity: 0.6;
+}
+
+.modal-thumbnails .thumbnail:hover {
+  opacity: 1;
+  border-color: var(--primary-200);
+  transform: scale(1.05);
+}
+
+.modal-thumbnails .thumbnail.active {
+  opacity: 1;
+  border-color: var(--primary-600);
+  box-shadow: var(--shadow-md);
+}
+
+/* ============================================== 
+   INFORMACIÓN DEL PRODUCTO EN MODAL
+   ============================================== */
+
+.modal-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.modal-title {
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  color: var(--gray-900);
+  line-height: 1.3;
+}
+
+.modal-price {
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-4xl);
+  font-weight: 700;
+  color: var(--primary-800);
+}
+
+.modal-description {
+  font-size: var(--font-size-base);
+  color: var(--gray-700);
+  line-height: 1.7;
+}
+
+.product-details-list {
+  background-color: var(--gray-50);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  margin-top: var(--spacing-md);
+}
+
+.product-details-list h3 {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  margin-bottom: var(--spacing-md);
+  color: var(--gray-900);
+}
+
+.product-details-list ul {
+  list-style: none;
+}
+
+.product-details-list li {
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid var(--gray-200);
+  font-size: var(--font-size-sm);
+  color: var(--gray-700);
+}
+
+.product-details-list li:last-child {
+  border-bottom: none;
+}
+
+.product-details-list strong {
+  color: var(--gray-900);
+  font-weight: 600;
+}
+
+.modal-actions {
+  margin-top: var(--spacing-lg);
+}
+
+.btn-add-to-cart-large {
+  width: 100%;
+  padding: var(--spacing-lg);
+  background: linear-gradient(135deg, var(--primary-800) 0%, var(--primary-600) 100%);
+  color: white;
+  border: none;
+  border-radius: var(--radius-xl);
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-add-to-cart-large:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl);
+}
+
+.btn-add-to-cart-large:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ============================================== 
+   OCULTAR SPINNER DE CARGA MOLESTO
+   ============================================== */
+
+#loading-spinner {
+  display: none !important;
+}
+
+/* ============================================== 
+   RESPONSIVE PARA MODAL
+   ============================================== */
+
+@media (max-width: 1024px) {
+  .modal-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal-main-image {
+    padding-top: 75%; /* Aspecto más ancho en tablets */
+  }
+}
+
+@media (max-width: 768px) {
+  .product-modal {
+    max-width: 100%;
+    margin: 0;
+    border-radius: var(--radius-xl);
+  }
+  
+  .modal-content {
+    padding: var(--spacing-lg);
+    gap: var(--spacing-lg);
+  }
+  
+  .modal-carousel-btn {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .modal-carousel-btn.prev {
+    left: 8px;
+  }
+  
+  .modal-carousel-btn.next {
+    right: 8px;
+  }
+  
+  .modal-thumbnails {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-xs);
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-content {
+    padding: var(--spacing-md);
+  }
+  
+  .modal-title {
+    font-size: var(--font-size-2xl);
+  }
+  
+  .modal-price {
+    font-size: var(--font-size-3xl);
+  }
+  
+  .modal-close {
+    width: 32px;
+    height: 32px;
+    font-size: var(--font-size-xl);
+  }
+}
