@@ -497,24 +497,37 @@ const render = {
       return;
     }
     
-    grid.innerHTML = products.map(product => `
+    grid.innerHTML = products.map(product => {
+      // ✅ ASEGURAR QUE LA IMAGEN SIEMPRE TENGA UNA URL VÁLIDA
+      const imageUrl = product.image || 'https://via.placeholder.com/400x400?text=Sin+Imagen';
+      
+      // Debug: Log de la imagen para cada producto
+      console.log(`Producto ${product.id}: ${product.name} - Imagen: ${imageUrl}`);
+      
+      return `
       <article class="product-card" data-product-id="${product.id}">
         <div class="product-image-container" onclick="productModal.show(${product.id})" style="cursor: pointer;">
           <div class="product-carousel">
-            <img src="${product.image}" alt="${product.name}" class="product-image" loading="lazy">
+            <img 
+              src="${imageUrl}" 
+              alt="${product.name}" 
+              class="product-image" 
+              loading="eager"
+              onerror="console.error('Error cargando imagen:', this.src); this.src='https://via.placeholder.com/400x400?text=Error+Imagen';"
+            >
           </div>
         </div>
         
         <div class="product-content">
-          <div class="product-category">${product.category}</div>
+          <div class="product-category">${product.category || 'Sin categoría'}</div>
           <h3 class="product-title">${product.name}</h3>
-          <p class="product-description">${product.description.substring(0, 80)}...</p>
+          <p class="product-description">${(product.description || '').substring(0, 80)}...</p>
           
           <div class="product-footer">
             <span class="product-price">$${Number(product.price).toFixed(2)}</span>
             <button 
               class="btn-add-to-cart" 
-              onclick="cart.addItem(${product.id})"
+              onclick="event.stopPropagation(); cart.addItem(${product.id})"
               ${product.stock < 1 ? 'disabled' : ''}
             >
               ${product.stock > 0 ? 'Añadir' : 'Sin Stock'}
@@ -531,14 +544,30 @@ const render = {
             }
           </div>
           
-          <button class="btn-details" onclick="productModal.show(${product.id})">
+          <button class="btn-details" onclick="event.stopPropagation(); productModal.show(${product.id})">
             Ver detalles
           </button>
         </div>
       </article>
-    `).join('');
+    `;
+    }).join('');
     
-    console.log(`✅ ${products.length} productos renderizados`);
+    console.log(`✅ ${products.length} productos renderizados con imágenes`);
+    
+    // ✅ VERIFICAR QUE LAS IMÁGENES SE CARGARON
+    setTimeout(() => {
+      const images = grid.querySelectorAll('.product-image');
+      console.log(`📸 Total de imágenes en el DOM: ${images.length}`);
+      images.forEach((img, index) => {
+        if (!img.complete) {
+          console.warn(`⚠️ Imagen ${index} aún cargando: ${img.src}`);
+        } else if (img.naturalHeight === 0) {
+          console.error(`❌ Imagen ${index} falló al cargar: ${img.src}`);
+        } else {
+          console.log(`✅ Imagen ${index} cargada correctamente: ${img.src.substring(0, 50)}...`);
+        }
+      });
+    }, 1000);
   },
   
   categories(categories) {
