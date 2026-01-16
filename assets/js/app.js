@@ -1,8 +1,9 @@
 /**
- * MAWEWE E-COMMERCE - VERSIÓN COMPLETA Y FUNCIONAL
- * ✅ Conecta con API PHP
- * ✅ Carrito funcional
- * ✅ Filtros y búsqueda
+ * MAWEWE E-COMMERCE - VERSIÓN CORREGIDA
+ * ✅ Imágenes en grid principal
+ * ✅ Orden correcto de categorías
+ * ✅ Sin badge "Destacado"
+ * ✅ Sistema de stock funcional
  */
 
 // =============================================================================
@@ -84,6 +85,32 @@ const api = {
       console.error('❌ API Error:', error);
       throw error;
     }
+  },
+
+  async saveOrder(orderData) {
+    try {
+      const response = await fetch(
+        CONFIG.api.baseUrl + CONFIG.api.endpoints.saveOrder,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(orderData),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Error al guardar la orden');
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Error saving order:', error);
+      return null;
+    }
   }
 };
 
@@ -97,7 +124,6 @@ const cart = {
       const saved = localStorage.getItem('mawewe_cart_v3');
       if (saved) {
         const parsed = JSON.parse(saved);
-        // ✅ VALIDAR que cada item tenga los datos necesarios
         state.cart = Array.isArray(parsed) 
           ? parsed.filter(item => item && item.price && item.name && item.productId)
           : [];
@@ -105,7 +131,6 @@ const cart = {
         state.cart = [];
       }
       
-      // Si hay items inválidos, limpiar
       if (state.cart.length === 0 && saved) {
         console.warn('⚠️ Carrito corrupto detectado, limpiando...');
         localStorage.removeItem('mawewe_cart_v3');
@@ -131,14 +156,16 @@ const cart = {
       return;
     }
     
+    // ✅ VALIDAR STOCK
     if (product.stock < 1) {
-      ui.showNotification('Producto sin stock', 'error');
+      ui.showNotification('Producto sin stock disponible', 'error');
       return;
     }
     
     const existingItem = state.cart.find(item => item.productId === productId);
     
     if (existingItem) {
+      // ✅ VALIDAR STOCK AL INCREMENTAR
       if (existingItem.quantity >= product.stock) {
         ui.showNotification('Stock máximo alcanzado', 'error');
         return;
@@ -172,6 +199,7 @@ const cart = {
       return;
     }
     
+    // ✅ VALIDAR STOCK
     if (newQuantity > item.stock) {
       ui.showNotification('Stock máximo alcanzado', 'error');
       return;
@@ -313,7 +341,6 @@ const render = {
           <div class="product-carousel">
             <img src="${product.image}" alt="${product.name}" class="product-image" loading="lazy">
           </div>
-          ${product.featured ? '<span class="product-badge">Destacado</span>' : ''}
         </div>
         
         <div class="product-content">
@@ -333,7 +360,13 @@ const render = {
           </div>
           
           <div class="stock-indicator ${product.stock < 5 ? 'low' : ''} ${product.stock < 1 ? 'out' : ''}">
-            ${product.stock > 0 ? `${product.stock} disponibles` : 'Agotado'}
+            ${
+              product.stock < 1 
+                ? 'No Disponible' 
+                : product.stock < 5 
+                  ? `Solo ${product.stock} disponibles` 
+                  : `${product.stock} disponibles`
+            }
           </div>
         </div>
       </article>
@@ -347,16 +380,39 @@ const render = {
     
     if (!container || !categories) return;
     
-    container.innerHTML = `
-      <button class="filter-button active" onclick="filters.setCategory('all')">
-        Todos
+    // ✅ ORDEN CORRECTO DE CATEGORÍAS
+    const categoryOrder = [
+      'all',
+      'ropa',
+      'juguetes',
+      'peluches',
+      'joyas',
+      'perfumes',
+      'relojes',
+      'accesorios'
+    ];
+    
+    // Crear array ordenado
+    const orderedCategories = [];
+    
+    // Primero "Todos"
+    orderedCategories.push({ id: 'all', name: 'Todos' });
+    
+    // Luego el resto en el orden especificado
+    categoryOrder.forEach(id => {
+      if (id !== 'all') {
+        const cat = categories.find(c => c.id === id);
+        if (cat) {
+          orderedCategories.push(cat);
+        }
+      }
+    });
+    
+    container.innerHTML = orderedCategories.map(cat => `
+      <button class="filter-button ${state.currentFilter === cat.id ? 'active' : ''}" onclick="filters.setCategory('${cat.id}')">
+        ${cat.name}
       </button>
-      ${categories.map(cat => `
-        <button class="filter-button" onclick="filters.setCategory('${cat.id}')">
-          ${cat.name} (${cat.count})
-        </button>
-      `).join('')}
-    `;
+    `).join('');
   },
   
   cartItems() {
@@ -381,7 +437,6 @@ const render = {
     }
     
     container.innerHTML = state.cart.map(item => {
-      // ✅ VALIDAR que el item tenga los datos necesarios
       if (!item || !item.price || !item.name) {
         console.warn('⚠️ Item inválido en carrito:', item);
         return '';
@@ -392,7 +447,7 @@ const render = {
           <img src="${item.image || ''}" alt="${item.name}" class="cart-item-image">
           <div class="cart-item-info">
             <h4 class="cart-item-title">${item.name}</h4>
-            <div class="cart-item-price">${Number(item.price).toFixed(2)}</div>
+            <div class="cart-item-price">$${Number(item.price).toFixed(2)}</div>
             <div class="cart-item-controls">
               <button class="btn-quantity" onclick="cart.updateQuantity(${item.productId}, -1)">-</button>
               <span class="quantity-display">${item.quantity || 1}</span>
@@ -512,7 +567,6 @@ async function init() {
   try {
     ui.showLoading(true);
     
-    // ✅ PRIMERO cargar productos
     const data = await api.fetchProducts();
     
     if (data.success) {
@@ -524,7 +578,6 @@ async function init() {
       
       console.log(`✅ ${data.products.length} productos cargados`);
       
-      // ✅ DESPUÉS cargar el carrito
       cart.load();
     } else {
       throw new Error(data.message || 'Error al cargar productos');
