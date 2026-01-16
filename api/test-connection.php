@@ -41,8 +41,8 @@ if (!extension_loaded('pdo') || !extension_loaded('pdo_mysql')) {
 // ========================================
 $host = "localhost";  // ✅ Usando localhost (mismo servidor)
 $db_name = "maweweco_tienda_db";
-$username = "maweweco_admin";
-$password = "Tr~RcW\$bIE(U";
+$username = "maweweco_cris";
+$password = "bdC(ZFro1rYd";
 $port = "3306";
 
 echo "\n🔐 CONFIGURACIÓN DE CONEXIÓN:\n";
