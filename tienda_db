@@ -1,0 +1,214 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Servidor: localhost:3306
+-- Tiempo de generación: 16-01-2026 a las 15:37:34
+-- Versión del servidor: 10.6.20-MariaDB-cll-lve
+-- Versión de PHP: 8.1.34
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Base de datos: `maweweco_tienda_db`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `orders`
+--
+
+CREATE TABLE `orders` (
+  `id` int(11) NOT NULL,
+  `paypal_order_id` varchar(100) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `first_name` varchar(100) NOT NULL,
+  `last_name` varchar(100) NOT NULL,
+  `address` varchar(255) DEFAULT NULL,
+  `apartment` varchar(100) DEFAULT NULL,
+  `city` varchar(100) DEFAULT NULL,
+  `postal_code` varchar(20) DEFAULT NULL,
+  `phone` varchar(50) DEFAULT NULL,
+  `shipping_method` varchar(50) DEFAULT 'standard',
+  `subtotal` decimal(10,2) NOT NULL,
+  `shipping_cost` decimal(10,2) NOT NULL,
+  `total` decimal(10,2) NOT NULL,
+  `status` varchar(50) DEFAULT 'pending',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `order_items`
+--
+
+CREATE TABLE `order_items` (
+  `id` int(11) NOT NULL,
+  `order_id` int(11) NOT NULL,
+  `product_id` int(11) NOT NULL,
+  `product_name` varchar(255) NOT NULL,
+  `product_sku` varchar(100) NOT NULL,
+  `price` decimal(10,2) NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `subtotal` decimal(10,2) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `products`
+--
+
+CREATE TABLE `products` (
+  `id` int(11) NOT NULL,
+  `sku` varchar(100) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `category` varchar(100) NOT NULL,
+  `subcategory` varchar(100) DEFAULT NULL,
+  `price` decimal(10,2) NOT NULL,
+  `description` text DEFAULT NULL,
+  `image` varchar(500) NOT NULL,
+  `images` text DEFAULT NULL,
+  `stock` int(11) NOT NULL DEFAULT 0,
+  `featured` tinyint(1) DEFAULT 0,
+  `rating` decimal(3,1) DEFAULT 0.0,
+  `review_count` int(11) DEFAULT 0,
+  `active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `products`
+--
+
+INSERT INTO `products` (`id`, `sku`, `name`, `category`, `subcategory`, `price`, `description`, `image`, `images`, `stock`, `featured`, `rating`, `review_count`, `active`, `created_at`, `updated_at`) VALUES
+(1, 'PLH-PAN-001', 'Peluche Panda Gigante', 'peluches', 'animales', 45.99, 'Panda gigante de 140cm. Súper suave y adorable.', 'assets/img/peluches/panda.jpg', '[\"assets/img/peluches/panda.jpg\",\"assets/img/peluches/panda.jpg\",\"assets/img/peluches/panda.jpg\"]', 8, 1, 5.0, 67, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(2, 'PLH-BCN-001', 'Peluche Oso FC Barcelona', 'peluches', 'deportivos', 25.99, 'Peluche oficial del FC Barcelona. Suave, de alta calidad y perfecto para fanáticos del Barça.', 'assets/img/peluches/osoBSC.jpg', '[\"assets/img/peluches/osoBSC.jpg\",\"assets/img/peluches/osoBSC.jpg\",\"assets/img/peluches/osoBSC.jpg\"]', 15, 1, 4.8, 24, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(3, 'PLH-RMA-001', 'Peluche Oso Real Madrid', 'peluches', 'deportivos', 25.99, 'Peluche oficial del Real Madrid. Ideal para aficionados merengues.', 'assets/img/peluches/osoRMA.jpg', '[\"assets/img/peluches/osoRMA.jpg\",\"assets/img/peluches/osoRMA.jpg\",\"assets/img/peluches/osoRMA.jpg\"]', 12, 1, 4.9, 31, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(4, 'PLH-UNI-001', 'Peluche Unicornio Grande', 'peluches', 'fantasia', 35.99, 'Unicornio gigante de colores pastel. Perfecto para decoración infantil.', 'assets/img/peluches/unicornio.jpg', '[\"assets/img/peluches/unicornio.jpg\",\"assets/img/peluches/unicornio.jpg\",\"assets/img/peluches/unicornio.jpg\"]', 20, 1, 4.7, 45, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(5, 'PLH-OSO-001', 'Osito de Peluche Clásico', 'peluches', 'clasicos', 19.99, 'Osito clásico suave y tierno. Perfecto para regalo.', 'assets/img/peluches/osito.jpg', '[\"assets/img/peluches/osito.jpg\",\"assets/img/peluches/osito.jpg\",\"assets/img/peluches/osito.jpg\"]', 30, 0, 4.6, 18, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(6, 'PRF-CHE-001', 'Carolina Herrera Good Girl', 'perfumes', 'mujer', 89.99, 'Eau de Parfum 80ml. Fragancia sensual y moderna para mujer.', 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=800&h=800&fit=crop&q=85', '[\"https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=800\",\"https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=800\",\"https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=800\"]', 15, 1, 4.8, 134, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(7, 'PRF-DIO-001', 'Dior Sauvage EDT', 'perfumes', 'hombre', 95.99, 'Eau de Toilette 100ml. Fragancia masculina fresca e intensa.', 'https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=800&h=800&fit=crop&q=85', '[\"https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=800\",\"https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=800\",\"https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=800\"]', 20, 1, 4.9, 298, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(8, 'PRF-CHA-001', 'Chanel N°5 EDP', 'perfumes', 'mujer', 145.99, 'Eau de Parfum 100ml. El perfume más icónico del mundo.', 'https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?w=800&h=800&fit=crop&q=85', '[\"https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?w=800\",\"https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?w=800\",\"https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?w=800\"]', 10, 1, 5.0, 421, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(9, 'PRF-VER-001', 'Versace Eros Pour Homme', 'perfumes', 'hombre', 79.99, 'EDT 100ml. Fragancia seductora con notas de menta y vainilla.', 'https://images.unsplash.com/photo-1587017539504-67cfbddac569?w=800&h=800&fit=crop&q=85', '[\"https://images.unsplash.com/photo-1587017539504-67cfbddac569?w=800\",\"https://images.unsplash.com/photo-1587017539504-67cfbddac569?w=800\",\"https://images.unsplash.com/photo-1587017539504-67cfbddac569?w=800\"]', 18, 0, 4.7, 156, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(10, 'PRF-LAN-001', 'Lancôme La Vie Est Belle', 'perfumes', 'mujer', 99.99, 'EDP 75ml. Fragancia gourmand floral femenina.', 'assets/img/perfumes/lancome.jpg', '[\"assets/img/perfumes/lancome.jpg\",\"assets/img/perfumes/lancome.jpg\",\"assets/img/perfumes/lancome.jpg\"]', 14, 0, 4.8, 187, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(11, 'JUG-LEG-001', 'LEGO Star Wars Millennium Falcon', 'juguetes', 'lego', 159.99, 'Set de 1351 piezas. Incluye 7 minifiguras.', 'assets/img/juguetes/legoSWFalcon.jpg', '[\"assets/img/juguetes/legoSWFalcon.jpg\",\"assets/img/juguetes/legoSWFalcon.jpg\",\"assets/img/juguetes/legoSWFalcon.jpg\"]', 12, 1, 5.0, 234, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(12, 'JUG-LEG-002', 'LEGO Creator Casa Familiar', 'juguetes', 'lego', 89.99, 'Set de 969 piezas. Casa modular con detalles increíbles.', 'assets/img/juguetes/legoCasaFamiliar.jpg', '[\"assets/img/juguetes/legoCasaFamiliar.jpg\",\"assets/img/juguetes/legoCasaFamiliar.jpg\",\"assets/img/juguetes/legoCasaFamiliar.jpg\"]', 20, 0, 4.8, 145, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(13, 'JUG-BAR-001', 'Barbie Dreamhouse', 'juguetes', 'munecas', 199.99, 'Casa de ensueño de 3 pisos con ascensor y tobogán.', 'assets/img/juguetes/barbieDreamhouse.jpg', '[\"assets/img/juguetes/barbieDreamhouse.jpg\",\"assets/img/juguetes/barbieDreamhouse.jpg\",\"assets/img/juguetes/barbieDreamhouse.jpg\"]', 8, 1, 4.9, 312, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(14, 'JUG-FIS-001', 'Fisher-Price Gimnasio Bebé', 'juguetes', 'bebes', 65.99, 'Gimnasio con piano y luces. Para bebés de 0-12 meses.', 'assets/img/juguetes/gimnasioBebes.jpg', '[\"assets/img/juguetes/gimnasioBebes.jpg\",\"assets/img/juguetes/gimnasioBebes.jpg\",\"assets/img/juguetes/gimnasioBebes.jpg\"]', 15, 0, 4.7, 89, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(15, 'JUG-HOT-001', 'Hot Wheels Pista Mega Loop', 'juguetes', 'autos', 45.99, 'Pista con doble loop y 3 carritos incluidos.', 'assets/img/juguetes/hotwheels.jpg', '[\"assets/img/juguetes/hotwheels.jpg\",\"assets/img/juguetes/hotwheels.jpg\",\"assets/img/juguetes/hotwheels.jpg\"]', 22, 0, 4.6, 76, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(16, 'JOY-COL-001', 'Collar Plata 925', 'joyas', 'collares', 149.99, 'Collar de plata con circonitas. Incluye estuche.', 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&h=800&fit=crop&q=85', '[\"https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800\",\"https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800\",\"https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800\"]', 10, 0, 4.7, 45, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(17, 'JOY-ARE-001', 'Aretes Oro 18K', 'joyas', 'aretes', 389.99, 'Aretes de oro con diamantes naturales 0.25ct.', 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&h=800&fit=crop&q=85', '[\"https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800\",\"https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800\",\"https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800\"]', 6, 1, 4.9, 67, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(18, 'JOY-PUL-001', 'Pulsera Pandora Charm', 'joyas', 'pulseras', 89.99, 'Pulsera de plata con 3 charms incluidos.', 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&h=800&fit=crop&q=85', '[\"https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800\",\"https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800\",\"https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800\"]', 14, 0, 4.8, 92, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(19, 'JOY-ANI-001', 'Anillo Compromiso Oro Blanco', 'joyas', 'anillos', 1299.99, 'Anillo de oro blanco 18K con diamante 0.50ct.', 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&h=800&fit=crop&q=85', '[\"https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800\",\"https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800\",\"https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800\"]', 3, 1, 5.0, 23, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(20, 'REL-ROL-001', 'Reloj Rolex Submariner', 'relojes', 'lujo', 12999.99, 'Reloj automático resistente al agua 300m.', 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&h=800&fit=crop&q=85', '[\"https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800\",\"https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800\",\"https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800\"]', 2, 1, 5.0, 156, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(21, 'REL-TAG-001', 'TAG Heuer Carrera', 'relojes', 'deportivo', 3499.99, 'Cronógrafo automático con esfera negra.', 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=800&h=800&fit=crop&q=85', '[\"https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=800\",\"https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=800\",\"https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=800\"]', 5, 1, 4.9, 89, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(22, 'REL-CAS-001', 'Casio G-Shock Digital', 'relojes', 'deportivo', 149.99, 'Reloj resistente a golpes e impermeable 200m.', 'https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?w=800&h=800&fit=crop&q=85', '[\"https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?w=800\",\"https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?w=800\",\"https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?w=800\"]', 25, 0, 4.7, 234, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(23, 'REL-APP-001', 'Apple Watch Series 9', 'relojes', 'inteligente', 399.99, 'Smartwatch con GPS y pantalla Always-On.', 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=800&h=800&fit=crop&q=85', '[\"https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=800\",\"https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=800\",\"https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=800\"]', 18, 1, 4.8, 567, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(24, 'ACC-NIK-001', 'Mochila Nike Air Max', 'accesorios', 'mochilas', 89.99, 'Mochila deportiva 30L con compartimento para laptop.', 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&h=800&fit=crop&q=85', '[\"https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800\",\"https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800\",\"https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800\"]', 30, 0, 4.6, 178, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(25, 'ACC-RAY-001', 'Lentes Ray-Ban Aviator', 'accesorios', 'lentes', 159.99, 'Gafas de sol clásicas con lentes polarizadas.', 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=800&h=800&fit=crop&q=85', '[\"https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=800\",\"https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=800\",\"https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=800\"]', 22, 0, 4.8, 345, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(26, 'ACC-LV-001', 'Cartera Louis Vuitton', 'accesorios', 'carteras', 1299.99, 'Cartera de lujo en canvas monogram con cuero.', 'assets/img/accesorios/carteraLV.jpg', '[\"assets/img/accesorios/carteraLV.jpg\",\"assets/img/accesorios/carteraLV.jpg\",\"assets/img/accesorios/carteraLV.jpg\"]', 4, 1, 4.9, 87, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(27, 'ACC-GUC-001', 'Cinturón Gucci GG', 'accesorios', 'cinturones', 450.99, 'Cinturón de cuero con hebilla GG dorada.', 'assets/img/accesorios/cinturonGucci.jpg', '[\"assets/img/accesorios/cinturonGucci.jpg\",\"assets/img/accesorios/cinturonGucci.jpg\",\"assets/img/accesorios/cinturonGucci.jpg\"]', 12, 0, 4.7, 56, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(28, 'ROP-AME-001', 'Jeans Americanino Wear 1975 Oscuro', 'ropa', 'americanino', 89.99, 'Jeans clásicos Americanino de corte recto. 100% algodón.', 'assets/img/ropa/AMERICANINO/5.jpg', '[\"assets/img/ropa/AMERICANINO/5.jpg\",\"assets/img/ropa/AMERICANINO/5.jpg\",\"assets/img/ropa/AMERICANINO/5.jpg\"]', 40, 0, 4.6, 234, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(29, 'ROP-AME-002', 'Jeans Americanino Wear 1975 Claro', 'ropa', 'americanino', 65.99, 'Jeans clásicos Americanino de corte recto. 100% algodón.', 'assets/img/ropa/AMERICANINO/6.jpg', '[\"assets/img/ropa/AMERICANINO/6.jpg\",\"assets/img/ropa/AMERICANINO/6.jpg\",\"assets/img/ropa/AMERICANINO/6.jpg\"]', 35, 0, 4.7, 156, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(30, 'ROP-AME-003', 'Jeans Americanino Wear 1975 Italy', 'ropa', 'americanino', 180.99, 'Jeans clásicos Americanino de corte recto. 100% algodón.', 'assets/img/ropa/AMERICANINO/7.jpg', '[\"assets/img/ropa/AMERICANINO/7.jpg\",\"assets/img/ropa/AMERICANINO/7.jpg\",\"assets/img/ropa/AMERICANINO/7.jpg\"]', 28, 1, 4.9, 423, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(31, 'ROP-AME-004', 'Jeans Americanino Wear 1975 Azul Marino', 'ropa', 'americanino', 45.99, 'Jeans clásicos Americanino de corte recto. 100% algodón.', 'assets/img/ropa/AMERICANINO/8.jpg', '[\"assets/img/ropa/AMERICANINO/8.jpg\",\"assets/img/ropa/AMERICANINO/8.jpg\",\"assets/img/ropa/AMERICANINO/8.jpg\"]', 25, 0, 4.5, 89, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(33, 'ROP-CHE-001', 'Jeans Chevignon Slim Fit', 'ropa', 'chevignon', 129.99, 'Jeans de corte slim fit con elasticidad. Comodidad y estilo.', 'assets/img/ropa/CHEVIGNON/1.jpg', '[\"assets/img/ropa/CHEVIGNON/1.jpg\",\"assets/img/ropa/CHEVIGNON/1.jpg\",\"assets/img/ropa/CHEVIGNON/1.jpg\"]', 15, 1, 4.8, 78, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(34, 'ROP-CHE-002', 'Jeans Chevignon Slim Fit Premium Design', 'ropa', 'chevignon', 55.99, 'Jeans de corte slim fit con elasticidad y un diseño premium.', 'assets/img/ropa/CHEVIGNON/2.jpg', '[\"assets/img/ropa/CHEVIGNON/2.jpg\",\"assets/img/ropa/CHEVIGNON/2.jpg\",\"assets/img/ropa/CHEVIGNON/2.jpg\"]', 20, 0, 4.6, 56, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(35, 'ROP-OFF-001', 'Denim super slim para niño', 'ropa', 'offcors', 59.99, 'Denim en tejido plano silueta super slim , la esencia del estilo en cada prenda de denim. ¡Un clásico que nunca falla!', 'assets/img/ropa/OFFCORS/1.jpg', '[\"assets/img/ropa/OFFCORS/1.jpg\",\"assets/img/ropa/OFFCORS/1.jpg\",\"assets/img/ropa/OFFCORS/1.jpg\"]', 40, 0, 4.5, 112, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(36, 'ROP-OFF-002', 'Jogger en denim para niño con bolsillos cargos', 'ropa', 'offcors', 29.99, 'Denim en tejido plano silueta jogger. Estilo que redefine la comodidad en todo momento.', 'assets/img/ropa/OFFCORS/2.jpg', '[\"assets/img/ropa/OFFCORS/2.jpg\",\"assets/img/ropa/OFFCORS/2.jpg\",\"assets/img/ropa/OFFCORS/2.jpg\"]', 50, 0, 4.4, 98, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(37, 'ROP-CHE-003', 'Jeans Chevignon Skinny', 'ropa', 'chevignon', 55.99, 'Jeans de corte skinny unisex con elasticidad.', 'assets/img/ropa/CHEVIGNON/3.jpg', '[\"assets/img/ropa/CHEVIGNON/3.jpg\",\"assets/img/ropa/CHEVIGNON/3.jpg\",\"assets/img/ropa/CHEVIGNON/3.jpg\"]', 20, 0, 4.6, 56, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(38, 'ROP-CHE-004', 'Jeans Chevignon Quality Supreme', 'ropa', 'chevignon', 55.99, 'Jeans de muy alta calidad con un gran diseño a la vista y comodidad.', 'assets/img/ropa/CHEVIGNON/4.jpg', '[\"assets/img/ropa/CHEVIGNON/4.jpg\",\"assets/img/ropa/CHEVIGNON/4.jpg\",\"assets/img/ropa/CHEVIGNON/4.jpg\"]', 20, 0, 4.6, 56, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(39, 'ROP-OFF-003', 'Pantalón para niño con bolsillos cargo', 'ropa', 'offcors', 29.99, 'Pantalón en tejido plano silueta jogger ideal para días cómodos y relajados. ¡Comodidad en cada movimiento!', 'assets/img/ropa/OFFCORS/3.jpg', '[\"assets/img/ropa/OFFCORS/3.jpg\",\"assets/img/ropa/OFFCORS/3.jpg\",\"assets/img/ropa/OFFCORS/3.jpg\"]', 50, 0, 4.4, 98, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(40, 'ROP-OFF-004', 'Pantalón para niño silueta jogger', 'ropa', 'offcors', 29.99, 'Pantalón en tejido plano silueta jogger ideal para días cómodos y relajados. ¡Comodidad en cada movimiento!', 'assets/img/ropa/OFFCORS/4.jpg', '[\"assets/img/ropa/OFFCORS/4.jpg\",\"assets/img/ropa/OFFCORS/4.jpg\",\"assets/img/ropa/OFFCORS/4.jpg\"]', 50, 0, 4.4, 98, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(41, 'ROP-AME-005', 'Polo Slim cuello NERU para hombre', 'ropa', 'americanino', 45.99, 'Camiseta tipo polo de corte slim fit para hombre, con cuello NERU. Ideal para un look casual y moderno.', 'assets/img/ropa/AMERICANINO/polo1.jpg', '[\"assets/img/ropa/AMERICANINO/polo1.jpg\",\"assets/img/ropa/AMERICANINO/polo1.jpg\",\"assets/img/ropa/AMERICANINO/polo1.jpg\"]', 25, 0, 4.5, 89, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(42, 'ROP-AME-006', 'Polo Slim cuello NERU para hombre', 'ropa', 'americanino', 45.99, 'Camiseta tipo polo de corte slim fit para hombre, con cuello NERU. Ideal para un look casual y moderno.', 'assets/img/ropa/AMERICANINO/polo2.jpg', '[\"assets/img/ropa/AMERICANINO/polo2.jpg\",\"assets/img/ropa/AMERICANINO/polo2.jpg\",\"assets/img/ropa/AMERICANINO/polo2.jpg\"]', 25, 0, 4.5, 89, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(43, 'ROP-AME-007', 'Polo Slim cuello NERU para hombre', 'ropa', 'americanino', 45.99, 'Camiseta tipo polo de corte slim fit para hombre, con cuello NERU. Ideal para un look casual y moderno.', 'assets/img/ropa/AMERICANINO/polo3.jpg', '[\"assets/img/ropa/AMERICANINO/polo3.jpg\",\"assets/img/ropa/AMERICANINO/polo3.jpg\",\"assets/img/ropa/AMERICANINO/polo3.jpg\"]', 25, 0, 4.5, 89, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(44, 'ROP-AME-008', 'Polo de tela texturizada con bordado para hombre', 'ropa', 'americanino', 45.99, 'Camiseta polo de tela texturizada para hombre, con bordado distintivo. Perfecta para un estilo casual y elegante.', 'assets/img/ropa/AMERICANINO/polo4.jpg', '[\"assets/img/ropa/AMERICANINO/polo4.jpg\",\"assets/img/ropa/AMERICANINO/polo4.jpg\",\"assets/img/ropa/AMERICANINO/polo4.jpg\"]', 25, 0, 4.5, 89, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(45, 'ROP-CHE-005', 'Camisa Manga Corta para Hombre', 'ropa', 'chevignon', 55.99, 'Camisa de manga corta para hombre, ideal para un look casual y fresco en días cálidos.', 'assets/img/ropa/CHEVIGNON/camiseta1.jpg', '[\"assets/img/ropa/CHEVIGNON/camiseta1.jpg\",\"assets/img/ropa/CHEVIGNON/camiseta1.jpg\",\"assets/img/ropa/CHEVIGNON/camiseta1.jpg\"]', 20, 0, 4.6, 56, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(46, 'ROP-CHE-006', 'Camiseta Tipo Polo para Hombre REF: 609G003', 'ropa', 'chevignon', 55.99, 'Camiseta tipo polo para hombre, perfecta para un estilo casual y deportivo.', 'assets/img/ropa/CHEVIGNON/camiseta2.jpg', '[\"assets/img/ropa/CHEVIGNON/camiseta2.jpg\",\"assets/img/ropa/CHEVIGNON/camiseta2.jpg\",\"assets/img/ropa/CHEVIGNON/camiseta2.jpg\"]', 20, 0, 4.6, 56, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(47, 'ROP-CHE-007', 'Camisa Slim Fit Manga Larga Esencial para Hombre REF: 612G000', 'ropa', 'chevignon', 55.99, 'Camisa slim fit manga larga esencial para hombre, perfecta para un estilo casual y deportivo.', 'assets/img/ropa/CHEVIGNON/camiseta3.jpg', '[\"assets/img/ropa/CHEVIGNON/camiseta3.jpg\",\"assets/img/ropa/CHEVIGNON/camiseta3.jpg\",\"assets/img/ropa/CHEVIGNON/camiseta3.jpg\"]', 20, 0, 4.6, 56, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19'),
+(48, 'ROP-CHE-008', 'Camiseta Classic Fit Cuello Redondo con Bordado y Estampado para Hombre REF: 642G019', 'ropa', 'chevignon', 55.99, 'Camiseta classic fit cuello redondo con bordado y estampado para hombre, perfecta para un estilo casual y deportivo.', 'assets/img/ropa/CHEVIGNON/camiseta4.jpg', '[\"assets/img/ropa/CHEVIGNON/camiseta4.jpg\",\"assets/img/ropa/CHEVIGNON/camiseta4.jpg\",\"assets/img/ropa/CHEVIGNON/camiseta4.jpg\"]', 20, 0, 4.6, 56, 1, '2026-01-15 22:05:19', '2026-01-15 22:05:19');
+
+--
+-- Índices para tablas volcadas
+--
+
+--
+-- Indices de la tabla `orders`
+--
+ALTER TABLE `orders`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `paypal_order_id` (`paypal_order_id`),
+  ADD KEY `idx_email` (`email`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_created` (`created_at`);
+
+--
+-- Indices de la tabla `order_items`
+--
+ALTER TABLE `order_items`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_order` (`order_id`),
+  ADD KEY `idx_product` (`product_id`);
+
+--
+-- Indices de la tabla `products`
+--
+ALTER TABLE `products`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `sku` (`sku`),
+  ADD KEY `idx_category` (`category`),
+  ADD KEY `idx_featured` (`featured`),
+  ADD KEY `idx_active` (`active`);
+
+--
+-- AUTO_INCREMENT de las tablas volcadas
+--
+
+--
+-- AUTO_INCREMENT de la tabla `orders`
+--
+ALTER TABLE `orders`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `order_items`
+--
+ALTER TABLE `order_items`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `products`
+--
+ALTER TABLE `products`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
+
+--
+-- Restricciones para tablas volcadas
+--
+
+--
+-- Filtros para la tabla `order_items`
+--
+ALTER TABLE `order_items`
+  ADD CONSTRAINT `fk_order_items_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_order_items_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`);
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
