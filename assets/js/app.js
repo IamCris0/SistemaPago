@@ -93,8 +93,29 @@ const api = {
 
 const cart = {
   load() {
-    const saved = localStorage.getItem('mawewe_cart_v3');
-    state.cart = saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('mawewe_cart_v3');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // ✅ VALIDAR que cada item tenga los datos necesarios
+        state.cart = Array.isArray(parsed) 
+          ? parsed.filter(item => item && item.price && item.name && item.productId)
+          : [];
+      } else {
+        state.cart = [];
+      }
+      
+      // Si hay items inválidos, limpiar
+      if (state.cart.length === 0 && saved) {
+        console.warn('⚠️ Carrito corrupto detectado, limpiando...');
+        localStorage.removeItem('mawewe_cart_v3');
+      }
+    } catch (error) {
+      console.error('❌ Error loading cart:', error);
+      state.cart = [];
+      localStorage.removeItem('mawewe_cart_v3');
+    }
+    
     this.updateUI();
   },
   
@@ -359,23 +380,31 @@ const render = {
       return;
     }
     
-    container.innerHTML = state.cart.map(item => `
-      <div class="cart-item">
-        <img src="${item.image}" alt="${item.name}" class="cart-item-image">
-        <div class="cart-item-info">
-          <h4 class="cart-item-title">${item.name}</h4>
-          <div class="cart-item-price">$${item.price.toFixed(2)}</div>
-          <div class="cart-item-controls">
-            <button class="btn-quantity" onclick="cart.updateQuantity(${item.productId}, -1)">-</button>
-            <span class="quantity-display">${item.quantity}</span>
-            <button class="btn-quantity" onclick="cart.updateQuantity(${item.productId}, 1)">+</button>
-            <button class="btn-remove" onclick="cart.removeItem(${item.productId})">
-              Eliminar
-            </button>
+    container.innerHTML = state.cart.map(item => {
+      // ✅ VALIDAR que el item tenga los datos necesarios
+      if (!item || !item.price || !item.name) {
+        console.warn('⚠️ Item inválido en carrito:', item);
+        return '';
+      }
+      
+      return `
+        <div class="cart-item">
+          <img src="${item.image || ''}" alt="${item.name}" class="cart-item-image">
+          <div class="cart-item-info">
+            <h4 class="cart-item-title">${item.name}</h4>
+            <div class="cart-item-price">${Number(item.price).toFixed(2)}</div>
+            <div class="cart-item-controls">
+              <button class="btn-quantity" onclick="cart.updateQuantity(${item.productId}, -1)">-</button>
+              <span class="quantity-display">${item.quantity || 1}</span>
+              <button class="btn-quantity" onclick="cart.updateQuantity(${item.productId}, 1)">+</button>
+              <button class="btn-remove" onclick="cart.removeItem(${item.productId})">
+                Eliminar
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).filter(Boolean).join('');
   },
   
   cartSummary() {
@@ -483,8 +512,7 @@ async function init() {
   try {
     ui.showLoading(true);
     
-    cart.load();
-    
+    // ✅ PRIMERO cargar productos
     const data = await api.fetchProducts();
     
     if (data.success) {
@@ -495,6 +523,9 @@ async function init() {
       render.categories(data.categories);
       
       console.log(`✅ ${data.products.length} productos cargados`);
+      
+      // ✅ DESPUÉS cargar el carrito
+      cart.load();
     } else {
       throw new Error(data.message || 'Error al cargar productos');
     }
