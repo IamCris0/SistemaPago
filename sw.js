@@ -1,16 +1,15 @@
 /**
  * Service Worker para Mawewe E-commerce
- * Version: 1.1 - Fixed
+ * Version: 1.3 - Completamente corregido
  * PWA Support
  */
 
-const CACHE_NAME = 'mawewe-v1.1';
+const CACHE_NAME = 'mawewe-v1.3';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/assets/css/styles.css',
-  '/assets/js/app.js',
-  '/site.webmanifest'
+  '/assets/js/app.js'
 ];
 
 // Install event
@@ -23,7 +22,7 @@ self.addEventListener('install', (event) => {
         return cache.addAll(ASSETS_TO_CACHE);
       })
       .then(() => self.skipWaiting())
-      .catch(err => console.log('[SW] Cache error:', err))
+      .catch(err => console.log('[SW] Install error:', err))
   );
 });
 
@@ -44,15 +43,14 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - Network first, fallback to cache
+// Fetch event
 self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
   
-  // ✅ FILTROS MEJORADOS - Skip chrome extensions and external requests
   const url = event.request.url;
   
-  // Lista de URLs que NO deben ser cacheadas
+  // ✅ NO cachear estas URLs
   if (url.startsWith('chrome-extension://') ||
       url.startsWith('chrome://') ||
       url.startsWith('moz-extension://') ||
@@ -62,9 +60,10 @@ self.addEventListener('fetch', (event) => {
       url.includes('unsplash.com') ||
       url.includes('cloudflare') ||
       url.includes('/cdn-cgi/')) {
-    return; // No hacer nada con estas peticiones
+    return;
   }
   
+  // Network first, fallback to cache
   event.respondWith(
     fetch(event.request)
       .then(response => {
@@ -73,15 +72,13 @@ self.addEventListener('fetch', (event) => {
           return response;
         }
         
-        // Clone the response
+        // Clone response
         const responseClone = response.clone();
         
-        // Update cache
+        // Update cache (sin bloquear la respuesta)
         caches.open(CACHE_NAME)
           .then(cache => {
-            // Verificar que la URL sea cacheab
-
-le
+            // Solo cachear si es una URL HTTP válida
             if (event.request.url.startsWith('http')) {
               cache.put(event.request, responseClone);
             }
@@ -105,53 +102,4 @@ le
           });
       })
   );
-});
-
-// Background sync for failed purchases
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-purchases') {
-    event.waitUntil(syncPurchases());
-  }
-});
-
-async function syncPurchases() {
-  console.log('[SW] Syncing purchases...');
-  // Implement purchase sync logic here
-}
-
-// Push notifications
-self.addEventListener('push', (event) => {
-  const options = {
-    body: event.data ? event.data.text() : 'Nueva oferta disponible',
-    icon: '/android-chrome-192x192.png',
-    badge: '/badge-72x72.png',
-    vibrate: [200, 100, 200],
-    tag: 'mawewe-notification',
-    requireInteraction: true,
-    actions: [
-      {
-        action: 'explore',
-        title: 'Ver ofertas'
-      },
-      {
-        action: 'close',
-        title: 'Cerrar'
-      }
-    ]
-  };
-  
-  event.waitUntil(
-    self.registration.showNotification('Mawewe', options)
-  );
-});
-
-// Notification click
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  
-  if (event.action === 'explore') {
-    event.waitUntil(
-      clients.openWindow('/')
-    );
-  }
 });
