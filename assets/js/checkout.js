@@ -1,7 +1,7 @@
 /**
- * MAWEWE E-COMMERCE - CHECKOUT SIMULADO
+ * MAWEWE E-COMMERCE - CHECKOUT SIMULADO CORREGIDO
  * Sistema de pago simulado sin PayPal
- * Incluye: Transferencia, Efectivo, Tarjeta (simulado)
+ * ✅ FIX: Namespace y referencias corregidas
  */
 
 // =============================================================================
@@ -12,7 +12,7 @@ const checkout = {
   
   // Estado del checkout
   state: {
-    step: 1, // 1: Datos, 2: Método de pago, 3: Confirmación
+    step: 1,
     customerData: {},
     paymentMethod: null,
     orderNumber: null
@@ -22,28 +22,46 @@ const checkout = {
   // STEP 1: Abrir formulario de checkout
   // ========================================
   openCheckout() {
-    if (state.cart.length === 0) {
-      ui.showNotification('El carrito está vacío', 'error');
+    // ✅ FIX: Verificar que el carrito no esté vacío
+    if (!state || !state.cart || state.cart.length === 0) {
+      if (window.ui) {
+        window.ui.showNotification('El carrito está vacío', 'error');
+      } else {
+        alert('El carrito está vacío');
+      }
       return;
     }
     
+    console.log('📝 Abriendo checkout...');
+    
     // Ocultar items del carrito y footer
-    document.getElementById('cart-items').style.display = 'none';
-    document.getElementById('cart-footer').style.display = 'none';
+    const cartItems = document.getElementById('cart-items');
+    const cartFooter = document.getElementById('cart-footer');
+    const container = document.getElementById('checkout-form-container');
+    
+    if (cartItems) cartItems.style.display = 'none';
+    if (cartFooter) cartFooter.style.display = 'none';
     
     // Mostrar formulario de checkout
-    const container = document.getElementById('checkout-form-container');
-    container.style.display = 'block';
-    container.innerHTML = this.renderCheckoutForm();
+    if (container) {
+      container.style.display = 'block';
+      container.innerHTML = this.renderCheckoutForm();
+    }
     
-    console.log('📝 Checkout abierto - Step 1: Datos del cliente');
+    console.log('✅ Checkout abierto - Step 1: Datos del cliente');
   },
   
   // ========================================
   // Renderizar formulario principal
   // ========================================
   renderCheckoutForm() {
-    const { subtotal, shipping, total } = cart.calculateTotals();
+    // ✅ FIX: Verificar que cart esté disponible
+    if (!window.cart || typeof window.cart.calculateTotals !== 'function') {
+      console.error('❌ Error: cart no está disponible');
+      return '<p style="color: red; padding: 2rem;">Error: Sistema de carrito no disponible</p>';
+    }
+    
+    const { subtotal, shipping, total } = window.cart.calculateTotals();
     
     return `
       <div class="checkout-header">
@@ -272,6 +290,8 @@ const checkout = {
   submitCustomerData(event) {
     event.preventDefault();
     
+    console.log('📝 Procesando datos del cliente...');
+    
     const formData = new FormData(event.target);
     
     // Guardar datos del cliente
@@ -304,7 +324,7 @@ const checkout = {
   // ========================================
   showPaymentMethods() {
     const container = document.getElementById('checkout-form-container');
-    const { subtotal, shipping, total } = cart.calculateTotals();
+    const { subtotal, shipping, total } = window.cart.calculateTotals();
     
     container.innerHTML = `
       <div class="checkout-header">
@@ -464,7 +484,9 @@ const checkout = {
     btn.disabled = true;
     btn.textContent = 'Procesando pago...';
     
-    ui.showLoading(true);
+    if (window.ui) {
+      window.ui.showLoading(true);
+    }
     
     // Simular procesamiento (2 segundos)
     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -486,7 +508,7 @@ const checkout = {
       })),
       shippingMethod: state.shippingMethod,
       paymentMethod: this.state.paymentMethod,
-      totals: cart.calculateTotals(),
+      totals: window.cart.calculateTotals(),
       createdAt: new Date().toISOString()
     };
     
@@ -494,7 +516,9 @@ const checkout = {
       // Guardar orden en API
       const result = await this.saveOrder(orderData);
       
-      ui.showLoading(false);
+      if (window.ui) {
+        window.ui.showLoading(false);
+      }
       
       if (result.success) {
         console.log('✅ Orden guardada exitosamente:', result);
@@ -503,18 +527,24 @@ const checkout = {
         this.showConfirmation(orderData);
         
         // Limpiar carrito
-        cart.clear();
+        if (window.cart) {
+          window.cart.clear();
+        }
       } else {
         throw new Error(result.message || 'Error al guardar la orden');
       }
       
     } catch (error) {
-      ui.showLoading(false);
+      if (window.ui) {
+        window.ui.showLoading(false);
+      }
       console.error('❌ Error procesando pago:', error);
       
       // Mostrar confirmación de todos modos (modo simulado)
       this.showConfirmation(orderData);
-      cart.clear();
+      if (window.cart) {
+        window.cart.clear();
+      }
     }
   },
   
@@ -701,7 +731,7 @@ const checkout = {
         </div>
         
         <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-          <button onclick="checkout.closeCheckout(); ui.toggleCart();" class="btn-continue-payment" style="flex: 1;">
+          <button onclick="checkout.closeCheckout(); if(window.ui) window.ui.toggleCart();" class="btn-continue-payment" style="flex: 1;">
             Cerrar
           </button>
           <button onclick="window.print();" class="btn-continue-payment" style="flex: 1; background: var(--gray-700);">
@@ -714,7 +744,9 @@ const checkout = {
     this.state.step = 3;
     
     // Mostrar notificación de éxito
-    ui.showNotification(`¡Orden ${this.state.orderNumber} confirmada! 🎉`);
+    if (window.ui) {
+      window.ui.showNotification(`¡Orden ${this.state.orderNumber} confirmada! 🎉`);
+    }
     
     console.log('✅ Orden completada:', this.state.orderNumber);
   },
@@ -723,9 +755,13 @@ const checkout = {
   // Cerrar checkout
   // ========================================
   closeCheckout() {
-    document.getElementById('cart-items').style.display = 'block';
-    document.getElementById('cart-footer').style.display = 'block';
-    document.getElementById('checkout-form-container').style.display = 'none';
+    const cartItems = document.getElementById('cart-items');
+    const cartFooter = document.getElementById('cart-footer');
+    const container = document.getElementById('checkout-form-container');
+    
+    if (cartItems) cartItems.style.display = 'block';
+    if (cartFooter) cartFooter.style.display = 'block';
+    if (container) container.style.display = 'none';
     
     // Resetear estado
     this.state.step = 1;
@@ -737,7 +773,12 @@ const checkout = {
   }
 };
 
-// Exportar para uso global
+// ✅ FIX: Exportar para uso global
 window.checkout = checkout;
 
-console.log('✅ Sistema de checkout simulado cargado');
+// ✅ FIX: También crear alias en el namespace mawewe si existe
+if (window.mawewe) {
+  window.mawewe.checkout = checkout;
+}
+
+console.log('✅ Sistema de checkout simulado cargado y exportado correctamente');
