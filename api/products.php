@@ -1,10 +1,9 @@
 <?php
 /**
  * API Endpoint: products.php
- * Obtiene productos desde MySQL con categorías y subcategorías dinámicas
- * ✅ Subcategorías para TODAS las categorías
- * ✅ Orden personalizado de categorías
- * Ruta: /api/products.php
+ * ✅ Sistema de búsqueda corregido y mejorado
+ * ✅ Subcategorías para todas las categorías
+ * ✅ Orden personalizado
  */
 
 // Headers CORS
@@ -44,19 +43,23 @@ try {
     }
 
     // ========================================
-    // 2. OBTENER PARÁMETROS DE BÚSQUEDA
+    // 2. OBTENER Y LIMPIAR PARÁMETROS DE BÚSQUEDA
     // ========================================
-    $category = isset($_GET['category']) && $_GET['category'] !== 'all' 
-        ? $_GET['category'] 
+    $category = isset($_GET['category']) && $_GET['category'] !== 'all' && $_GET['category'] !== '' 
+        ? trim($_GET['category']) 
         : null;
     
-    $subcategory = isset($_GET['subcategory']) 
-        ? $_GET['subcategory'] 
+    $subcategory = isset($_GET['subcategory']) && $_GET['subcategory'] !== '' 
+        ? trim($_GET['subcategory']) 
         : null;
     
-    $search = isset($_GET['search']) 
-        ? $_GET['search'] 
+    // ✅ MEJORADO: Limpieza y validación de búsqueda
+    $search = isset($_GET['search']) && $_GET['search'] !== '' 
+        ? trim($_GET['search']) 
         : null;
+    
+    // Log de parámetros recibidos (para debug)
+    error_log("📥 Parámetros recibidos - Category: " . ($category ?? 'null') . ", Subcategory: " . ($subcategory ?? 'null') . ", Search: " . ($search ?? 'null'));
 
     // ========================================
     // 3. CONSTRUIR QUERY SQL PARA PRODUCTOS
@@ -84,24 +87,33 @@ try {
 
     // Filtro por categoría
     if ($category) {
-        $sql .= " AND category = :category";
+        $sql .= " AND LOWER(category) = LOWER(:category)";
         $params[':category'] = $category;
     }
 
     // Filtro por subcategoría
     if ($subcategory) {
-        $sql .= " AND subcategory = :subcategory";
+        $sql .= " AND LOWER(subcategory) = LOWER(:subcategory)";
         $params[':subcategory'] = $subcategory;
     }
 
-    // Filtro por búsqueda
-    if ($search) {
+    // ✅ MEJORADO: Filtro por búsqueda con mejor manejo
+    if ($search && strlen($search) >= 2) { // Mínimo 2 caracteres para buscar
+        $searchTerm = '%' . $search . '%';
         $sql .= " AND (
-            name LIKE :search 
-            OR description LIKE :search 
-            OR sku LIKE :search
+            LOWER(name) LIKE LOWER(:search1) 
+            OR LOWER(description) LIKE LOWER(:search2) 
+            OR LOWER(sku) LIKE LOWER(:search3)
+            OR LOWER(category) LIKE LOWER(:search4)
+            OR LOWER(subcategory) LIKE LOWER(:search5)
         )";
-        $params[':search'] = '%' . $search . '%';
+        $params[':search1'] = $searchTerm;
+        $params[':search2'] = $searchTerm;
+        $params[':search3'] = $searchTerm;
+        $params[':search4'] = $searchTerm;
+        $params[':search5'] = $searchTerm;
+        
+        error_log("🔍 Buscando: " . $search);
     }
 
     // Ordenar: destacados primero, luego por fecha
@@ -111,8 +123,17 @@ try {
     // 4. EJECUTAR QUERY DE PRODUCTOS
     // ========================================
     $stmt = $db->prepare($sql);
-    $stmt->execute($params);
-    $products = $stmt->fetchAll();
+    
+    // ✅ MEJORADO: Manejo de errores en la ejecución
+    try {
+        $stmt->execute($params);
+        $products = $stmt->fetchAll();
+        
+        error_log("✅ Productos encontrados: " . count($products));
+    } catch (PDOException $e) {
+        error_log("❌ Error ejecutando query: " . $e->getMessage());
+        throw new Exception("Error en la búsqueda de productos");
+    }
 
     // ========================================
     // 5. PROCESAR RESULTADOS DE PRODUCTOS
@@ -133,13 +154,17 @@ try {
         $product['featured'] = (bool)$product['featured'];
         $product['rating'] = (float)($product['rating'] ?? 0);
         $product['review_count'] = (int)($product['review_count'] ?? 0);
+        
+        // ✅ Asegurar que category y subcategory sean strings
+        $product['category'] = $product['category'] ?? '';
+        $product['subcategory'] = $product['subcategory'] ?? '';
     }
 
     // ========================================
     // 6. OBTENER CATEGORÍAS ÚNICAS CON ORDEN PERSONALIZADO
     // ========================================
     
-    // ✅ ORDEN DESEADO: Todos, Ropa, Juguetes, Peluches, Joyas, Perfumes, Relojes, Accesorios
+    // ✅ ORDEN DESEADO
     $categoryOrder = [
         'ropa',
         'juguetes',
@@ -166,7 +191,8 @@ try {
     $categoryMap = [];
     $totalCount = 0;
     foreach ($categoriesData as $cat) {
-        $categoryMap[strtolower($cat['category'])] = (int)$cat['count'];
+        $catLower = strtolower(trim($cat['category']));
+        $categoryMap[$catLower] = (int)$cat['count'];
         $totalCount += (int)$cat['count'];
     }
 
@@ -184,7 +210,7 @@ try {
         if (isset($categoryMap[$catId])) {
             $categories[] = [
                 'id' => $catId,
-                'name' => ucfirst($catId), // Primera letra mayúscula
+                'name' => ucfirst($catId),
                 'count' => $categoryMap[$catId]
             ];
         }
@@ -194,7 +220,6 @@ try {
     // 7. OBTENER SUBCATEGORÍAS PARA TODAS LAS CATEGORÍAS
     // ========================================
     
-    // ✅ NUEVO: Obtener subcategorías agrupadas por categoría
     $sqlAllSubcategories = "SELECT 
                                 category,
                                 subcategory,
@@ -213,8 +238,8 @@ try {
     // Organizar subcategorías por categoría
     $subcategoriesByCategory = [];
     foreach ($allSubcategoriesData as $subcat) {
-        $cat = strtolower($subcat['category']);
-        $sub = strtolower($subcat['subcategory']);
+        $cat = strtolower(trim($subcat['category']));
+        $sub = strtolower(trim($subcat['subcategory']));
         
         if (!isset($subcategoriesByCategory[$cat])) {
             $subcategoriesByCategory[$cat] = [];
@@ -222,7 +247,7 @@ try {
         
         $subcategoriesByCategory[$cat][] = [
             'id' => $sub,
-            'name' => ucfirst($sub), // Primera letra mayúscula
+            'name' => ucfirst($sub),
             'count' => (int)$subcat['count']
         ];
     }
@@ -243,7 +268,7 @@ try {
         'success' => true,
         'products' => $products,
         'categories' => $categories,
-        'subcategoriesByCategory' => $subcategoriesByCategory, // ✅ NUEVO: Todas las subcategorías organizadas
+        'subcategoriesByCategory' => $subcategoriesByCategory,
         'shippingConfig' => $shippingConfig,
         'total' => count($products),
         'filters' => [
@@ -265,7 +290,7 @@ try {
         'success' => false,
         'message' => 'Error de base de datos',
         'error' => $e->getMessage(),
-        'trace' => $e->getTraceAsString()
+        'code' => 'DB_ERROR'
     ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     
 } catch (Exception $e) {
@@ -276,7 +301,8 @@ try {
     echo json_encode([
         'success' => false,
         'message' => 'Error al obtener productos',
-        'error' => $e->getMessage()
+        'error' => $e->getMessage(),
+        'code' => 'GENERAL_ERROR'
     ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 }
 

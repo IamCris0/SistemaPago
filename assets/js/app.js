@@ -1,8 +1,8 @@
 /**
- * MAWEWE E-COMMERCE - VERSIÓN COMPLETA V3
- * ✅ Productos ordenados por ID (menor a mayor)
- * ✅ Categorías con orden personalizado: Todos, Ropa, Juguetes, Peluches, Joyas, etc.
- * ✅ Subcategorías para TODAS las categorías (no solo Ropa y Juguetes)
+ * MAWEWE E-COMMERCE - VERSIÓN COMPLETA V4
+ * ✅ Sistema de búsqueda corregido y mejorado
+ * ✅ Búsqueda en tiempo real con sugerencias
+ * ✅ Manejo de errores robusto
  */
 
 // =============================================================================
@@ -27,10 +27,16 @@ const CONFIG = {
     cost: 5.00,
     freeThreshold: 50.00,
     expressCost: 10.00
+  },
+  
+  // ✅ NUEVO: Configuración de búsqueda
+  search: {
+    minChars: 2,        // Mínimo de caracteres para buscar
+    debounceTime: 500   // Tiempo de espera en ms antes de buscar
   }
 };
 
-console.log('🚀 Mawewe iniciando con subcategorías para todas las categorías...');
+console.log('🚀 Mawewe iniciando con búsqueda mejorada...');
 
 // =============================================================================
 // STATE MANAGEMENT
@@ -38,14 +44,16 @@ console.log('🚀 Mawewe iniciando con subcategorías para todas las categorías
 
 const state = {
   products: [],
+  allProducts: [], // ✅ NUEVO: Todos los productos para búsqueda local
   categories: [],
-  subcategoriesByCategory: {}, // ✅ NUEVO: Subcategorías organizadas por categoría
+  subcategoriesByCategory: {},
   cart: [],
   currentFilter: 'all',
   currentSubcategory: null,
   searchQuery: '',
   shippingMethod: 'standard',
-  checkoutData: {}
+  checkoutData: {},
+  isSearching: false // ✅ NUEVO: Estado de búsqueda
 };
 
 // =============================================================================
@@ -58,14 +66,18 @@ const api = {
       let url = `${CONFIG.api.baseUrl}${CONFIG.api.endpoints.products}`;
       
       const params = new URLSearchParams();
+      
+      // ✅ MEJORADO: Solo agregar parámetros si tienen valor
       if (filters.category && filters.category !== 'all') {
-        params.append('category', filters.category);
+        params.append('category', filters.category.toLowerCase().trim());
       }
-      if (filters.subcategory) {
-        params.append('subcategory', filters.subcategory);
+      
+      if (filters.subcategory && filters.subcategory !== '') {
+        params.append('subcategory', filters.subcategory.toLowerCase().trim());
       }
-      if (filters.search) {
-        params.append('search', filters.search);
+      
+      if (filters.search && filters.search.trim().length >= CONFIG.search.minChars) {
+        params.append('search', filters.search.trim());
       }
       
       if (params.toString()) {
@@ -81,12 +93,18 @@ const api = {
       }
       
       const data = await response.json();
+      
+      // ✅ MEJORADO: Validar respuesta
+      if (!data || typeof data !== 'object') {
+        throw new Error('Respuesta inválida del servidor');
+      }
+      
       console.log('✅ Data received:', data);
       
-      // ✅ ORDENAR PRODUCTOS POR ID (MENOR A MAYOR)
-      if (data.success && data.products) {
+      // Ordenar productos por ID
+      if (data.success && data.products && Array.isArray(data.products)) {
         data.products.sort((a, b) => a.id - b.id);
-        console.log(`✅ Productos ordenados por ID (${data.products.length} productos)`);
+        console.log(`✅ ${data.products.length} productos cargados`);
       }
       
       return data;
@@ -260,7 +278,7 @@ const cart = {
 };
 
 // =============================================================================
-// UI FUNCTIONS (sin cambios)
+// UI FUNCTIONS
 // =============================================================================
 
 const ui = {
@@ -312,11 +330,39 @@ const ui = {
     } else {
       document.body.style.cursor = '';
     }
+  },
+  
+  // ✅ NUEVO: Mostrar indicador de búsqueda
+  showSearchIndicator(show = true) {
+    const searchInput = document.getElementById('search-input');
+    if (!searchInput) return;
+    
+    if (show) {
+      searchInput.style.borderColor = 'var(--primary-600)';
+      searchInput.style.backgroundColor = 'rgba(140, 0, 75, 0.05)';
+    } else {
+      searchInput.style.borderColor = '';
+      searchInput.style.backgroundColor = '';
+    }
+  },
+  
+  // ✅ NUEVO: Actualizar placeholder de búsqueda
+  updateSearchPlaceholder(count) {
+    const searchInput = document.getElementById('search-input');
+    if (!searchInput) return;
+    
+    if (count === 0) {
+      searchInput.placeholder = 'No se encontraron productos...';
+    } else if (state.searchQuery && state.searchQuery.length >= CONFIG.search.minChars) {
+      searchInput.placeholder = `${count} producto${count !== 1 ? 's' : ''} encontrado${count !== 1 ? 's' : ''}`;
+    } else {
+      searchInput.placeholder = 'Buscar productos...';
+    }
   }
 };
 
 // =============================================================================
-// PRODUCT MODAL (sin cambios - omitido por brevedad)
+// PRODUCT MODAL (sin cambios - código omitido por brevedad)
 // =============================================================================
 
 const productModal = {
@@ -478,9 +524,21 @@ const render = {
     }
     
     if (!products || products.length === 0) {
+      // ✅ MEJORADO: Mensaje cuando no hay productos
+      const searchTerm = state.searchQuery;
       grid.innerHTML = `
         <div style="grid-column: 1/-1; text-align: center; padding: 4rem;">
-          <p style="font-size: 1.25rem; color: #666;">No se encontraron productos</p>
+          <p style="font-size: 1.25rem; color: #666; margin-bottom: 1rem;">
+            ${searchTerm ? `No se encontraron productos para "${searchTerm}"` : 'No se encontraron productos'}
+          </p>
+          ${searchTerm ? `
+            <button 
+              onclick="filters.clearSearch()" 
+              style="padding: 0.75rem 1.5rem; background: var(--primary-800); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem;"
+            >
+              Ver todos los productos
+            </button>
+          ` : ''}
         </div>
       `;
       return;
@@ -541,9 +599,11 @@ const render = {
     }).join('');
     
     console.log(`✅ ${sortedProducts.length} productos renderizados`);
+    
+    // ✅ NUEVO: Actualizar placeholder de búsqueda
+    ui.updateSearchPlaceholder(sortedProducts.length);
   },
   
-  // ✅ Renderizar categorías en el orden especificado
   categories(categories) {
     const container = document.getElementById('category-filters');
     
@@ -561,20 +621,16 @@ const render = {
     console.log('✅ Categorías renderizadas:', categories);
   },
   
-  // ✅ NUEVO: Renderizar subcategorías para CUALQUIER categoría
   subcategories() {
     const subcatContainer = document.getElementById('subcategory-container');
     
     if (!subcatContainer) return;
     
-    // Obtener subcategorías de la categoría actual
     const currentSubcategories = state.subcategoriesByCategory[state.currentFilter] || [];
     
-    // Mostrar solo si hay subcategorías para la categoría actual
     if (state.currentFilter !== 'all' && currentSubcategories.length > 0) {
       subcatContainer.style.display = 'block';
       
-      // Actualizar el label según la categoría
       const labelMap = {
         'ropa': 'Marcas de Ropa:',
         'juguetes': 'Tipos de Juguetes:',
@@ -721,13 +777,40 @@ const filters = {
     this.apply();
   },
   
+  // ✅ MEJORADO: Función de búsqueda con validación
   setSearch(query) {
-    state.searchQuery = query;
+    const trimmedQuery = query ? query.trim() : '';
+    
+    // Solo buscar si hay al menos 2 caracteres o si está vacío (para limpiar)
+    if (trimmedQuery.length === 0 || trimmedQuery.length >= CONFIG.search.minChars) {
+      state.searchQuery = trimmedQuery;
+      console.log('🔍 Búsqueda:', state.searchQuery || '(vacía)');
+      this.apply();
+    } else {
+      console.log(`⚠️ Búsqueda requiere al menos ${CONFIG.search.minChars} caracteres`);
+    }
+  },
+  
+  // ✅ NUEVO: Limpiar búsqueda
+  clearSearch() {
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+      searchInput.value = '';
+    }
+    state.searchQuery = '';
     this.apply();
   },
   
   apply() {
+    // Evitar búsquedas múltiples simultáneas
+    if (state.isSearching) {
+      console.log('⏳ Búsqueda en progreso, esperando...');
+      return;
+    }
+    
+    state.isSearching = true;
     ui.showLoading(true);
+    ui.showSearchIndicator(true);
     
     const filters = {
       category: state.currentFilter,
@@ -739,19 +822,46 @@ const filters = {
     }
     
     api.fetchProducts(filters)
-    .then(data => {
-      if (data.success) {
-        state.products = data.products;
-        render.products(data.products);
-      }
-    })
-    .catch(error => {
-      console.error('Error filtering:', error);
-      ui.showNotification('Error al filtrar productos', 'error');
-    })
-    .finally(() => {
-      ui.showLoading(false);
-    });
+      .then(data => {
+        if (data && data.success) {
+          state.products = data.products || [];
+          render.products(state.products);
+          
+          if (state.products.length === 0 && state.searchQuery) {
+            console.log('❌ No se encontraron productos');
+          }
+        } else {
+          throw new Error(data.message || 'Error en la respuesta');
+        }
+      })
+      .catch(error => {
+        console.error('❌ Error filtering:', error);
+        ui.showNotification('Error al buscar productos', 'error');
+        
+        // Mostrar mensaje de error en el grid
+        const grid = document.getElementById('products-grid');
+        if (grid) {
+          grid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 4rem;">
+              <p style="font-size: 1.25rem; color: #e53e3e; margin-bottom: 1rem;">
+                Error al cargar productos
+              </p>
+              <p style="color: #666; margin-bottom: 1rem;">${error.message}</p>
+              <button 
+                onclick="filters.apply()" 
+                style="padding: 0.75rem 1.5rem; background: var(--primary-800); color: white; border: none; border-radius: 8px; cursor: pointer;"
+              >
+                Reintentar
+              </button>
+            </div>
+          `;
+        }
+      })
+      .finally(() => {
+        state.isSearching = false;
+        ui.showLoading(false);
+        ui.showSearchIndicator(false);
+      });
   }
 };
 
@@ -767,44 +877,47 @@ async function init() {
     
     const data = await api.fetchProducts();
     
-    if (data.success) {
-      state.products = data.products;
-      state.categories = data.categories;
-      state.subcategoriesByCategory = data.subcategoriesByCategory || {}; // ✅ Guardar todas las subcategorías
+    if (data && data.success) {
+      state.products = data.products || [];
+      state.allProducts = data.products || []; // Guardar copia de todos los productos
+      state.categories = data.categories || [];
+      state.subcategoriesByCategory = data.subcategoriesByCategory || {};
       
-      render.products(data.products);
-      render.categories(data.categories);
+      render.products(state.products);
+      render.categories(state.categories);
       render.subcategories();
       
-      console.log(`✅ ${data.products.length} productos cargados`);
-      console.log(`✅ ${data.categories.length} categorías cargadas`);
-      console.log(`✅ Subcategorías cargadas:`, state.subcategoriesByCategory);
+      console.log(`✅ ${state.products.length} productos cargados`);
+      console.log(`✅ ${state.categories.length} categorías cargadas`);
+      console.log(`✅ Subcategorías cargadas:`, Object.keys(state.subcategoriesByCategory).length);
       
       cart.load();
     } else {
-      throw new Error(data.message || 'Error al cargar productos');
+      throw new Error(data?.message || 'Error al cargar productos');
     }
     
   } catch (error) {
-    console.error('❌ Error:', error);
+    console.error('❌ Error de inicialización:', error);
     
     const grid = document.getElementById('products-grid');
     if (grid) {
       grid.innerHTML = `
         <div style="grid-column: 1/-1; text-align: center; padding: 4rem;">
           <p style="font-size: 1.25rem; color: #e53e3e; margin-bottom: 1rem;">
-            Error al cargar productos
+            Error al cargar la tienda
           </p>
-          <p style="color: #666;">${error.message}</p>
+          <p style="color: #666; margin-bottom: 1rem;">${error.message}</p>
           <button 
             onclick="location.reload()" 
-            style="margin-top: 1rem; padding: 0.5rem 1rem; background: #8C004B; color: white; border: none; border-radius: 8px; cursor: pointer;"
+            style="padding: 0.75rem 1.5rem; background: #8C004B; color: white; border: none; border-radius: 8px; cursor: pointer;"
           >
-            Reintentar
+            Recargar página
           </button>
         </div>
       `;
     }
+    
+    ui.showNotification('Error al inicializar la tienda', 'error');
   } finally {
     ui.showLoading(false);
   }
@@ -818,12 +931,32 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('search-input');
   
   if (searchInput) {
-    let timeout;
+    let searchTimeout;
+    
+    // ✅ MEJORADO: Búsqueda con debounce y validación
     searchInput.addEventListener('input', (e) => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => {
-        filters.setSearch(e.target.value);
-      }, 300);
+      clearTimeout(searchTimeout);
+      
+      const query = e.target.value.trim();
+      
+      // Mostrar indicador visual inmediatamente
+      if (query.length >= CONFIG.search.minChars) {
+        ui.showSearchIndicator(true);
+      } else {
+        ui.showSearchIndicator(false);
+      }
+      
+      // Esperar antes de buscar
+      searchTimeout = setTimeout(() => {
+        filters.setSearch(query);
+      }, CONFIG.search.debounceTime);
+    });
+    
+    // ✅ NUEVO: Limpiar búsqueda con Escape
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        filters.clearSearch();
+      }
     });
   }
   
@@ -857,4 +990,4 @@ window.mawewe = {
 
 window.productModal = productModal;
 
-console.log('✅ Mawewe cargado con subcategorías para todas las categorías');
+console.log('✅ Mawewe cargado con sistema de búsqueda mejorado');
