@@ -1,7 +1,9 @@
 <?php
 /**
  * API Endpoint: products.php
- * Obtiene productos desde MySQL
+ * Obtiene productos desde MySQL con categorías y subcategorías dinámicas
+ * ✅ Subcategorías para TODAS las categorías
+ * ✅ Orden personalizado de categorías
  * Ruta: /api/products.php
  */
 
@@ -57,7 +59,7 @@ try {
         : null;
 
     // ========================================
-    // 3. CONSTRUIR QUERY SQL
+    // 3. CONSTRUIR QUERY SQL PARA PRODUCTOS
     // ========================================
     $sql = "SELECT 
                 id,
@@ -106,14 +108,14 @@ try {
     $sql .= " ORDER BY featured DESC, created_at DESC";
 
     // ========================================
-    // 4. EJECUTAR QUERY
+    // 4. EJECUTAR QUERY DE PRODUCTOS
     // ========================================
     $stmt = $db->prepare($sql);
     $stmt->execute($params);
     $products = $stmt->fetchAll();
 
     // ========================================
-    // 5. PROCESAR RESULTADOS
+    // 5. PROCESAR RESULTADOS DE PRODUCTOS
     // ========================================
     foreach ($products as &$product) {
         // Convertir campo 'images' de JSON a array
@@ -134,10 +136,22 @@ try {
     }
 
     // ========================================
-    // 6. OBTENER CATEGORÍAS ÚNICAS
+    // 6. OBTENER CATEGORÍAS ÚNICAS CON ORDEN PERSONALIZADO
     // ========================================
+    
+    // ✅ ORDEN DESEADO: Todos, Ropa, Juguetes, Peluches, Joyas, Perfumes, Relojes, Accesorios
+    $categoryOrder = [
+        'ropa',
+        'juguetes',
+        'peluches',
+        'joyas',
+        'perfumes',
+        'relojes',
+        'accesorios'
+    ];
+    
     $sqlCategories = "SELECT 
-                        category,
+                        DISTINCT category,
                         COUNT(*) as count
                       FROM products 
                       WHERE active = 1 
@@ -148,17 +162,73 @@ try {
     $stmtCategories->execute();
     $categoriesData = $stmtCategories->fetchAll();
 
-    $categories = [];
+    // Crear mapa de categorías con conteos
+    $categoryMap = [];
+    $totalCount = 0;
     foreach ($categoriesData as $cat) {
-        $categories[] = [
-            'id' => strtolower(str_replace(' ', '-', $cat['category'])),
-            'name' => ucfirst($cat['category']),
-            'count' => (int)$cat['count']
+        $categoryMap[strtolower($cat['category'])] = (int)$cat['count'];
+        $totalCount += (int)$cat['count'];
+    }
+
+    $categories = [];
+    
+    // Agregar "Todos" primero
+    $categories[] = [
+        'id' => 'all',
+        'name' => 'Todos',
+        'count' => $totalCount
+    ];
+    
+    // Agregar categorías en el orden especificado
+    foreach ($categoryOrder as $catId) {
+        if (isset($categoryMap[$catId])) {
+            $categories[] = [
+                'id' => $catId,
+                'name' => ucfirst($catId), // Primera letra mayúscula
+                'count' => $categoryMap[$catId]
+            ];
+        }
+    }
+
+    // ========================================
+    // 7. OBTENER SUBCATEGORÍAS PARA TODAS LAS CATEGORÍAS
+    // ========================================
+    
+    // ✅ NUEVO: Obtener subcategorías agrupadas por categoría
+    $sqlAllSubcategories = "SELECT 
+                                category,
+                                subcategory,
+                                COUNT(*) as count
+                            FROM products 
+                            WHERE active = 1 
+                            AND subcategory IS NOT NULL
+                            AND subcategory != ''
+                            GROUP BY category, subcategory 
+                            ORDER BY category, subcategory";
+    
+    $stmtAllSubcategories = $db->prepare($sqlAllSubcategories);
+    $stmtAllSubcategories->execute();
+    $allSubcategoriesData = $stmtAllSubcategories->fetchAll();
+
+    // Organizar subcategorías por categoría
+    $subcategoriesByCategory = [];
+    foreach ($allSubcategoriesData as $subcat) {
+        $cat = strtolower($subcat['category']);
+        $sub = strtolower($subcat['subcategory']);
+        
+        if (!isset($subcategoriesByCategory[$cat])) {
+            $subcategoriesByCategory[$cat] = [];
+        }
+        
+        $subcategoriesByCategory[$cat][] = [
+            'id' => $sub,
+            'name' => ucfirst($sub), // Primera letra mayúscula
+            'count' => (int)$subcat['count']
         ];
     }
 
     // ========================================
-    // 7. CONFIGURACIÓN DE ENVÍO
+    // 8. CONFIGURACIÓN DE ENVÍO
     // ========================================
     $shippingConfig = [
         'cost' => 5.0,
@@ -167,12 +237,13 @@ try {
     ];
 
     // ========================================
-    // 8. RESPUESTA EXITOSA
+    // 9. RESPUESTA EXITOSA
     // ========================================
     $response = [
         'success' => true,
         'products' => $products,
         'categories' => $categories,
+        'subcategoriesByCategory' => $subcategoriesByCategory, // ✅ NUEVO: Todas las subcategorías organizadas
         'shippingConfig' => $shippingConfig,
         'total' => count($products),
         'filters' => [

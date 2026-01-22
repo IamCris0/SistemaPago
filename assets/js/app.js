@@ -1,6 +1,8 @@
 /**
- * MAWEWE E-COMMERCE - VERSIÓN COMPLETA
+ * MAWEWE E-COMMERCE - VERSIÓN COMPLETA V3
  * ✅ Productos ordenados por ID (menor a mayor)
+ * ✅ Categorías con orden personalizado: Todos, Ropa, Juguetes, Peluches, Joyas, etc.
+ * ✅ Subcategorías para TODAS las categorías (no solo Ropa y Juguetes)
  */
 
 // =============================================================================
@@ -28,7 +30,7 @@ const CONFIG = {
   }
 };
 
-console.log('🚀 Mawewe iniciando con ordenamiento por ID...');
+console.log('🚀 Mawewe iniciando con subcategorías para todas las categorías...');
 
 // =============================================================================
 // STATE MANAGEMENT
@@ -37,6 +39,7 @@ console.log('🚀 Mawewe iniciando con ordenamiento por ID...');
 const state = {
   products: [],
   categories: [],
+  subcategoriesByCategory: {}, // ✅ NUEVO: Subcategorías organizadas por categoría
   cart: [],
   currentFilter: 'all',
   currentSubcategory: null,
@@ -122,7 +125,7 @@ const api = {
 };
 
 // =============================================================================
-// CART FUNCTIONS
+// CART FUNCTIONS (sin cambios)
 // =============================================================================
 
 const cart = {
@@ -257,7 +260,7 @@ const cart = {
 };
 
 // =============================================================================
-// UI FUNCTIONS
+// UI FUNCTIONS (sin cambios)
 // =============================================================================
 
 const ui = {
@@ -313,7 +316,7 @@ const ui = {
 };
 
 // =============================================================================
-// PRODUCT MODAL
+// PRODUCT MODAL (sin cambios - omitido por brevedad)
 // =============================================================================
 
 const productModal = {
@@ -368,7 +371,7 @@ const productModal = {
           </div>
           
           <div class="modal-info">
-            <div class="product-category">${product.category}</div>
+            <div class="product-category">${product.category ? product.category.toUpperCase() : ''}</div>
             ${product.subcategory ? `<div class="product-subcategory">${product.subcategory.toUpperCase()}</div>` : ''}
             
             <h2 class="modal-title">${product.name}</h2>
@@ -381,8 +384,8 @@ const productModal = {
               <ul>
                 <li><strong>SKU:</strong> ${product.sku}</li>
                 <li><strong>Stock disponible:</strong> ${product.stock} unidades</li>
-                <li><strong>Categoría:</strong> ${product.category}</li>
-                ${product.subcategory ? `<li><strong>Subcategoría:</strong> ${product.subcategory}</li>` : ''}
+                <li><strong>Categoría:</strong> ${product.category ? product.category.toUpperCase() : ''}</li>
+                ${product.subcategory ? `<li><strong>Subcategoría:</strong> ${product.subcategory.toUpperCase()}</li>` : ''}
               </ul>
             </div>
             
@@ -483,7 +486,6 @@ const render = {
       return;
     }
     
-    // ✅ ASEGURAR ORDENAMIENTO POR ID (MENOR A MAYOR)
     const sortedProducts = [...products].sort((a, b) => a.id - b.id);
     
     grid.innerHTML = sortedProducts.map(product => {
@@ -504,7 +506,7 @@ const render = {
         </div>
         
         <div class="product-content">
-          <div class="product-category">${product.category || 'Sin categoría'}</div>
+          <div class="product-category">${product.category ? product.category.toUpperCase() : 'SIN CATEGORÍA'}</div>
           ${product.subcategory ? `<div class="product-subcategory">${product.subcategory.toUpperCase()}</div>` : ''}
           <h3 class="product-title">${product.name}</h3>
           <p class="product-description">${(product.description || '').substring(0, 80)}...</p>
@@ -538,61 +540,59 @@ const render = {
     `;
     }).join('');
     
-    console.log(`✅ ${sortedProducts.length} productos renderizados (ordenados por ID)`);
+    console.log(`✅ ${sortedProducts.length} productos renderizados`);
   },
   
+  // ✅ Renderizar categorías en el orden especificado
   categories(categories) {
     const container = document.getElementById('category-filters');
     
     if (!container || !categories) return;
     
-    const categoryOrder = [
-      'all',
-      'ropa',
-      'juguetes',
-      'peluches',
-      'joyas',
-      'perfumes',
-      'relojes',
-      'accesorios'
-    ];
-    
-    const orderedCategories = [];
-    orderedCategories.push({ id: 'all', name: 'Todos' });
-    
-    categoryOrder.forEach(id => {
-      if (id !== 'all') {
-        const cat = categories.find(c => c.id === id);
-        if (cat) {
-          orderedCategories.push(cat);
-        }
-      }
-    });
-    
-    container.innerHTML = orderedCategories.map(cat => `
-      <button class="filter-button ${state.currentFilter === cat.id ? 'active' : ''}" onclick="filters.setCategory('${cat.id}')">
+    container.innerHTML = categories.map(cat => `
+      <button 
+        class="filter-button ${state.currentFilter === cat.id ? 'active' : ''}" 
+        onclick="filters.setCategory('${cat.id}')"
+      >
         ${cat.name}
       </button>
     `).join('');
+    
+    console.log('✅ Categorías renderizadas:', categories);
   },
   
+  // ✅ NUEVO: Renderizar subcategorías para CUALQUIER categoría
   subcategories() {
     const subcatContainer = document.getElementById('subcategory-container');
     
     if (!subcatContainer) return;
     
-    if (state.currentFilter === 'ropa') {
+    // Obtener subcategorías de la categoría actual
+    const currentSubcategories = state.subcategoriesByCategory[state.currentFilter] || [];
+    
+    // Mostrar solo si hay subcategorías para la categoría actual
+    if (state.currentFilter !== 'all' && currentSubcategories.length > 0) {
       subcatContainer.style.display = 'block';
       
-      const subcategories = [
-        { id: 'americanino', name: 'Americanino' },
-        { id: 'chevignon', name: 'Chevignon' },
-        { id: 'offcors', name: 'Offcors' }
-      ];
+      // Actualizar el label según la categoría
+      const labelMap = {
+        'ropa': 'Marcas de Ropa:',
+        'juguetes': 'Tipos de Juguetes:',
+        'peluches': 'Tipos de Peluches:',
+        'perfumes': 'Marcas de Perfumes:',
+        'joyas': 'Tipos de Joyas:',
+        'relojes': 'Tipos de Relojes:',
+        'accesorios': 'Tipos de Accesorios:'
+      };
+      
+      const label = subcatContainer.querySelector('.subcategory-label');
+      if (label) {
+        label.textContent = labelMap[state.currentFilter] || 'Subcategorías:';
+      }
       
       const subcatFilters = document.getElementById('subcategory-filters');
       if (subcatFilters) {
-        subcatFilters.innerHTML = subcategories.map(subcat => `
+        subcatFilters.innerHTML = currentSubcategories.map(subcat => `
           <button 
             class="subcategory-button ${state.currentSubcategory === subcat.id ? 'active' : ''}" 
             onclick="filters.setSubcategory('${subcat.id}')"
@@ -601,6 +601,8 @@ const render = {
           </button>
         `).join('');
       }
+      
+      console.log(`✅ Subcategorías de ${state.currentFilter} renderizadas:`, currentSubcategories);
     } else {
       subcatContainer.style.display = 'none';
       state.currentSubcategory = null;
@@ -754,14 +756,6 @@ const filters = {
 };
 
 // =============================================================================
-// CHECKOUT (código del checkout omitido por brevedad - sin cambios)
-// =============================================================================
-
-const checkout = {
-  // ... (mismo código que antes)
-};
-
-// =============================================================================
 // INITIALIZATION
 // =============================================================================
 
@@ -776,12 +770,15 @@ async function init() {
     if (data.success) {
       state.products = data.products;
       state.categories = data.categories;
+      state.subcategoriesByCategory = data.subcategoriesByCategory || {}; // ✅ Guardar todas las subcategorías
       
       render.products(data.products);
       render.categories(data.categories);
       render.subcategories();
       
-      console.log(`✅ ${data.products.length} productos cargados (ordenados por ID)`);
+      console.log(`✅ ${data.products.length} productos cargados`);
+      console.log(`✅ ${data.categories.length} categorías cargadas`);
+      console.log(`✅ Subcategorías cargadas:`, state.subcategoriesByCategory);
       
       cart.load();
     } else {
@@ -854,11 +851,10 @@ window.mawewe = {
   cart,
   ui,
   filters,
-  checkout,
   state,
   CONFIG
 };
 
 window.productModal = productModal;
 
-console.log('✅ Mawewe cargado con ordenamiento por ID (menor a mayor)');
+console.log('✅ Mawewe cargado con subcategorías para todas las categorías');
