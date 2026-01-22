@@ -1,0 +1,215 @@
+/* ==============================================
+   CHECKOUT SIMULADO - ESTILOS
+   Sistema de pago sin PayPal
+   ============================================== */
+
+/* ============================================== 
+   MÉTODOS DE PAGO
+   ============================================== */
+
+.payment-methods-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.payment-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.payment-option {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-lg);
+  border: 2px solid var(--gray-300);
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  background: white;
+}
+
+.payment-option:hover {
+  border-color: var(--primary-600);
+  background-color: rgba(140, 0, 75, 0.02);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.payment-option.selected {
+  border-color: var(--primary-800);
+  background-color: rgba(140, 0, 75, 0.05);
+  box-shadow: var(--shadow-lg);
+}
+
+.payment-option input[type="radio"] {
+  margin-right: var(--spacing-md);
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--primary-800);
+}
+
+.payment-method-content {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  flex: 1;
+}
+
+.payment-icon {
+  font-size: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+}
+
+.payment-details {
+  flex: 1;
+}
+
+.payment-name {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: var(--spacing-xs);
+}
+
+.payment-description {
+  font-size: var(--font-size-sm);
+  color: var(--gray-600);
+}
+
+/* ============================================== 
+   CONFIRMACIÓN DE ORDEN
+   ============================================== */
+
+.order-confirmation {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+  padding: var(--spacing-xl);
+  text-align: center;
+}
+
+.confirmation-icon {
+  display: flex;
+  justify-content: center;
+  margin: var(--spacing-xl) 0;
+  animation: scaleIn 0.5s ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.order-number {
+  background: linear-gradient(135deg, var(--primary-50) 0%, var(--primary-100) 100%);
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-2xl);
+  border: 2px solid var(--primary-200);
+  margin: var(--spacing-lg) 0;
+}
+
+.bank-details {
+  background: white;
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200);
+  margin-top: var(--spacing-md);
+  text-align: left;
+}
+
+.bank-details p {
+  margin-bottom: var(--spacing-sm);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.bank-details p:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.bank-details strong {
+  color: var(--primary-800);
+  font-weight: 600;
+}
+
+/* ============================================== 
+   RESPONSIVE
+   ============================================== */
+
+@media (max-width: 768px) {
+  .payment-method-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .payment-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 2rem;
+  }
+  
+  .order-confirmation {
+    padding: var(--spacing-md);
+  }
+  
+  .order-number p:last-child {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .payment-option {
+    padding: var(--spacing-md);
+  }
+  
+  .payment-method-content {
+    gap: var(--spacing-md);
+  }
+  
+  .payment-name {
+    font-size: var(--font-size-base);
+  }
+  
+  .payment-description {
+    font-size: var(--font-size-xs);
+  }
+}
+
+/* ============================================== 
+   PRINT STYLES (para imprimir orden)
+   ============================================== */
+
+@media print {
+  .site-header,
+  .cart-modal,
+  .site-footer,
+  button:not(.no-print) {
+    display: none !important;
+  }
+  
+  .order-confirmation {
+    padding: 0;
+  }
+  
+  .form-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

@@ -1,8 +1,9 @@
 <?php
 /**
  * API Endpoint: save-order.php
- * Guarda órdenes de compra en MySQL
+ * Guarda órdenes de compra con métodos de pago simulados
  * ✅ DESCUENTA STOCK AUTOMÁTICAMENTE
+ * ✅ Soporta múltiples métodos de pago
  * Ruta: /api/save-order.php
  */
 
@@ -43,11 +44,17 @@ try {
     }
 
     // Validar campos requeridos
-    $required = ['paypalOrderId', 'email', 'firstName', 'lastName', 'items', 'totals'];
+    $required = ['orderNumber', 'email', 'firstName', 'lastName', 'items', 'totals', 'paymentMethod'];
     foreach ($required as $field) {
         if (!isset($data[$field]) || empty($data[$field])) {
             throw new Exception("Campo requerido faltante: {$field}");
         }
+    }
+    
+    // Validar método de pago
+    $validPaymentMethods = ['transfer', 'card', 'cash', 'paypal'];
+    if (!in_array($data['paymentMethod'], $validPaymentMethods)) {
+        throw new Exception("Método de pago inválido: {$data['paymentMethod']}");
     }
 
     // ========================================
@@ -66,7 +73,7 @@ try {
     $db->beginTransaction();
 
     // ========================================
-    // 4. VERIFICAR STOCK DISPONIBLE ANTES DE PROCESAR
+    // 4. VERIFICAR STOCK DISPONIBLE
     // ========================================
     $stockErrors = [];
     
@@ -86,7 +93,7 @@ try {
         }
     }
     
-    // Si hay errores de stock, hacer rollback y retornar error
+    // Si hay errores de stock, hacer rollback
     if (!empty($stockErrors)) {
         $db->rollBack();
         http_response_code(400);
@@ -102,7 +109,7 @@ try {
     // 5. INSERTAR ORDEN PRINCIPAL
     // ========================================
     $sqlOrder = "INSERT INTO orders (
-                    paypal_order_id,
+                    order_number,
                     email,
                     first_name,
                     last_name,
@@ -112,13 +119,14 @@ try {
                     postal_code,
                     phone,
                     shipping_method,
+                    payment_method,
                     subtotal,
                     shipping_cost,
                     total,
                     status,
                     created_at
                 ) VALUES (
-                    :paypal_order_id,
+                    :order_number,
                     :email,
                     :first_name,
                     :last_name,
@@ -128,16 +136,27 @@ try {
                     :postal_code,
                     :phone,
                     :shipping_method,
+                    :payment_method,
                     :subtotal,
                     :shipping_cost,
                     :total,
-                    'completed',
+                    :status,
                     NOW()
                 )";
 
+    // Determinar status según método de pago
+    $statusMap = [
+        'transfer' => 'pending_payment',  // Esperando comprobante
+        'card' => 'completed',             // Pagado
+        'cash' => 'pending_payment',       // Pagar al recibir
+        'paypal' => 'completed'            // Pagado
+    ];
+    
+    $orderStatus = $statusMap[$data['paymentMethod']] ?? 'pending_payment';
+
     $stmtOrder = $db->prepare($sqlOrder);
     $stmtOrder->execute([
-        ':paypal_order_id' => $data['paypalOrderId'],
+        ':order_number' => $data['orderNumber'],
         ':email' => $data['email'],
         ':first_name' => $data['firstName'],
         ':last_name' => $data['lastName'],
@@ -147,12 +166,14 @@ try {
         ':postal_code' => $data['postalCode'] ?? '',
         ':phone' => $data['phone'] ?? '',
         ':shipping_method' => $data['shippingMethod'] ?? 'standard',
+        ':payment_method' => $data['paymentMethod'],
         ':subtotal' => $data['totals']['subtotal'],
         ':shipping_cost' => $data['totals']['shipping'],
-        ':total' => $data['totals']['total']
+        ':total' => $data['totals']['total'],
+        ':status' => $orderStatus
     ]);
 
-    // Obtener ID de la orden recién insertada
+    // Obtener ID de la orden
     $orderId = $db->lastInsertId();
 
     // ========================================
@@ -181,7 +202,7 @@ try {
     foreach ($data['items'] as $item) {
         $itemSubtotal = $item['price'] * $item['quantity'];
         
-        // Insertar item de orden
+        // Insertar item
         $stmtItem->execute([
             ':order_id' => $orderId,
             ':product_id' => $item['productId'],
@@ -192,7 +213,7 @@ try {
             ':subtotal' => $itemSubtotal
         ]);
 
-        // ✅ DESCONTAR STOCK DEL PRODUCTO
+        // ✅ DESCONTAR STOCK
         $sqlUpdateStock = "UPDATE products 
                           SET stock = stock - :quantity,
                               updated_at = NOW()
@@ -205,12 +226,10 @@ try {
             ':product_id' => $item['productId']
         ]);
 
-        // Verificar que se actualizó el stock
         if ($stmtUpdateStock->rowCount() === 0) {
             throw new Exception("Error crítico: No se pudo actualizar stock para: {$item['name']}");
         }
         
-        // Log del descuento de stock
         error_log("✅ Stock descontado: Producto ID {$item['productId']}, Cantidad: {$item['quantity']}");
     }
 
@@ -219,17 +238,27 @@ try {
     // ========================================
     $db->commit();
 
-    // Generar número de orden
-    $orderNumber = 'MW-' . str_pad($orderId, 6, '0', STR_PAD_LEFT);
+    // ========================================
+    // 8. PREPARAR RESPUESTA
+    // ========================================
+    $paymentMethodNames = [
+        'transfer' => 'Transferencia Bancaria',
+        'card' => 'Tarjeta de Crédito/Débito',
+        'cash' => 'Pago en Efectivo',
+        'paypal' => 'PayPal'
+    ];
 
     // ========================================
-    // 8. RESPUESTA EXITOSA
+    // 9. RESPUESTA EXITOSA
     // ========================================
     echo json_encode([
         'success' => true,
-        'message' => 'Orden guardada exitosamente y stock actualizado',
+        'message' => 'Orden guardada exitosamente',
         'orderId' => (int)$orderId,
-        'orderNumber' => $orderNumber,
+        'orderNumber' => $data['orderNumber'],
+        'paymentMethod' => $data['paymentMethod'],
+        'paymentMethodName' => $paymentMethodNames[$data['paymentMethod']],
+        'status' => $orderStatus,
         'timestamp' => date('c'),
         'customer' => [
             'name' => $data['firstName'] . ' ' . $data['lastName'],
@@ -260,8 +289,7 @@ try {
     echo json_encode([
         'success' => false,
         'message' => 'Error al guardar la orden',
-        'error' => $e->getMessage(),
-        'trace' => $e->getTraceAsString()
+        'error' => $e->getMessage()
     ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 }
 
