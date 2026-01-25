@@ -164,14 +164,16 @@ try {
     // 6. OBTENER CATEGORÍAS ÚNICAS CON ORDEN PERSONALIZADO
     // ========================================
     
-    // ✅ ORDEN DESEADO
+    // ✅ ORDEN DESEADO - Actualizado con todas las categorías
     $categoryOrder = [
         'ropa',
+        'belleza',        // ⭐ NUEVO: Victoria's Secret
+        'perfumes',
         'juguetes',
         'peluches',
         'joyas',
-        'perfumes',
         'relojes',
+        'deportes',       // ⭐ NUEVO: Patines y deportivos
         'accesorios'
     ];
     
