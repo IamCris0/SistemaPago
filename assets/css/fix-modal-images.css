@@ -31,9 +31,7 @@
   max-height: 100% !important;
 }
 
-/* ============================================== 
-   MINIATURAS (ULTRA FUERTE)
-   ============================================== */
+
 
 .modal-thumbnails .thumbnail,
 .product-modal .modal-thumbnails .thumbnail {
@@ -163,7 +161,6 @@
 }
 
 body::after {
-  content: "✓ fix-modal-ultra.css cargado" !important;
   position: fixed !important;
   bottom: 5px !important;
   right: 5px !important;
