@@ -527,8 +527,9 @@ body {
   position: relative;
   width: 100%;
   padding-top: 100%;
-  background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-200) 100%);
+  background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
   overflow: hidden;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
 }
 
 .product-carousel {
@@ -543,15 +544,22 @@ body {
 }
 
 .product-image {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  transition: transform var(--transition-slow); /* Solo transición para el hover, no para el cambio de src */
+  object-fit: contain; /* ✅ Muestra imagen completa */
+  object-position: center;
+  transition: transform var(--transition-slow);
   cursor: pointer;
+  padding: var(--spacing-sm); /* Espaciado interno */
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.05));
 }
 
 .product-card:hover .product-image {
-  transform: scale(1.08);
+  transform: scale(1.05);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
 }
 
 /* Botones del carrusel */
@@ -903,7 +911,9 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;      
+  object-position: center;
+  padding: 12px;           
   transition: opacity 0.3s ease;
 }
 
@@ -956,7 +966,9 @@ body {
 .modal-thumbnails .thumbnail {
   width: 100%;
   aspect-ratio: 1;
-  object-fit: cover;
+  object-fit: contain;     
+  object-position: center;
+  padding: 4px;            
   border-radius: var(--radius-lg);
   cursor: pointer;
   border: 3px solid transparent;
@@ -2346,4 +2358,16 @@ img[loading="lazy"].loaded {
     width: 50px;
     height: 50px;
   }
+
+@media (max-width: 768px) {
+  .product-image {
+    padding: var(--spacing-xs); 
+  }
+}
+
+@media (max-width: 480px) {
+  .product-image {
+    padding: 4px; 
+  }
+}
 }
