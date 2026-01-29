@@ -11,8 +11,8 @@
     # Métodos HTTP permitidos
     Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
     
-    # Headers permitidos en las peticiones
-    Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+    # Headers permitidos en las peticiones (✅ MODIFICADO: agregado cache-control)
+    Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, cache-control"
     
     # Permitir credenciales
     Header always set Access-Control-Allow-Credentials "true"
