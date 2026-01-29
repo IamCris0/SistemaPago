@@ -1,11 +1,10 @@
 <?php
 /**
  * API Endpoint: save-order.php MEJORADO
- * ✅ Guarda órdenes con validación robusta
- * ✅ Descuenta stock automáticamente con verificación
- * ✅ Transacciones seguras con rollback automático
- * ✅ Logging detallado para debugging
- * ✅ Manejo de errores profesional
+ * ✅ Genera orderNumber automáticamente
+ * ✅ Validación completa de datos
+ * ✅ Transacciones seguras
+ * ✅ Logging detallado
  */
 
 // Headers CORS
@@ -38,13 +37,41 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 require_once __DIR__ . '/config/database.php';
 
 // ========================================
+// FUNCIÓN: Generar número de orden único
+// ========================================
+function generateOrderNumber($db) {
+    $prefix = 'MW';
+    $date = date('Ymd');
+    
+    // Buscar el último número del día
+    $sql = "SELECT order_number FROM orders 
+            WHERE order_number LIKE :pattern 
+            ORDER BY id DESC LIMIT 1";
+    
+    $stmt = $db->prepare($sql);
+    $stmt->execute([':pattern' => $prefix . $date . '%']);
+    $lastOrder = $stmt->fetch();
+    
+    if ($lastOrder) {
+        // Extraer el número secuencial y sumarle 1
+        $lastNumber = intval(substr($lastOrder['order_number'], -4));
+        $newNumber = $lastNumber + 1;
+    } else {
+        $newNumber = 1;
+    }
+    
+    // Formato: MW20260125-0001
+    return $prefix . $date . '-' . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+}
+
+// ========================================
 // FUNCIÓN: Validar datos de entrada
 // ========================================
 function validateOrderData($data) {
     $errors = [];
     
     // Campos requeridos
-    $required = ['orderNumber', 'email', 'firstName', 'lastName', 'items', 'totals', 'paymentMethod'];
+    $required = ['email', 'firstName', 'lastName', 'items', 'totals', 'paymentMethod'];
     foreach ($required as $field) {
         if (!isset($data[$field]) || empty($data[$field])) {
             $errors[] = "Campo requerido faltante: {$field}";
@@ -112,7 +139,6 @@ try {
     }
     
     logOrder('📥 Orden recibida', [
-        'orderNumber' => $data['orderNumber'] ?? 'N/A',
         'email' => $data['email'] ?? 'N/A',
         'itemCount' => count($data['items'] ?? [])
     ]);
@@ -147,25 +173,29 @@ try {
     logOrder('✅ Conectado a la base de datos');
 
     // ========================================
-    // 4. INICIAR TRANSACCIÓN
+    // 4. GENERAR NÚMERO DE ORDEN
+    // ========================================
+    $orderNumber = generateOrderNumber($db);
+    logOrder('✅ Número de orden generado', ['orderNumber' => $orderNumber]);
+
+    // ========================================
+    // 5. INICIAR TRANSACCIÓN
     // ========================================
     $db->beginTransaction();
     logOrder('🔄 Transacción iniciada');
 
     // ========================================
-    // 5. VERIFICAR STOCK DISPONIBLE
+    // 6. VERIFICAR STOCK DISPONIBLE
     // ========================================
     $stockErrors = [];
-    $productData = []; // Guardar data de productos para validación
+    $productData = [];
     
     foreach ($data['items'] as $item) {
-        // Validar estructura del item
         if (!isset($item['productId']) || !isset($item['quantity'])) {
             $stockErrors[] = "Item inválido en la orden";
             continue;
         }
         
-        // Obtener datos del producto con lock
         $sqlCheckStock = "SELECT id, stock, name, price FROM products WHERE id = :product_id AND active = 1 FOR UPDATE";
         $stmtCheck = $db->prepare($sqlCheckStock);
         $stmtCheck->execute([':product_id' => $item['productId']]);
@@ -176,17 +206,14 @@ try {
             continue;
         }
         
-        // Verificar stock suficiente
         if ($product['stock'] < $item['quantity']) {
             $stockErrors[] = "Stock insuficiente para: {$product['name']} (Disponible: {$product['stock']}, Solicitado: {$item['quantity']})";
             continue;
         }
         
-        // Guardar data del producto
         $productData[$item['productId']] = $product;
     }
     
-    // Si hay errores de stock, hacer rollback
     if (!empty($stockErrors)) {
         $db->rollBack();
         logOrder('❌ Errores de stock', $stockErrors);
@@ -203,7 +230,7 @@ try {
     logOrder('✅ Stock verificado para todos los productos');
 
     // ========================================
-    // 6. INSERTAR ORDEN PRINCIPAL
+    // 7. INSERTAR ORDEN PRINCIPAL
     // ========================================
     $sqlOrder = "INSERT INTO orders (
                     order_number,
@@ -241,12 +268,11 @@ try {
                     NOW()
                 )";
 
-    // Determinar status según método de pago
     $statusMap = [
-        'transfer' => 'pending_payment',  // Esperando comprobante
-        'card' => 'completed',             // Pagado (simulado)
-        'cash' => 'pending_payment',       // Pagar al recibir
-        'paypal' => 'completed'            // Pagado (simulado)
+        'transfer' => 'pending_payment',
+        'card' => 'completed',
+        'cash' => 'pending_payment',
+        'paypal' => 'completed'
     ];
     
     $orderStatus = $statusMap[$data['paymentMethod']] ?? 'pending_payment';
@@ -255,7 +281,7 @@ try {
     
     try {
         $stmtOrder->execute([
-            ':order_number' => $data['orderNumber'],
+            ':order_number' => $orderNumber,
             ':email' => strtolower(trim($data['email'])),
             ':first_name' => trim($data['firstName']),
             ':last_name' => trim($data['lastName']),
@@ -275,14 +301,12 @@ try {
         logOrder('✅ Orden principal insertada');
         
     } catch (PDOException $e) {
-        // Verificar si es error de duplicate key
-        if ($e->getCode() == 23000) { // Duplicate entry
-            throw new Exception("El número de orden {$data['orderNumber']} ya existe. Por favor intenta de nuevo.");
+        if ($e->getCode() == 23000) {
+            throw new Exception("Error al generar número de orden único. Por favor intenta de nuevo.");
         }
         throw $e;
     }
 
-    // Obtener ID de la orden
     $orderId = $db->lastInsertId();
     
     if (!$orderId) {
@@ -292,7 +316,7 @@ try {
     logOrder('✅ Order ID obtenido', ['orderId' => $orderId]);
 
     // ========================================
-    // 7. INSERTAR ITEMS Y DESCONTAR STOCK
+    // 8. INSERTAR ITEMS Y DESCONTAR STOCK
     // ========================================
     $sqlItem = "INSERT INTO order_items (
                     order_id,
@@ -321,7 +345,6 @@ try {
         $product = $productData[$item['productId']];
         $itemSubtotal = $item['price'] * $item['quantity'];
         
-        // Insertar item
         $stmtItem->execute([
             ':order_id' => $orderId,
             ':product_id' => $item['productId'],
@@ -334,7 +357,6 @@ try {
         
         $itemsInserted++;
 
-        // Descontar stock con verificación doble
         $sqlUpdateStock = "UPDATE products 
                           SET stock = stock - :quantity,
                               updated_at = NOW()
@@ -369,24 +391,13 @@ try {
     ]);
 
     // ========================================
-    // 8. VERIFICACIÓN FINAL
-    // ========================================
-    if ($itemsInserted !== count($data['items'])) {
-        throw new Exception("Discrepancia en items: esperados " . count($data['items']) . ", insertados {$itemsInserted}");
-    }
-    
-    if ($stockUpdated !== count($data['items'])) {
-        throw new Exception("Discrepancia en actualización de stock");
-    }
-
-    // ========================================
     // 9. COMMIT DE LA TRANSACCIÓN
     // ========================================
     $db->commit();
     logOrder('✅ Transacción completada exitosamente', ['orderId' => $orderId]);
 
     // ========================================
-    // 10. PREPARAR RESPUESTA
+    // 10. RESPUESTA EXITOSA
     // ========================================
     $paymentMethodNames = [
         'transfer' => 'Transferencia Bancaria',
@@ -395,31 +406,36 @@ try {
         'paypal' => 'PayPal'
     ];
 
-    // ========================================
-    // 11. RESPUESTA EXITOSA
-    // ========================================
     $response = [
         'success' => true,
         'message' => 'Orden procesada exitosamente',
         'orderId' => (int)$orderId,
-        'orderNumber' => $data['orderNumber'],
+        'orderNumber' => $orderNumber,
         'paymentMethod' => $data['paymentMethod'],
         'paymentMethodName' => $paymentMethodNames[$data['paymentMethod']],
         'status' => $orderStatus,
         'timestamp' => date('c'),
         'customer' => [
             'name' => $data['firstName'] . ' ' . $data['lastName'],
-            'email' => $data['email']
+            'email' => $data['email'],
+            'phone' => $data['phone'] ?? '',
+            'address' => $data['address'] ?? ''
         ],
         'totals' => [
             'subtotal' => (float)$data['totals']['subtotal'],
             'shipping' => (float)($data['totals']['shipping'] ?? 0),
             'total' => (float)$data['totals']['total']
         ],
-        'items' => [
-            'count' => count($data['items']),
-            'inserted' => $itemsInserted
-        ],
+        'items' => array_map(function($item) {
+            return [
+                'productId' => $item['productId'],
+                'name' => $item['name'],
+                'sku' => $item['sku'],
+                'price' => (float)$item['price'],
+                'quantity' => (int)$item['quantity'],
+                'subtotal' => (float)($item['price'] * $item['quantity'])
+            ];
+        }, $data['items']),
         'stockUpdated' => true,
         'stockCount' => $stockUpdated
     ];
@@ -427,11 +443,6 @@ try {
     echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 
 } catch (PDOException $e) {
-    // ========================================
-    // MANEJO DE ERRORES DE BASE DE DATOS
-    // ========================================
-    
-    // Rollback en caso de error
     if (isset($db) && $db->inTransaction()) {
         $db->rollBack();
         logOrder('❌ Rollback ejecutado debido a error de BD');
@@ -447,16 +458,10 @@ try {
         'success' => false,
         'message' => 'Error de base de datos',
         'error' => 'Ocurrió un problema al guardar tu orden. Por favor intenta de nuevo.',
-        'code' => 'DB_ERROR',
-        'details' => $e->getMessage() // Solo para desarrollo, quitar en producción
+        'code' => 'DB_ERROR'
     ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     
 } catch (Exception $e) {
-    // ========================================
-    // MANEJO DE ERRORES GENERALES
-    // ========================================
-    
-    // Rollback en caso de error
     if (isset($db) && $db->inTransaction()) {
         $db->rollBack();
         logOrder('❌ Rollback ejecutado debido a error general');
@@ -473,9 +478,6 @@ try {
     ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     
 } finally {
-    // ========================================
-    // LIMPIEZA
-    // ========================================
     if (isset($database)) {
         $database->closeConnection();
     }
