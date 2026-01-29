@@ -22,20 +22,46 @@ const checkout = {
   // STEP 1: Abrir formulario de checkout
   // ========================================
   openCheckout() {
-    // ✅ FIX: Verificar que el carrito no esté vacío usando window.state
-    if (!window.state || !window.state.cart || window.state.cart.length === 0) {
-      if (window.ui) {
-        window.ui.showNotification('El carrito está vacío', 'error');
-      } else {
-        alert('El carrito está vacío');
-      }
-      return;
+    // ✅ FIX MEJORADO: Verificar carrito con debug
+    console.log('🔍 DEBUG Checkout:');
+    console.log('- window.state existe:', !!window.state);
+    console.log('- window.cart existe:', !!window.cart);
+    console.log('- window.mawewe existe:', !!window.mawewe);
+    
+    // Intentar obtener el carrito de múltiples fuentes
+    let cartItems = null;
+    
+    if (window.state && window.state.cart) {
+        cartItems = window.state.cart;
+        console.log('✅ Carrito encontrado en window.state.cart');
+    } else if (window.mawewe && window.mawewe.state && window.mawewe.state.cart) {
+        cartItems = window.mawewe.state.cart;
+        console.log('✅ Carrito encontrado en window.mawewe.state.cart');
+    } else if (window.cart && typeof window.cart.getItemCount === 'function') {
+        // Cargar desde cart API
+        const count = window.cart.getItemCount();
+        console.log('✅ Items en cart API:', count);
+        if (count > 0) {
+            // El carrito tiene items, continuar
+            cartItems = []; // Placeholder, se cargará después
+        }
     }
     
-    console.log('📝 Abriendo checkout...');
+    console.log('📦 Items detectados:', cartItems ? cartItems.length : 0);
+    
+    if (!cartItems || cartItems.length === 0) {
+        console.log('❌ Carrito vacío');
+        if (window.ui) {
+            window.ui.showNotification('El carrito está vacío', 'error');
+        } else {
+            alert('El carrito está vacío');
+        }
+        return;
+    }
+    
+    console.log('✅ Carrito válido, abriendo checkout...');
     
     // Ocultar items del carrito y footer
-    const cartItems = document.getElementById('cart-items');
     const cartFooter = document.getElementById('cart-footer');
     const container = document.getElementById('checkout-form-container');
     
