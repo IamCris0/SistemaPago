@@ -1,7 +1,7 @@
 /**
- * MAWEWE E-COMMERCE - VERSIÓN CORREGIDA
- * ✅ FIX: Productos borrados no aparecen
- * ✅ FIX: Sin destello en barra de búsqueda
+ * MAWEWE E-COMMERCE - VERSIÓN CORREGIDA FINAL
+ * ✅ FIX 1: Envío SIEMPRE GRATIS (sin umbral)
+ * ✅ FIX 2: Stock se actualiza al cerrar carrito
  */
 
 // =============================================================================
@@ -23,9 +23,9 @@ const CONFIG = {
   },
   
   shipping: {
-    cost: 5.00,
-    freeThreshold: 50.00,
-    expressCost: 10.00
+    cost: 0.00,              // ✅ SIEMPRE GRATIS
+    freeThreshold: 0.00,     // ✅ SIN UMBRAL
+    expressCost: 0.00        // ✅ NO HAY EXPRESS
   },
   
   search: {
@@ -34,7 +34,7 @@ const CONFIG = {
   }
 };
 
-console.log('🚀 Mawewe iniciando (versión corregida)...');
+console.log('🚀 Mawewe iniciando (envío gratis siempre)...');
 
 // =============================================================================
 // STATE MANAGEMENT
@@ -49,7 +49,7 @@ const state = {
   currentFilter: 'all',
   currentSubcategory: null,
   searchQuery: '',
-  shippingMethod: 'standard',
+  shippingMethod: 'standard', // ✅ SIEMPRE ESTÁNDAR
   checkoutData: {},
   isSearching: false
 };
@@ -244,14 +244,8 @@ const cart = {
   calculateTotals() {
     const subtotal = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     
-    let shipping = 0;
-    if (subtotal > 0) {
-      if (state.shippingMethod === 'express') {
-        shipping = CONFIG.shipping.expressCost;
-      } else if (subtotal < CONFIG.shipping.freeThreshold) {
-        shipping = CONFIG.shipping.cost;
-      }
-    }
+    // ✅ ENVÍO SIEMPRE GRATIS
+    const shipping = 0.00;
     
     const total = subtotal + shipping;
     
@@ -286,9 +280,14 @@ const ui = {
     const isOpen = modal.classList.contains('open');
     
     if (isOpen) {
+      // ✅ AL CERRAR CARRITO: ACTUALIZAR PRODUCTOS
+      console.log('🔄 Cerrando carrito, actualizando productos...');
       modal.classList.remove('open');
       overlay.classList.remove('active');
       document.body.style.overflow = '';
+      
+      // ✅ REFRESCAR PRODUCTOS DESDE API
+      filters.apply();
     } else {
       modal.classList.add('open');
       overlay.classList.add('active');
@@ -327,8 +326,6 @@ const ui = {
     }
   },
   
-  // ✅ ELIMINADO: showSearchIndicator - causa el destello
-  
   updateSearchPlaceholder(count) {
     const searchInput = document.getElementById('search-input');
     if (!searchInput) return;
@@ -344,7 +341,7 @@ const ui = {
 };
 
 // =============================================================================
-// PRODUCT MODAL
+// PRODUCT MODAL (igual que antes)
 // =============================================================================
 
 const productModal = {
@@ -493,7 +490,7 @@ const productModal = {
 };
 
 // =============================================================================
-// RENDER FUNCTIONS
+// RENDER FUNCTIONS (actualizado con envío gratis)
 // =============================================================================
 
 const render = {
@@ -712,19 +709,15 @@ const render = {
       </div>
       <div class="summary-row">
         <span>Envío:</span>
-        <span class="amount ${shipping === 0 && subtotal > 0 ? 'free-shipping' : ''}">
-          ${shipping === 0 && subtotal > 0 ? 'GRATIS' : '$' + shipping.toFixed(2)}
-        </span>
+        <span class="amount free-shipping">GRATIS</span>
       </div>
       <div class="summary-row total">
         <span>Total:</span>
         <span class="amount">$${total.toFixed(2)}</span>
       </div>
-      ${subtotal > 0 && subtotal < CONFIG.shipping.freeThreshold ? `
-        <p class="summary-note">
-          Compra $${(CONFIG.shipping.freeThreshold - subtotal).toFixed(2)} más para envío gratis
-        </p>
-      ` : ''}
+      <p class="summary-note" style="background: #d4edda; color: #155724; border: 1px solid #c3e6cb;">
+        ✓ Envío gratis en todos los pedidos
+      </p>
     `;
   }
 };
@@ -781,7 +774,6 @@ const filters = {
   },
   
   apply() {
-    // ✅ FIX: Sin destello - removido showSearchIndicator
     if (state.isSearching) {
       console.log('⏳ Búsqueda en progreso, esperando...');
       return;
@@ -837,7 +829,6 @@ const filters = {
       .finally(() => {
         state.isSearching = false;
         ui.showLoading(false);
-        // ✅ FIX: Sin showSearchIndicator
       });
   }
 };
@@ -915,8 +906,6 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const query = e.target.value.trim();
       
-      // ✅ FIX: Sin indicador visual que cause destello
-      
       searchTimeout = setTimeout(() => {
         filters.setSearch(query);
       }, CONFIG.search.debounceTime);
@@ -971,4 +960,4 @@ window.mawewe = {
 
 window.productModal = productModal;
 
-console.log('✅ Mawewe cargado (versión corregida - sin destello)');
+console.log('✅ Mawewe cargado (envío gratis + actualización automática)');

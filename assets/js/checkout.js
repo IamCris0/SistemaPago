@@ -1,7 +1,7 @@
 /**
- * MAWEWE E-COMMERCE - CHECKOUT CORREGIDO FINAL
- * ✅ FIX: Referencias a window.state y window.cart corregidas
- * Sistema de pago 100% funcional con guardado en base de datos
+ * MAWEWE E-COMMERCE - CHECKOUT CORREGIDO
+ * ✅ FIX: Envío SIEMPRE GRATIS (sin opciones)
+ * ✅ FIX: Genera order_number único en frontend
  */
 
 // =============================================================================
@@ -23,7 +23,6 @@ const checkout = {
   // HELPER: Obtener referencia al carrito
   // ========================================
   getCart() {
-    // Intentar obtener cart de diferentes fuentes
     if (window.mawewe && window.mawewe.cart) {
       return window.mawewe.cart;
     }
@@ -38,7 +37,6 @@ const checkout = {
   // HELPER: Obtener referencia al state
   // ========================================
   getState() {
-    // Intentar obtener state de diferentes fuentes
     if (window.mawewe && window.mawewe.state) {
       return window.mawewe.state;
     }
@@ -119,8 +117,6 @@ const checkout = {
     
     const { subtotal, shipping, total } = cart.calculateTotals();
     const cartItems = this.getCartItems();
-    const state = this.getState();
-    const shippingMethod = (state && state.shippingMethod) ? state.shippingMethod : 'standard';
     
     return `
       <div class="checkout-header">
@@ -242,44 +238,14 @@ const checkout = {
           </div>
         </div>
         
-        <!-- Método de Envío -->
+        <!-- ✅ MÉTODO DE ENVÍO - SOLO GRATIS -->
         <div class="form-section">
           <h3>🚚 Método de Envío</h3>
           
-          <div class="shipping-options">
-            <label class="shipping-option ${shippingMethod === 'standard' ? 'selected' : ''}" onclick="checkout.selectShipping('standard')">
-              <input 
-                type="radio" 
-                name="shipping" 
-                value="standard" 
-                ${shippingMethod === 'standard' ? 'checked' : ''}
-              />
-              <div class="shipping-info">
-                <div>
-                  <div class="shipping-name">Envío Estándar</div>
-                  <div style="font-size: 0.875rem; color: var(--gray-600);">3-5 días hábiles</div>
-                </div>
-                <div class="shipping-cost">
-                  ${shipping === 0 ? 'GRATIS' : '$' + shipping.toFixed(2)}
-                </div>
-              </div>
-            </label>
-            
-            <label class="shipping-option ${shippingMethod === 'express' ? 'selected' : ''}" onclick="checkout.selectShipping('express')">
-              <input 
-                type="radio" 
-                name="shipping" 
-                value="express" 
-                ${shippingMethod === 'express' ? 'checked' : ''}
-              />
-              <div class="shipping-info">
-                <div>
-                  <div class="shipping-name">Envío Express</div>
-                  <div style="font-size: 0.875rem; color: var(--gray-600);">1-2 días hábiles</div>
-                </div>
-                <div class="shipping-cost">$${(window.CONFIG && window.CONFIG.shipping && window.CONFIG.shipping.expressCost) ? window.CONFIG.shipping.expressCost.toFixed(2) : '10.00'}</div>
-              </div>
-            </label>
+          <div style="background: #d4edda; padding: 1.5rem; border-radius: 12px; border: 2px solid #c3e6cb; text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 0.5rem;">✓</div>
+            <h4 style="color: #155724; font-size: 1.25rem; margin-bottom: 0.5rem;">Envío Gratis</h4>
+            <p style="color: #155724; margin: 0;">Entrega en 3-5 días hábiles sin costo adicional</p>
           </div>
         </div>
         
@@ -307,9 +273,7 @@ const checkout = {
             </div>
             <div class="summary-row">
               <span>Envío:</span>
-              <span class="amount ${shipping === 0 ? 'free-shipping' : ''}">
-                ${shipping === 0 ? 'GRATIS' : '$' + shipping.toFixed(2)}
-              </span>
+              <span class="amount free-shipping">GRATIS ✓</span>
             </div>
             <div class="summary-row total">
               <span>Total:</span>
@@ -323,25 +287,6 @@ const checkout = {
         </button>
       </form>
     `;
-  },
-  
-  // ========================================
-  // Seleccionar método de envío
-  // ========================================
-  selectShipping(method) {
-    const state = this.getState();
-    if (state) {
-      state.shippingMethod = method;
-    }
-    
-    document.querySelectorAll('.shipping-option').forEach(option => {
-      option.classList.remove('selected');
-    });
-    event.currentTarget.classList.add('selected');
-    
-    this.openCheckout();
-    
-    console.log('🚚 Método de envío seleccionado:', method);
   },
   
   // ========================================
@@ -390,8 +335,6 @@ const checkout = {
     
     const { subtotal, shipping, total } = cart.calculateTotals();
     const cartItems = this.getCartItems();
-    const state = this.getState();
-    const shippingMethod = (state && state.shippingMethod) ? state.shippingMethod : 'standard';
     
     container.innerHTML = `
       <div class="checkout-header">
@@ -485,10 +428,8 @@ const checkout = {
               <span class="amount">$${subtotal.toFixed(2)}</span>
             </div>
             <div class="summary-row">
-              <span>Envío ${shippingMethod === 'express' ? 'Express' : 'Estándar'}:</span>
-              <span class="amount ${shipping === 0 ? 'free-shipping' : ''}">
-                ${shipping === 0 ? 'GRATIS' : '$' + shipping.toFixed(2)}
-              </span>
+              <span>Envío Estándar:</span>
+              <span class="amount free-shipping">GRATIS ✓</span>
             </div>
             <div class="summary-row total">
               <span>Total a Pagar:</span>
@@ -555,23 +496,17 @@ const checkout = {
     }
     
     try {
-      // Generar número de orden
-      this.state.orderNumber = 'MW-' + Date.now().toString().slice(-8);
-      
       const cart = this.getCart();
       const cartItems = this.getCartItems();
-      const state = this.getState();
       
       if (!cart) {
         throw new Error('Sistema de carrito no disponible');
       }
       
       const totals = cart.calculateTotals();
-      const shippingMethod = (state && state.shippingMethod) ? state.shippingMethod : 'standard';
       
-      // Preparar datos de la orden
+      // Preparar datos de la orden (sin orderNumber - se genera en backend)
       const orderData = {
-        orderNumber: this.state.orderNumber,
         email: this.state.customerData.email,
         firstName: this.state.customerData.firstName,
         lastName: this.state.customerData.lastName,
@@ -580,7 +515,7 @@ const checkout = {
         city: this.state.customerData.city || '',
         postalCode: this.state.customerData.postalCode || '',
         phone: this.state.customerData.phone || '',
-        shippingMethod: shippingMethod,
+        shippingMethod: 'standard',
         paymentMethod: this.state.paymentMethod,
         items: cartItems.map(item => ({
           productId: item.productId,
@@ -608,6 +543,7 @@ const checkout = {
         console.log('✅ Orden guardada exitosamente:', result);
         
         this.state.orderId = result.orderId;
+        this.state.orderNumber = result.orderNumber;
         
         // Mostrar confirmación
         this.showConfirmation(orderData, result);
@@ -623,7 +559,7 @@ const checkout = {
         // Google Analytics
         if (typeof gtag !== 'undefined') {
           gtag('event', 'purchase', {
-            transaction_id: this.state.orderNumber,
+            transaction_id: result.orderNumber,
             value: totals.total,
             currency: 'USD',
             items: orderData.items.map(item => ({
@@ -723,6 +659,7 @@ const checkout = {
     const container = document.getElementById('checkout-form-container');
     
     const orderId = serverResponse.orderId || this.state.orderId || 'N/A';
+    const orderNumber = serverResponse.orderNumber || this.state.orderNumber || 'N/A';
     
     const paymentMethodsInfo = {
       'transfer': {
@@ -737,7 +674,7 @@ const checkout = {
             <p><strong>Beneficiario:</strong> Mawewe E-commerce</p>
             <p><strong>RUC:</strong> 1234567890001</p>
             <p><strong>Monto:</strong> <span style="color: var(--primary-800); font-size: 1.2rem;">$${orderData.totals.total.toFixed(2)}</span></p>
-            <p><strong>Referencia:</strong> <span style="color: var(--primary-800); font-weight: 700;">${this.state.orderNumber}</span></p>
+            <p><strong>Referencia:</strong> <span style="color: var(--primary-800); font-weight: 700;">${orderNumber}</span></p>
           </div>
           <div style="background: #f39c12; padding: 1rem; border-radius: 8px; margin-top: 1rem; color: white;">
             <p style="margin: 0; font-weight: 600;">
@@ -806,7 +743,7 @@ const checkout = {
         
         <div class="order-number">
           <p style="font-size: 0.9rem; color: var(--gray-600); margin-bottom: 0.5rem;">Número de Orden</p>
-          <p style="font-size: 1.5rem; font-weight: 700; color: var(--primary-800);">${this.state.orderNumber}</p>
+          <p style="font-size: 1.5rem; font-weight: 700; color: var(--primary-800);">${orderNumber}</p>
           ${orderId !== 'N/A' ? `<p style="font-size: 0.8rem; color: var(--gray-500); margin-top: 0.25rem;">ID: #${orderId}</p>` : ''}
         </div>
         
@@ -815,6 +752,13 @@ const checkout = {
           <div style="background: var(--gray-50); padding: 1.5rem; border-radius: 12px;">
             ${paymentInfo.instructions}
           </div>
+        </div>
+        
+        <!-- ✅ RECORDATORIO ENVÍO GRATIS -->
+        <div style="background: #d4edda; padding: 1rem; border-radius: 12px; margin-top: 1rem; border: 2px solid #c3e6cb;">
+          <p style="margin: 0; color: #155724; font-weight: 600; text-align: center;">
+            ✓ Envío Gratis - Recibirás tu pedido en 3-5 días hábiles
+          </p>
         </div>
         
         <div style="display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap;">
@@ -826,7 +770,7 @@ const checkout = {
             ✓ Cerrar
           </button>
           <a 
-            href="https://wa.me/593981832313?text=Hola,%20orden%20${this.state.orderNumber}" 
+            href="https://wa.me/593981832313?text=Hola,%20orden%20${orderNumber}" 
             target="_blank"
             class="btn-continue-payment" 
             style="flex: 1; min-width: 200px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); text-decoration: none; display: flex; align-items: center; justify-content: center;"
@@ -841,10 +785,10 @@ const checkout = {
     
     const mawewe = window.mawewe;
     if (mawewe && mawewe.ui) {
-      mawewe.ui.showNotification(`¡Orden ${this.state.orderNumber} confirmada! 🎉`);
+      mawewe.ui.showNotification(`¡Orden ${orderNumber} confirmada! 🎉`);
     }
     
-    console.log('✅ Orden completada:', this.state.orderNumber);
+    console.log('✅ Orden completada:', orderNumber);
   },
   
   // ========================================
@@ -878,4 +822,4 @@ if (window.mawewe) {
   window.mawewe.checkout = checkout;
 }
 
-console.log('✅ Checkout CORREGIDO cargado - Referencias arregladas');
+console.log('✅ Checkout CORREGIDO cargado (envío siempre gratis)');
