@@ -1,7 +1,8 @@
 /**
  * MAWEWE E-COMMERCE - CHECKOUT CORREGIDO
  * ✅ FIX: Envío SIEMPRE GRATIS (sin opciones)
- * ✅ FIX: Genera order_number único en frontend
+ * ✅ SIN PDF - Solo WhatsApp
+ * ✅ Sin paypal_order_id
  */
 
 // =============================================================================
@@ -514,7 +515,7 @@ const checkout = {
 
       const totals = cart.calculateTotals();
 
-      // Preparar datos de la orden (sin orderNumber - se genera en backend)
+      // Preparar datos de la orden
       const orderData = {
         email: this.state.customerData.email,
         firstName: this.state.customerData.firstName,
@@ -669,7 +670,7 @@ const checkout = {
   },
 
   // ========================================
-  // STEP 4: Mostrar confirmación
+  // STEP 4: Mostrar confirmación - SIN PDF
   // ========================================
   showConfirmation(orderData, serverResponse = {}) {
     const container = document.getElementById("checkout-form-container");
@@ -771,7 +772,6 @@ const checkout = {
           </div>
         </div>
         
-        <!-- ✅ RECORDATORIO ENVÍO GRATIS -->
         <div style="background: #d4edda; padding: 1rem; border-radius: 12px; margin-top: 1rem; border: 2px solid #c3e6cb;">
           <p style="margin: 0; color: #155724; font-weight: 600; text-align: center;">
             ✓ Envío Gratis - Recibirás tu pedido en 3-5 días hábiles
@@ -787,12 +787,12 @@ const checkout = {
             ✓ Cerrar
           </button>
           <a 
-            href="https://wa.me/593981832313?text=Hola,%20orden%20${orderNumber}" 
+            href="https://wa.me/593981832313?text=Hola,%20mi%20orden%20es%20${orderNumber}%20por%20$${orderData.totals.total.toFixed(2)}" 
             target="_blank"
             class="btn-continue-payment" 
             style="flex: 1; min-width: 200px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); text-decoration: none; display: flex; align-items: center; justify-content: center;"
           >
-            WhatsApp
+            📱 WhatsApp
           </a>
         </div>
       </div>
@@ -839,4 +839,4 @@ if (window.mawewe) {
   window.mawewe.checkout = checkout;
 }
 
-console.log("✅ Checkout CORREGIDO cargado (envío siempre gratis)");
+console.log("✅ Checkout cargado (sin PDF, sin paypal_order_id)")
