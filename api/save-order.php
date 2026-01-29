@@ -1,9 +1,10 @@
 <?php
 /**
- * API Endpoint: save-order.php CORREGIDO
+ * API Endpoint: save-order.php - VERSIÓN CORREGIDA FINAL
+ * ✅ Sin paypal_order_id (no existe en tabla)
  * ✅ Genera orderNumber automáticamente
- * ✅ Sin paypal_order_id (no existe en la tabla)
  * ✅ Sin PDF
+ * ✅ Solo WhatsApp
  */
 
 header('Access-Control-Allow-Origin: *');
@@ -162,7 +163,7 @@ try {
         exit();
     }
 
-    // 7. INSERTAR ORDEN - SIN paypal_order_id, SIN created_at (usa DEFAULT)
+    // 7. INSERTAR ORDEN - ✅ SIN paypal_order_id, SIN created_at
     $sqlOrder = "INSERT INTO orders (
                     order_number,
                     email,
