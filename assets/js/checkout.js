@@ -1,7 +1,7 @@
 /**
  * MAWEWE E-COMMERCE - CHECKOUT SIMULADO CORREGIDO
  * Sistema de pago simulado sin PayPal
- * ✅ FIX: Namespace y referencias corregidas
+ * ✅ FIX: Referencias a cart y state corregidas
  */
 
 // =============================================================================
@@ -22,8 +22,8 @@ const checkout = {
   // STEP 1: Abrir formulario de checkout
   // ========================================
   openCheckout() {
-    // ✅ FIX: Verificar que el carrito no esté vacío
-    if (!state || !state.cart || state.cart.length === 0) {
+    // ✅ FIX: Verificar que el carrito no esté vacío usando window.state
+    if (!window.state || !window.state.cart || window.state.cart.length === 0) {
       if (window.ui) {
         window.ui.showNotification('El carrito está vacío', 'error');
       } else {
@@ -55,13 +55,17 @@ const checkout = {
   // Renderizar formulario principal
   // ========================================
   renderCheckoutForm() {
-    // ✅ FIX: Verificar que cart esté disponible
+    // ✅ FIX: Verificar que cart esté disponible en window
     if (!window.cart || typeof window.cart.calculateTotals !== 'function') {
       console.error('❌ Error: cart no está disponible');
       return '<p style="color: red; padding: 2rem;">Error: Sistema de carrito no disponible</p>';
     }
     
     const { subtotal, shipping, total } = window.cart.calculateTotals();
+    
+    // ✅ FIX: Acceder a state desde window
+    const cartItems = window.state.cart || [];
+    const shippingMethod = window.state.shippingMethod || 'standard';
     
     return `
       <div class="checkout-header">
@@ -188,12 +192,12 @@ const checkout = {
           <h3>🚚 Método de Envío</h3>
           
           <div class="shipping-options">
-            <label class="shipping-option ${state.shippingMethod === 'standard' ? 'selected' : ''}" onclick="checkout.selectShipping('standard')">
+            <label class="shipping-option ${shippingMethod === 'standard' ? 'selected' : ''}" onclick="checkout.selectShipping('standard')">
               <input 
                 type="radio" 
                 name="shipping" 
                 value="standard" 
-                ${state.shippingMethod === 'standard' ? 'checked' : ''}
+                ${shippingMethod === 'standard' ? 'checked' : ''}
               />
               <div class="shipping-info">
                 <div>
@@ -206,19 +210,19 @@ const checkout = {
               </div>
             </label>
             
-            <label class="shipping-option ${state.shippingMethod === 'express' ? 'selected' : ''}" onclick="checkout.selectShipping('express')">
+            <label class="shipping-option ${shippingMethod === 'express' ? 'selected' : ''}" onclick="checkout.selectShipping('express')">
               <input 
                 type="radio" 
                 name="shipping" 
                 value="express" 
-                ${state.shippingMethod === 'express' ? 'checked' : ''}
+                ${shippingMethod === 'express' ? 'checked' : ''}
               />
               <div class="shipping-info">
                 <div>
                   <div class="shipping-name">Envío Express</div>
                   <div style="font-size: 0.875rem; color: var(--gray-600);">1-2 días hábiles</div>
                 </div>
-                <div class="shipping-cost">$${CONFIG.shipping.expressCost.toFixed(2)}</div>
+                <div class="shipping-cost">$${window.CONFIG.shipping.expressCost.toFixed(2)}</div>
               </div>
             </label>
           </div>
@@ -229,7 +233,7 @@ const checkout = {
           <h3>📋 Resumen del Pedido</h3>
           
           <div class="summary-items">
-            ${state.cart.map(item => `
+            ${cartItems.map(item => `
               <div class="summary-item">
                 <img src="${item.image}" alt="${item.name}" />
                 <div class="summary-item-info">
@@ -270,7 +274,7 @@ const checkout = {
   // Seleccionar método de envío
   // ========================================
   selectShipping(method) {
-    state.shippingMethod = method;
+    window.state.shippingMethod = method;
     
     // Actualizar UI
     document.querySelectorAll('.shipping-option').forEach(option => {
@@ -325,6 +329,7 @@ const checkout = {
   showPaymentMethods() {
     const container = document.getElementById('checkout-form-container');
     const { subtotal, shipping, total } = window.cart.calculateTotals();
+    const cartItems = window.state.cart || [];
     
     container.innerHTML = `
       <div class="checkout-header">
@@ -414,11 +419,11 @@ const checkout = {
           
           <div class="summary-totals">
             <div class="summary-row">
-              <span>Subtotal (${state.cart.length} items):</span>
+              <span>Subtotal (${cartItems.length} items):</span>
               <span class="amount">$${subtotal.toFixed(2)}</span>
             </div>
             <div class="summary-row">
-              <span>Envío ${state.shippingMethod === 'express' ? 'Express' : 'Estándar'}:</span>
+              <span>Envío ${window.state.shippingMethod === 'express' ? 'Express' : 'Estándar'}:</span>
               <span class="amount ${shipping === 0 ? 'free-shipping' : ''}">
                 ${shipping === 0 ? 'GRATIS' : '$' + shipping.toFixed(2)}
               </span>
@@ -497,19 +502,24 @@ const checkout = {
     // Preparar datos de la orden
     const orderData = {
       orderNumber: this.state.orderNumber,
-      customer: this.state.customerData,
-      items: state.cart.map(item => ({
+      email: this.state.customerData.email,
+      firstName: this.state.customerData.firstName,
+      lastName: this.state.customerData.lastName,
+      address: this.state.customerData.address,
+      apartment: this.state.customerData.apartment,
+      city: this.state.customerData.city,
+      postalCode: this.state.customerData.postalCode,
+      phone: this.state.customerData.phone,
+      shippingMethod: window.state.shippingMethod,
+      paymentMethod: this.state.paymentMethod,
+      items: window.state.cart.map(item => ({
         productId: item.productId,
         name: item.name,
         sku: item.sku,
         price: item.price,
-        quantity: item.quantity,
-        image: item.image
+        quantity: item.quantity
       })),
-      shippingMethod: state.shippingMethod,
-      paymentMethod: this.state.paymentMethod,
-      totals: window.cart.calculateTotals(),
-      createdAt: new Date().toISOString()
+      totals: window.cart.calculateTotals()
     };
     
     try {
@@ -554,27 +564,13 @@ const checkout = {
   async saveOrder(orderData) {
     try {
       const response = await fetch(
-        CONFIG.api.baseUrl + CONFIG.api.endpoints.saveOrder,
+        window.CONFIG.api.baseUrl + window.CONFIG.api.endpoints.saveOrder,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            orderNumber: orderData.orderNumber,
-            email: orderData.customer.email,
-            firstName: orderData.customer.firstName,
-            lastName: orderData.customer.lastName,
-            address: orderData.customer.address,
-            apartment: orderData.customer.apartment,
-            city: orderData.customer.city,
-            postalCode: orderData.customer.postalCode,
-            phone: orderData.customer.phone,
-            shippingMethod: orderData.shippingMethod,
-            paymentMethod: orderData.paymentMethod,
-            items: orderData.items,
-            totals: orderData.totals
-          }),
+          body: JSON.stringify(orderData),
         }
       );
 
@@ -681,7 +677,6 @@ const checkout = {
           <div style="background: white; padding: 1rem; border-radius: 12px; border: 1px solid var(--gray-200);">
             ${orderData.items.map(item => `
               <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid var(--gray-100);">
-                <img src="${item.image}" alt="${item.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;" />
                 <div style="flex: 1;">
                   <div style="font-weight: 600; font-size: 0.9rem;">${item.name}</div>
                   <div style="font-size: 0.8rem; color: var(--gray-600);">Cantidad: ${item.quantity}</div>
@@ -714,17 +709,17 @@ const checkout = {
         <div class="form-section">
           <h3>🚚 Información de Envío</h3>
           <div style="background: var(--gray-50); padding: 1rem; border-radius: 12px;">
-            <p style="margin-bottom: 0.5rem;"><strong>${orderData.customer.firstName} ${orderData.customer.lastName}</strong></p>
-            <p style="margin-bottom: 0.5rem; color: var(--gray-700);">${orderData.customer.address}${orderData.customer.apartment ? ', ' + orderData.customer.apartment : ''}</p>
-            <p style="margin-bottom: 0.5rem; color: var(--gray-700);">${orderData.customer.city}${orderData.customer.postalCode ? ', ' + orderData.customer.postalCode : ''}</p>
-            <p style="margin-bottom: 0.5rem; color: var(--gray-700);">📧 ${orderData.customer.email}</p>
-            <p style="color: var(--gray-700);">📱 ${orderData.customer.phone}</p>
+            <p style="margin-bottom: 0.5rem;"><strong>${orderData.firstName} ${orderData.lastName}</strong></p>
+            <p style="margin-bottom: 0.5rem; color: var(--gray-700);">${orderData.address}${orderData.apartment ? ', ' + orderData.apartment : ''}</p>
+            <p style="margin-bottom: 0.5rem; color: var(--gray-700);">${orderData.city}${orderData.postalCode ? ', ' + orderData.postalCode : ''}</p>
+            <p style="margin-bottom: 0.5rem; color: var(--gray-700);">📧 ${orderData.email}</p>
+            <p style="color: var(--gray-700);">📱 ${orderData.phone}</p>
           </div>
         </div>
         
         <div class="form-section" style="background: var(--primary-50); border: 2px solid var(--primary-200);">
           <p style="text-align: center; color: var(--gray-700); line-height: 1.6;">
-            📧 Hemos enviado un email de confirmación a <strong>${orderData.customer.email}</strong>
+            📧 Hemos enviado un email de confirmación a <strong>${orderData.email}</strong>
             <br/>
             ${orderData.shippingMethod === 'express' ? '🚀 Tu pedido llegará en 1-2 días hábiles' : '📦 Tu pedido llegará en 3-5 días hábiles'}
           </p>
