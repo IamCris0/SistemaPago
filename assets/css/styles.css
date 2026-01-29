@@ -162,13 +162,12 @@ body {
 
 .site-slogan p {
   font-family: var(--font-family-primary);
-  font-size: 1.6rem; /* ⬅ más grande */
+  font-size: 1.6rem;
   font-weight: 700;
   color: var(--primary-800);
   margin: 0;
   font-style: italic;
 }
-
 
 .site-branding-text {
   display: flex;
@@ -228,17 +227,17 @@ body {
   font-weight: 700;
 }
 
-/* ============================================== HERO ============================================== */
+/* ============================================== 
+   HERO SECTION - ACTUALIZADO
+   ============================================== */
 
 .hero-section {
   background: #e7d9c8;
   color: var(--gray-900);
-  padding: var(--spacing-xl) 0; /* ⬅ MÁS GRANDE: de spacing-sm a spacing-xl */
+  padding: var(--spacing-2xl) 0; /* ✅ MÁS GRANDE */
   position: relative;
   overflow: hidden;
 }
-
-
 
 .hero-section::before {
   content: '';
@@ -256,38 +255,50 @@ body {
   z-index: 1;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-xl);
+  gap: var(--spacing-2xl); /* ✅ MÁS ESPACIO */
   align-items: center;
-  max-width: 900px; /* ⬅ MÁS GRANDE: de 700px a 900px */
+  max-width: 1000px; /* ✅ MÁS GRANDE */
   margin: 0 auto;
 }
 
+/* ✅ INTERCAMBIADO: hero-left ahora va a la IZQUIERDA */
 .hero-left {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md); /* ⬅ MÁS ESPACIO: de spacing-sm a spacing-md */
+  gap: var(--spacing-md);
   align-items: center;  
   text-align: center;
-  order: 2; /* ⬅ INTERCAMBIADO: va a la derecha */
+  order: 1; /* ✅ Va a la IZQUIERDA */
 }
 
+/* ✅ NUEVO: Texto de pregunta - VERDE Y NEGRITA */
+.hero-question {
+  font-size: 1.1rem; /* ✅ MÁS GRANDE */
+  font-weight: 700; /* ✅ MÁS NEGRITA */
+  color: #128C7E; /* ✅ VERDE WHATSAPP */
+  margin-bottom: var(--spacing-md);
+  text-align: center;
+  letter-spacing: -0.01em;
+}
 
+/* ✅ ACTUALIZADO: Botón WhatsApp más grande y profesional */
 .hero-whatsapp-btn {
   display: inline-flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-xs) var(--spacing-md);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-2xl); /* ✅ MÁS GRANDE */
   background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
   color: white;
   border: none;
   border-radius: var(--radius-full);
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: 1rem; /* ✅ MÁS GRANDE */
+  font-weight: 700; /* ✅ MÁS NEGRITA */
   text-decoration: none;
   cursor: pointer;
   transition: all var(--transition-base);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
   max-width: fit-content;
+  letter-spacing: -0.01em;
 }
 
 .hero-whatsapp-btn:hover {
@@ -297,8 +308,8 @@ body {
 }
 
 .hero-whatsapp-btn svg {
-  width: 18px;
-  height: 18px;
+  width: 24px; /* ✅ MÁS GRANDE */
+  height: 24px;
   flex-shrink: 0;
 }
 
@@ -306,11 +317,12 @@ body {
   white-space: nowrap;
 }
 
+/* ✅ INTERCAMBIADO: hero-right ahora va a la DERECHA */
 .hero-right {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs);
-  
+  gap: var(--spacing-sm);
+  order: 2; /* ✅ Va a la DERECHA */
 }
 
 .hero-title-wrapper {
@@ -321,15 +333,16 @@ body {
 
 .hero-title {
   font-family: var(--font-family-primary);
-  font-size: var(--font-size-xl);
-  font-weight: 700;
+  font-size: var(--font-size-3xl); /* ✅ MÁS GRANDE: 1.875rem */
+  font-weight: 800; /* ✅ MÁS NEGRITA */
   line-height: 1.2;
   margin: 0;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  letter-spacing: -0.02em;
 }
 
 .hero-emoji {
-  font-size: 2rem;
+  font-size: 2.5rem; /* ✅ MÁS GRANDE para balance */
   line-height: 1;
   animation: bounce 2s infinite;
 }
@@ -340,27 +353,12 @@ body {
 }
 
 .hero-subtitle {
-  font-size: 0.75rem;
-  font-weight: 400;
-  opacity: 0.85;
-  line-height: 1.4;
+  font-size: 1rem; /* ✅ MÁS GRANDE: tamaño base */
+  font-weight: 500; /* ✅ MÁS PESO */
+  opacity: 0.9; /* ✅ MÁS VISIBLE */
+  line-height: 1.5;
   margin: 0;
-}
-
-.hero-whatsapp-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-2xl);
-  background: linear-gradient(135deg, #128C7E 0%, #25D366 100%);
-}
-
-.hero-whatsapp-btn svg {
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
-}
-
-.hero-whatsapp-btn span {
-  white-space: nowrap;
+  color: var(--gray-800);
 }
 
 .container {
@@ -503,7 +501,7 @@ body {
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: var(--spacing-xl);
   margin-bottom: var(--spacing-3xl);
-  align-items: start; /* Alinea todas las tarjetas al inicio */
+  align-items: start;
 }
 
 .product-card {
@@ -516,7 +514,7 @@ body {
   border: 1px solid var(--gray-200);
   display: flex;
   flex-direction: column;
-  height: 100%; /* Ocupa toda la altura disponible */
+  height: 100%;
 }
 
 .product-card:hover {
@@ -551,11 +549,11 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain; /* ✅ Muestra imagen completa */
+  object-fit: contain;
   object-position: center;
   transition: transform var(--transition-slow);
   cursor: pointer;
-  padding: var(--spacing-sm); /* Espaciado interno */
+  padding: var(--spacing-sm);
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.05));
 }
 
@@ -632,7 +630,7 @@ body {
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.5);
   cursor: pointer;
-  transition: all 0.08s ease; /* Ultra-rápido */
+  transition: all 0.08s ease;
   border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
@@ -645,9 +643,8 @@ body {
   background: white;
   width: 24px;
   border-radius: 4px;
-  transition: all 0.1s cubic-bezier(0.25, 0.1, 0.25, 1); /* Cambio casi instantáneo */
+  transition: all 0.1s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
-
 
 .product-badge {
   position: absolute;
@@ -668,7 +665,7 @@ body {
   padding: var(--spacing-lg);
   display: flex;
   flex-direction: column;
-  flex: 1; /* Ocupa todo el espacio disponible */
+  flex: 1;
 }
 
 .product-category {
@@ -701,7 +698,7 @@ body {
   color: var(--gray-900);
   margin-bottom: var(--spacing-sm);
   line-height: 1.4;
-  min-height: 2.8em; /* Altura mínima para 2 líneas */
+  min-height: 2.8em;
 }
 
 .product-description {
@@ -713,29 +710,9 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
   line-height: 1.6;
-  min-height: 3.2em; /* Altura fija para 2 líneas */
-  flex-grow: 0; /* No crece */
+  min-height: 3.2em;
+  flex-grow: 0;
 }
-
-/* RATING STYLES - DESHABILITADO
-.product-rating {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  margin-bottom: var(--spacing-md);
-}
-
-.rating-stars {
-  color: var(--accent-gold);
-  font-size: var(--font-size-base);
-  letter-spacing: 2px;
-}
-
-.rating-count {
-  font-size: var(--font-size-xs);
-  color: var(--gray-500);
-}
-*/
 
 .product-footer {
   display: flex;
@@ -744,7 +721,7 @@ body {
   padding-top: var(--spacing-md);
   border-top: 1px solid var(--gray-200);
   margin-bottom: var(--spacing-sm);
-  margin-top: auto; /* Empuja el footer al final */
+  margin-top: auto;
 }
 
 .product-price {
@@ -1009,7 +986,6 @@ body {
   object-fit: cover;
 }
 
-
 .modal-info {
   display: flex;
   flex-direction: column;
@@ -1100,7 +1076,7 @@ body {
   transform: none;
 }
 
-/* ============================================== CART MODAL ============================================== */
+/* ============================================== CART MODAL & CHECKOUT SECTIONS ============================================== */
 
 .cart-overlay {
   position: fixed;
@@ -1673,7 +1649,6 @@ body {
   flex-shrink: 0;
 }
 
-/* Animación alternativa (opcional) */
 @keyframes slideInFromRight {
   from {
     transform: translateX(400px);
@@ -1714,6 +1689,7 @@ body {
   color: rgb(255, 255, 255);
   margin-bottom: var(--spacing-md);
 }
+
 .footer-links {
   list-style: none;
 }
@@ -1740,7 +1716,98 @@ body {
   color: var(--gray-500);
 }
 
-/* ============================================== RESPONSIVE ============================================== */
+/* ============================================== 
+   RESPONSIVE HERO - ACTUALIZADO
+   ============================================== */
+
+@media (max-width: 768px) {
+  .hero-section {
+    padding: var(--spacing-lg) 0;
+  }
+  
+  .hero-content {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+    text-align: center;
+  }
+  
+  .hero-left {
+    order: 1; /* ✅ Mantener orden en móvil */
+  }
+  
+  .hero-right {
+    order: 2; /* ✅ Mantener orden en móvil */
+  }
+  
+  .hero-title-wrapper {
+    justify-content: center;
+  }
+  
+  .hero-title {
+    font-size: var(--font-size-2xl); /* ✅ Grande en tablet */
+  }
+  
+  .hero-emoji {
+    font-size: 2rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 0.9rem;
+  }
+  
+  .hero-question {
+    font-size: 1rem; /* ✅ Mantener legible */
+  }
+  
+  .hero-whatsapp-btn {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    padding: var(--spacing-md) 0;
+  }
+  
+  .hero-content {
+    gap: var(--spacing-md);
+  }
+  
+  .hero-title {
+    font-size: var(--font-size-xl); /* ✅ Legible en móvil */
+  }
+  
+  .hero-emoji {
+    font-size: 1.8rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+  
+  .hero-question {
+    font-size: 0.95rem; /* ✅ Legible en móvil */
+  }
+  
+  .hero-right {
+    gap: 8px;
+  }
+  
+  .hero-whatsapp-btn {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-size: 0.9rem;
+  }
+  
+  .hero-whatsapp-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* ============================================== RESPONSIVE - GENERAL ============================================== */
 
 @media (max-width: 1024px) {
   .hero-title {
@@ -1776,59 +1843,6 @@ body {
   
   .site-slogan {
     display: none;
-  }
-  
-  /* Hero responsive */
-  .hero-section {
-    padding: var(--spacing-sm) 0;
-  }
-  
-  .hero-content {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-md);
-    text-align: center;
-  }
-  
-  .hero-left {
-    align-items: center;
-    order: 2;
-  }
-  
-  .hero-right {
-    order: 1;
-  }
-  
-  .hero-title-wrapper {
-    justify-content: center;
-  }
-  
-  .hero-title {
-    font-size: var(--font-size-lg);
-  }
-  
-  .hero-emoji {
-    font-size: 1.5rem;
-  }
-  
-  .hero-subtitle {
-    font-size: 0.7rem;
-  }
-  
-  .hero-question {
-    font-size: 0.75rem;
-    text-align: center;
-  }
-  
-  .hero-whatsapp-btn {
-    width: 100%;
-    justify-content: center;
-    padding: var(--spacing-xs) var(--spacing-sm);
-    font-size: 0.7rem;
-  }
-  
-  .hero-whatsapp-btn svg {
-    width: 18px;
-    height: 18px;
   }
   
   .site-logo-img {
@@ -1873,49 +1887,6 @@ body {
     height: 40px;
   }
   
-  .hero-section {
-    padding: var(--spacing-xs) 0;
-  }
-  
-  .hero-content {
-    gap: var(--spacing-sm);
-  }
-  
-  .hero-title {
-    font-size: var(--font-size-base);
-  }
-  
-  .hero-emoji {
-    font-size: 1.2rem;
-  }
-  
-  .hero-subtitle {
-    font-size: 0.65rem;
-    line-height: 1.3;
-  }
-  
-  .hero-question {
-    font-size: 0.7rem;
-  }
-  
-  .hero-right {
-    gap: 4px;
-  }
-  
-  .hero-whatsapp-btn {
-    padding: 6px var(--spacing-sm);
-    font-size: 0.6rem;
-  }
-  
-  .hero-whatsapp-btn svg {
-    width: 14px;
-    height: 14px;
-  }
-  
-  .hero-whatsapp-btn span {
-    font-size: 0.6rem;
-  }
-  
   .site-logo-img {
     height: 40px;
   }
@@ -1956,7 +1927,6 @@ body {
   border-width: 0;
 }
 
-/* Focus visible for keyboard navigation */
 *:focus-visible {
   outline: 3px solid var(--primary-600);
   outline-offset: 2px;
@@ -2167,7 +2137,6 @@ body {
 
 @media (prefers-color-scheme: dark) {
   /* Optional: Add dark mode styles if needed */
-  /* This can be enabled later for a full dark mode experience */
 }
 
 /* ============================================== REDUCED MOTION ============================================== */
@@ -2256,7 +2225,6 @@ body {
   will-change: transform;
 }
 
-/* Lazy loading fade-in */
 img[loading="lazy"] {
   opacity: 0;
   transition: opacity 0.3s;
@@ -2285,7 +2253,6 @@ img[loading="lazy"].loaded {
   background: var(--primary-800);
 }
 
-/* Firefox scrollbar */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--primary-600) var(--gray-100);
@@ -2346,6 +2313,10 @@ img[loading="lazy"].loaded {
     width: 56px;
     height: 56px;
   }
+  
+  .product-image {
+    padding: var(--spacing-xs);
+  }
 }
 
 @media (max-width: 480px) {
@@ -2360,16 +2331,8 @@ img[loading="lazy"].loaded {
     width: 50px;
     height: 50px;
   }
-
-@media (max-width: 768px) {
+  
   .product-image {
-    padding: var(--spacing-xs); 
+    padding: 4px;
   }
-}
-
-@media (max-width: 480px) {
-  .product-image {
-    padding: 4px; 
-  }
-}
 }
