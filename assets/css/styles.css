@@ -233,10 +233,11 @@ body {
 .hero-section {
   background: #e7d9c8;
   color: var(--gray-900);
-  padding: var(--spacing-sm) 0; /* ⬅ más pegado al header */
+  padding: var(--spacing-xl) 0; /* ⬅ MÁS GRANDE: de spacing-sm a spacing-xl */
   position: relative;
   overflow: hidden;
 }
+
 
 
 .hero-section::before {
@@ -257,16 +258,17 @@ body {
   grid-template-columns: 1fr 1fr;
   gap: var(--spacing-xl);
   align-items: center;
-  max-width: 700px;
+  max-width: 900px; /* ⬅ MÁS GRANDE: de 700px a 900px */
   margin: 0 auto;
 }
 
 .hero-left {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-md); /* ⬅ MÁS ESPACIO: de spacing-sm a spacing-md */
   align-items: center;  
   text-align: center;
+  order: 2; /* ⬅ INTERCAMBIADO: va a la derecha */
 }
 
 

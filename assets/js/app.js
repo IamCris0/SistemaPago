@@ -1,8 +1,7 @@
 /**
- * MAWEWE E-COMMERCE - VERSIÓN COMPLETA V4
- * ✅ Sistema de búsqueda corregido y mejorado
- * ✅ Búsqueda en tiempo real con sugerencias
- * ✅ Manejo de errores robusto
+ * MAWEWE E-COMMERCE - VERSIÓN CORREGIDA
+ * ✅ FIX: Productos borrados no aparecen
+ * ✅ FIX: Sin destello en barra de búsqueda
  */
 
 // =============================================================================
@@ -29,14 +28,13 @@ const CONFIG = {
     expressCost: 10.00
   },
   
-  // ✅ NUEVO: Configuración de búsqueda
   search: {
-    minChars: 2,        // Mínimo de caracteres para buscar
-    debounceTime: 500   // Tiempo de espera en ms antes de buscar
+    minChars: 2,
+    debounceTime: 500
   }
 };
 
-console.log('🚀 Mawewe iniciando con búsqueda mejorada...');
+console.log('🚀 Mawewe iniciando (versión corregida)...');
 
 // =============================================================================
 // STATE MANAGEMENT
@@ -44,7 +42,7 @@ console.log('🚀 Mawewe iniciando con búsqueda mejorada...');
 
 const state = {
   products: [],
-  allProducts: [], // ✅ NUEVO: Todos los productos para búsqueda local
+  allProducts: [],
   categories: [],
   subcategoriesByCategory: {},
   cart: [],
@@ -53,7 +51,7 @@ const state = {
   searchQuery: '',
   shippingMethod: 'standard',
   checkoutData: {},
-  isSearching: false // ✅ NUEVO: Estado de búsqueda
+  isSearching: false
 };
 
 // =============================================================================
@@ -67,7 +65,6 @@ const api = {
       
       const params = new URLSearchParams();
       
-      // ✅ MEJORADO: Solo agregar parámetros si tienen valor
       if (filters.category && filters.category !== 'all') {
         params.append('category', filters.category.toLowerCase().trim());
       }
@@ -94,17 +91,15 @@ const api = {
       
       const data = await response.json();
       
-      // ✅ MEJORADO: Validar respuesta
       if (!data || typeof data !== 'object') {
         throw new Error('Respuesta inválida del servidor');
       }
       
       console.log('✅ Data received:', data);
       
-      // Ordenar productos por ID
       if (data.success && data.products && Array.isArray(data.products)) {
         data.products.sort((a, b) => a.id - b.id);
-        console.log(`✅ ${data.products.length} productos cargados`);
+        console.log(`✅ ${data.products.length} productos activos cargados`);
       }
       
       return data;
@@ -143,7 +138,7 @@ const api = {
 };
 
 // =============================================================================
-// CART FUNCTIONS (sin cambios)
+// CART FUNCTIONS
 // =============================================================================
 
 const cart = {
@@ -332,21 +327,8 @@ const ui = {
     }
   },
   
-  // ✅ NUEVO: Mostrar indicador de búsqueda
-  showSearchIndicator(show = true) {
-    const searchInput = document.getElementById('search-input');
-    if (!searchInput) return;
-    
-    if (show) {
-      searchInput.style.borderColor = 'var(--primary-600)';
-      searchInput.style.backgroundColor = 'rgba(140, 0, 75, 0.05)';
-    } else {
-      searchInput.style.borderColor = '';
-      searchInput.style.backgroundColor = '';
-    }
-  },
+  // ✅ ELIMINADO: showSearchIndicator - causa el destello
   
-  // ✅ NUEVO: Actualizar placeholder de búsqueda
   updateSearchPlaceholder(count) {
     const searchInput = document.getElementById('search-input');
     if (!searchInput) return;
@@ -362,7 +344,7 @@ const ui = {
 };
 
 // =============================================================================
-// PRODUCT MODAL (sin cambios - código omitido por brevedad)
+// PRODUCT MODAL
 // =============================================================================
 
 const productModal = {
@@ -524,7 +506,6 @@ const render = {
     }
     
     if (!products || products.length === 0) {
-      // ✅ MEJORADO: Mensaje cuando no hay productos
       const searchTerm = state.searchQuery;
       grid.innerHTML = `
         <div style="grid-column: 1/-1; text-align: center; padding: 4rem;">
@@ -600,7 +581,6 @@ const render = {
     
     console.log(`✅ ${sortedProducts.length} productos renderizados`);
     
-    // ✅ NUEVO: Actualizar placeholder de búsqueda
     ui.updateSearchPlaceholder(sortedProducts.length);
   },
   
@@ -633,13 +613,13 @@ const render = {
       
       const labelMap = {
         'ropa': 'Marcas de Ropa:',
-        'belleza': 'Líneas de Belleza:',        // ⭐ NUEVO
+        'belleza': 'Líneas de Belleza:',
         'perfumes': 'Marcas de Perfumes:',
         'juguetes': 'Tipos de Juguetes:',
         'peluches': 'Tipos de Peluches:',
         'joyas': 'Tipos de Joyas:',
         'relojes': 'Tipos de Relojes:',
-        'deportes': 'Categorías Deportivas:',   // ⭐ NUEVO
+        'deportes': 'Categorías Deportivas:',
         'accesorios': 'Tipos de Accesorios:'
       };
       
@@ -779,11 +759,9 @@ const filters = {
     this.apply();
   },
   
-  // ✅ MEJORADO: Función de búsqueda con validación
   setSearch(query) {
     const trimmedQuery = query ? query.trim() : '';
     
-    // Solo buscar si hay al menos 2 caracteres o si está vacío (para limpiar)
     if (trimmedQuery.length === 0 || trimmedQuery.length >= CONFIG.search.minChars) {
       state.searchQuery = trimmedQuery;
       console.log('🔍 Búsqueda:', state.searchQuery || '(vacía)');
@@ -793,7 +771,6 @@ const filters = {
     }
   },
   
-  // ✅ NUEVO: Limpiar búsqueda
   clearSearch() {
     const searchInput = document.getElementById('search-input');
     if (searchInput) {
@@ -804,7 +781,7 @@ const filters = {
   },
   
   apply() {
-    // Evitar búsquedas múltiples simultáneas
+    // ✅ FIX: Sin destello - removido showSearchIndicator
     if (state.isSearching) {
       console.log('⏳ Búsqueda en progreso, esperando...');
       return;
@@ -812,7 +789,6 @@ const filters = {
     
     state.isSearching = true;
     ui.showLoading(true);
-    ui.showSearchIndicator(true);
     
     const filters = {
       category: state.currentFilter,
@@ -840,7 +816,6 @@ const filters = {
         console.error('❌ Error filtering:', error);
         ui.showNotification('Error al buscar productos', 'error');
         
-        // Mostrar mensaje de error en el grid
         const grid = document.getElementById('products-grid');
         if (grid) {
           grid.innerHTML = `
@@ -862,7 +837,7 @@ const filters = {
       .finally(() => {
         state.isSearching = false;
         ui.showLoading(false);
-        ui.showSearchIndicator(false);
+        // ✅ FIX: Sin showSearchIndicator
       });
   }
 };
@@ -881,7 +856,7 @@ async function init() {
     
     if (data && data.success) {
       state.products = data.products || [];
-      state.allProducts = data.products || []; // Guardar copia de todos los productos
+      state.allProducts = data.products || [];
       state.categories = data.categories || [];
       state.subcategoriesByCategory = data.subcategoriesByCategory || {};
       
@@ -935,26 +910,18 @@ document.addEventListener('DOMContentLoaded', () => {
   if (searchInput) {
     let searchTimeout;
     
-    // ✅ MEJORADO: Búsqueda con debounce y validación
     searchInput.addEventListener('input', (e) => {
       clearTimeout(searchTimeout);
       
       const query = e.target.value.trim();
       
-      // Mostrar indicador visual inmediatamente
-      if (query.length >= CONFIG.search.minChars) {
-        ui.showSearchIndicator(true);
-      } else {
-        ui.showSearchIndicator(false);
-      }
+      // ✅ FIX: Sin indicador visual que cause destello
       
-      // Esperar antes de buscar
       searchTimeout = setTimeout(() => {
         filters.setSearch(query);
       }, CONFIG.search.debounceTime);
     });
     
-    // ✅ NUEVO: Limpiar búsqueda con Escape
     searchInput.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         filters.clearSearch();
@@ -979,10 +946,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // =============================================================================
-// CHECKOUT SYSTEM (Placeholder - se carga desde checkout.js)
+// CHECKOUT SYSTEM
 // =============================================================================
 
-// Placeholder temporal hasta que se cargue checkout.js
 window.checkout = {
   openCheckout: function() {
     console.log('⚠️ Esperando carga de checkout.js...');
@@ -1000,9 +966,9 @@ window.mawewe = {
   filters,
   state,
   CONFIG,
-  checkout: window.checkout // Referencia que será reemplazada por checkout.js
+  checkout: window.checkout
 };
 
 window.productModal = productModal;
 
-console.log('✅ Mawewe cargado con sistema de búsqueda mejorado');
+console.log('✅ Mawewe cargado (versión corregida - sin destello)');

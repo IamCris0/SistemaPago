@@ -1,12 +1,5 @@
 <?php
-/**
- * API Endpoint: products.php
- * ✅ Sistema de búsqueda corregido y mejorado
- * ✅ Subcategorías para todas las categorías
- * ✅ Orden personalizado
- */
 
-// Headers CORS
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
@@ -53,7 +46,6 @@ try {
         ? trim($_GET['subcategory']) 
         : null;
     
-    // ✅ MEJORADO: Limpieza y validación de búsqueda
     $search = isset($_GET['search']) && $_GET['search'] !== '' 
         ? trim($_GET['search']) 
         : null;
@@ -63,6 +55,7 @@ try {
 
     // ========================================
     // 3. CONSTRUIR QUERY SQL PARA PRODUCTOS
+    // ✅ CORREGIDO: active = 1 SIEMPRE verificado
     // ========================================
     $sql = "SELECT 
                 id,
@@ -97,8 +90,8 @@ try {
         $params[':subcategory'] = $subcategory;
     }
 
-    // ✅ MEJORADO: Filtro por búsqueda con mejor manejo
-    if ($search && strlen($search) >= 2) { // Mínimo 2 caracteres para buscar
+    // Filtro por búsqueda
+    if ($search && strlen($search) >= 2) {
         $searchTerm = '%' . $search . '%';
         $sql .= " AND (
             LOWER(name) LIKE LOWER(:search1) 
@@ -124,12 +117,11 @@ try {
     // ========================================
     $stmt = $db->prepare($sql);
     
-    // ✅ MEJORADO: Manejo de errores en la ejecución
     try {
         $stmt->execute($params);
         $products = $stmt->fetchAll();
         
-        error_log("✅ Productos encontrados: " . count($products));
+        error_log("✅ Productos activos encontrados: " . count($products));
     } catch (PDOException $e) {
         error_log("❌ Error ejecutando query: " . $e->getMessage());
         throw new Exception("Error en la búsqueda de productos");
@@ -155,28 +147,27 @@ try {
         $product['rating'] = (float)($product['rating'] ?? 0);
         $product['review_count'] = (int)($product['review_count'] ?? 0);
         
-        // ✅ Asegurar que category y subcategory sean strings
         $product['category'] = $product['category'] ?? '';
         $product['subcategory'] = $product['subcategory'] ?? '';
     }
 
     // ========================================
-    // 6. OBTENER CATEGORÍAS ÚNICAS CON ORDEN PERSONALIZADO
+    // 6. OBTENER CATEGORÍAS ÚNICAS - ✅ SOLO ACTIVAS
     // ========================================
     
-    // ✅ ORDEN DESEADO - Actualizado con todas las categorías
     $categoryOrder = [
         'ropa',
-        'belleza',        // ⭐ NUEVO: Victoria's Secret
+        'belleza',
         'perfumes',
         'juguetes',
         'peluches',
         'joyas',
         'relojes',
-        'deportes',       // ⭐ NUEVO: Patines y deportivos
+        'deportes',
         'accesorios'
     ];
     
+    // ✅ CORREGIDO: Solo contar productos activos
     $sqlCategories = "SELECT 
                         DISTINCT category,
                         COUNT(*) as count
@@ -219,9 +210,10 @@ try {
     }
 
     // ========================================
-    // 7. OBTENER SUBCATEGORÍAS PARA TODAS LAS CATEGORÍAS
+    // 7. OBTENER SUBCATEGORÍAS - ✅ SOLO ACTIVAS
     // ========================================
     
+    // ✅ CORREGIDO: Solo subcategorías de productos activos
     $sqlAllSubcategories = "SELECT 
                                 category,
                                 subcategory,
