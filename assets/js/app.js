@@ -1,7 +1,8 @@
 /**
- * MAWEWE E-COMMERCE - VERSIÓN CORREGIDA
+ * MAWEWE E-COMMERCE - VERSIÓN CORREGIDA SIN CORS
  * ✅ FIX: Productos borrados no aparecen
- * ✅ FIX: Sin destello en barra de búsqueda
+ * ✅ FIX: Sin problemas de CORS
+ * ✅ FIX: Cache evitado con timestamp
  */
 
 // =============================================================================
@@ -34,7 +35,7 @@ const CONFIG = {
   }
 };
 
-console.log('🚀 Mawewe iniciando (versión corregida)...');
+console.log('🚀 Mawewe iniciando (versión sin CORS)...');
 
 // =============================================================================
 // STATE MANAGEMENT
@@ -55,7 +56,27 @@ const state = {
 };
 
 // =============================================================================
-// API FUNCTIONS
+// CACHE MANAGEMENT
+// =============================================================================
+
+const cacheManager = {
+  clear() {
+    const cacheKeys = Object.keys(localStorage).filter(key => 
+      key.includes('products') || 
+      key.includes('categories') || 
+      key.includes('mawewe_products')
+    );
+    
+    cacheKeys.forEach(key => {
+      localStorage.removeItem(key);
+    });
+    
+    console.log('🗑️ Cache limpiado');
+  }
+};
+
+// =============================================================================
+// API FUNCTIONS - ✅ SIN HEADERS PROBLEMÁTICOS
 // =============================================================================
 
 const api = {
@@ -64,6 +85,9 @@ const api = {
       let url = `${CONFIG.api.baseUrl}${CONFIG.api.endpoints.products}`;
       
       const params = new URLSearchParams();
+      
+      // ✅ TIMESTAMP para evitar cache (sin headers problemáticos)
+      params.append('nocache', Date.now());
       
       if (filters.category && filters.category !== 'all') {
         params.append('category', filters.category.toLowerCase().trim());
@@ -83,6 +107,7 @@ const api = {
       
       console.log('📡 Fetching:', url);
       
+      // ✅ SIN HEADERS PROBLEMÁTICOS - Solo GET simple
       const response = await fetch(url);
       
       if (!response.ok) {
@@ -98,6 +123,11 @@ const api = {
       console.log('✅ Data received:', data);
       
       if (data.success && data.products && Array.isArray(data.products)) {
+        // ✅ FILTRAR PRODUCTOS ACTIVOS EN EL CLIENTE
+        data.products = data.products.filter(p => {
+          return p.active === 1 || p.active === true || p.active === '1';
+        });
+        
         data.products.sort((a, b) => a.id - b.id);
         console.log(`✅ ${data.products.length} productos activos cargados`);
       }
@@ -326,8 +356,6 @@ const ui = {
       document.body.style.cursor = '';
     }
   },
-  
-  // ✅ ELIMINADO: showSearchIndicator - causa el destello
   
   updateSearchPlaceholder(count) {
     const searchInput = document.getElementById('search-input');
@@ -781,7 +809,6 @@ const filters = {
   },
   
   apply() {
-    // ✅ FIX: Sin destello - removido showSearchIndicator
     if (state.isSearching) {
       console.log('⏳ Búsqueda en progreso, esperando...');
       return;
@@ -837,7 +864,6 @@ const filters = {
       .finally(() => {
         state.isSearching = false;
         ui.showLoading(false);
-        // ✅ FIX: Sin showSearchIndicator
       });
   }
 };
@@ -848,6 +874,9 @@ const filters = {
 
 async function init() {
   console.log('🚀 Mawewe iniciando...');
+  
+  // Limpiar cache al iniciar
+  cacheManager.clear();
   
   try {
     ui.showLoading(true);
@@ -915,8 +944,6 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const query = e.target.value.trim();
       
-      // ✅ FIX: Sin indicador visual que cause destello
-      
       searchTimeout = setTimeout(() => {
         filters.setSearch(query);
       }, CONFIG.search.debounceTime);
@@ -957,6 +984,16 @@ window.checkout = {
 };
 
 // =============================================================================
+// UTILITY FUNCTIONS
+// =============================================================================
+
+window.forceReloadProducts = function() {
+  console.log('🔄 Forzando recarga de productos...');
+  cacheManager.clear();
+  location.reload();
+};
+
+// =============================================================================
 // GLOBAL NAMESPACE
 // =============================================================================
 
@@ -966,9 +1003,11 @@ window.mawewe = {
   filters,
   state,
   CONFIG,
-  checkout: window.checkout
+  checkout: window.checkout,
+  cacheManager,
+  forceReload: window.forceReloadProducts
 };
 
 window.productModal = productModal;
 
-console.log('✅ Mawewe cargado (versión corregida - sin destello)');
+console.log('✅ Mawewe cargado correctamente (sin CORS)');

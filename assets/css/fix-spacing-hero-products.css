@@ -1,0 +1,39 @@
+/* ==============================================
+   FIX: REDUCIR ESPACIO ENTRE HERO Y PRODUCTS
+   ============================================== */
+
+/* Reducir padding inferior del hero */
+.hero-section {
+  padding: var(--spacing-2xl) 0 var(--spacing-lg) 0; /* ✅ Menos espacio abajo */
+}
+
+/* Reducir padding superior de products */
+.products-section {
+  padding-top: var(--spacing-lg); /* ✅ Menos espacio arriba */
+}
+
+/* Ajustar el margen del filtro */
+.filters-container {
+  margin-bottom: var(--spacing-lg); /* ✅ Espacio consistente */
+}
+
+/* Responsive: Espaciado más compacto en móvil */
+@media (max-width: 768px) {
+  .hero-section {
+    padding: var(--spacing-lg) 0 var(--spacing-md) 0;
+  }
+  
+  .products-section {
+    padding-top: var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    padding: var(--spacing-md) 0 var(--spacing-sm) 0;
+  }
+  
+  .products-section {
+    padding-top: var(--spacing-sm);
+  }
+}
