@@ -2,8 +2,14 @@
 
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, cache-control');
 header('Content-Type: application/json; charset=UTF-8');
+
+// ✅ NUEVO: Headers para evitar caché
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Cache-Control: post-check=0, pre-check=0', false);
+header('Pragma: no-cache');
+header('Expires: 0');
 
 // Manejar preflight
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -55,7 +61,7 @@ try {
 
     // ========================================
     // 3. CONSTRUIR QUERY SQL PARA PRODUCTOS
-    // ✅ CORREGIDO: active = 1 SIEMPRE verificado
+    // ✅ CRÍTICO: Verificar active = 1 SIEMPRE
     // ========================================
     $sql = "SELECT 
                 id,
@@ -167,7 +173,7 @@ try {
         'accesorios'
     ];
     
-    // ✅ CORREGIDO: Solo contar productos activos
+    // ✅ CRÍTICO: Solo contar productos activos
     $sqlCategories = "SELECT 
                         DISTINCT category,
                         COUNT(*) as count
@@ -213,7 +219,7 @@ try {
     // 7. OBTENER SUBCATEGORÍAS - ✅ SOLO ACTIVAS
     // ========================================
     
-    // ✅ CORREGIDO: Solo subcategorías de productos activos
+    // ✅ CRÍTICO: Solo subcategorías de productos activos
     $sqlAllSubcategories = "SELECT 
                                 category,
                                 subcategory,
