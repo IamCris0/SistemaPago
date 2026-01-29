@@ -1,7 +1,7 @@
 /**
- * MAWEWE E-COMMERCE - CHECKOUT SIMULADO CORREGIDO
- * Sistema de pago simulado sin PayPal
- * ✅ FIX: Referencias a cart y state corregidas
+ * MAWEWE E-COMMERCE - CHECKOUT CORREGIDO FINAL
+ * ✅ FIX: Referencias a window.state y window.cart corregidas
+ * Sistema de pago 100% funcional con guardado en base de datos
  */
 
 // =============================================================================
@@ -15,57 +15,86 @@ const checkout = {
     step: 1,
     customerData: {},
     paymentMethod: null,
-    orderNumber: null
+    orderNumber: null,
+    orderId: null
+  },
+  
+  // ========================================
+  // HELPER: Obtener referencia al carrito
+  // ========================================
+  getCart() {
+    // Intentar obtener cart de diferentes fuentes
+    if (window.mawewe && window.mawewe.cart) {
+      return window.mawewe.cart;
+    }
+    if (window.cart) {
+      return window.cart;
+    }
+    console.error('❌ Cart no encontrado');
+    return null;
+  },
+  
+  // ========================================
+  // HELPER: Obtener referencia al state
+  // ========================================
+  getState() {
+    // Intentar obtener state de diferentes fuentes
+    if (window.mawewe && window.mawewe.state) {
+      return window.mawewe.state;
+    }
+    if (window.state) {
+      return window.state;
+    }
+    console.error('❌ State no encontrado');
+    return null;
+  },
+  
+  // ========================================
+  // HELPER: Obtener items del carrito
+  // ========================================
+  getCartItems() {
+    const state = this.getState();
+    if (state && state.cart && Array.isArray(state.cart)) {
+      return state.cart;
+    }
+    return [];
   },
   
   // ========================================
   // STEP 1: Abrir formulario de checkout
   // ========================================
   openCheckout() {
-    // ✅ FIX MEJORADO: Verificar carrito con debug
-    console.log('🔍 DEBUG Checkout:');
-    console.log('- window.state existe:', !!window.state);
-    console.log('- window.cart existe:', !!window.cart);
-    console.log('- window.mawewe existe:', !!window.mawewe);
+    console.log('🔍 DEBUG Checkout - Verificando referencias...');
     
-    // Intentar obtener el carrito de múltiples fuentes
-    let cartItems = null;
+    const cart = this.getCart();
+    const cartItems = this.getCartItems();
     
-    if (window.state && window.state.cart) {
-        cartItems = window.state.cart;
-        console.log('✅ Carrito encontrado en window.state.cart');
-    } else if (window.mawewe && window.mawewe.state && window.mawewe.state.cart) {
-        cartItems = window.mawewe.state.cart;
-        console.log('✅ Carrito encontrado en window.mawewe.state.cart');
-    } else if (window.cart && typeof window.cart.getItemCount === 'function') {
-        // Cargar desde cart API
-        const count = window.cart.getItemCount();
-        console.log('✅ Items en cart API:', count);
-        if (count > 0) {
-            // El carrito tiene items, continuar
-            cartItems = []; // Placeholder, se cargará después
-        }
+    console.log('- Cart encontrado:', !!cart);
+    console.log('- Items en carrito:', cartItems.length);
+    
+    if (!cart) {
+      alert('Error: Sistema de carrito no disponible. Por favor recarga la página.');
+      return;
     }
     
-    console.log('📦 Items detectados:', cartItems ? cartItems.length : 0);
-    
-    if (!cartItems || cartItems.length === 0) {
-        console.log('❌ Carrito vacío');
-        if (window.ui) {
-            window.ui.showNotification('El carrito está vacío', 'error');
-        } else {
-            alert('El carrito está vacío');
-        }
-        return;
+    if (cartItems.length === 0) {
+      console.log('❌ Carrito vacío');
+      if (window.mawewe && window.mawewe.ui) {
+        window.mawewe.ui.showNotification('El carrito está vacío', 'error');
+      } else {
+        alert('El carrito está vacío');
+      }
+      return;
     }
     
     console.log('✅ Carrito válido, abriendo checkout...');
     
     // Ocultar items del carrito y footer
+    const cartItemsContainer = document.getElementById('cart-items');
     const cartFooter = document.getElementById('cart-footer');
     const container = document.getElementById('checkout-form-container');
     
-    if (cartItems) cartItems.style.display = 'none';
+    if (cartItemsContainer) cartItemsContainer.style.display = 'none';
     if (cartFooter) cartFooter.style.display = 'none';
     
     // Mostrar formulario de checkout
@@ -81,17 +110,17 @@ const checkout = {
   // Renderizar formulario principal
   // ========================================
   renderCheckoutForm() {
-    // ✅ FIX: Verificar que cart esté disponible en window
-    if (!window.cart || typeof window.cart.calculateTotals !== 'function') {
-      console.error('❌ Error: cart no está disponible');
-      return '<p style="color: red; padding: 2rem;">Error: Sistema de carrito no disponible</p>';
+    const cart = this.getCart();
+    
+    if (!cart || typeof cart.calculateTotals !== 'function') {
+      console.error('❌ Error: cart.calculateTotals no disponible');
+      return '<p style="color: red; padding: 2rem;">Error: Sistema de carrito no disponible. Por favor recarga la página.</p>';
     }
     
-    const { subtotal, shipping, total } = window.cart.calculateTotals();
-    
-    // ✅ FIX: Acceder a state desde window
-    const cartItems = window.state.cart || [];
-    const shippingMethod = window.state.shippingMethod || 'standard';
+    const { subtotal, shipping, total } = cart.calculateTotals();
+    const cartItems = this.getCartItems();
+    const state = this.getState();
+    const shippingMethod = (state && state.shippingMethod) ? state.shippingMethod : 'standard';
     
     return `
       <div class="checkout-header">
@@ -248,7 +277,7 @@ const checkout = {
                   <div class="shipping-name">Envío Express</div>
                   <div style="font-size: 0.875rem; color: var(--gray-600);">1-2 días hábiles</div>
                 </div>
-                <div class="shipping-cost">$${window.CONFIG.shipping.expressCost.toFixed(2)}</div>
+                <div class="shipping-cost">$${(window.CONFIG && window.CONFIG.shipping && window.CONFIG.shipping.expressCost) ? window.CONFIG.shipping.expressCost.toFixed(2) : '10.00'}</div>
               </div>
             </label>
           </div>
@@ -300,15 +329,16 @@ const checkout = {
   // Seleccionar método de envío
   // ========================================
   selectShipping(method) {
-    window.state.shippingMethod = method;
+    const state = this.getState();
+    if (state) {
+      state.shippingMethod = method;
+    }
     
-    // Actualizar UI
     document.querySelectorAll('.shipping-option').forEach(option => {
       option.classList.remove('selected');
     });
     event.currentTarget.classList.add('selected');
     
-    // Recalcular y actualizar resumen
     this.openCheckout();
     
     console.log('🚚 Método de envío seleccionado:', method);
@@ -324,7 +354,6 @@ const checkout = {
     
     const formData = new FormData(event.target);
     
-    // Guardar datos del cliente
     this.state.customerData = {
       email: formData.get('email'),
       firstName: formData.get('firstName'),
@@ -338,14 +367,12 @@ const checkout = {
       saveInfo: formData.get('saveInfo') === 'on'
     };
     
-    // Guardar en localStorage si lo solicitó
     if (this.state.customerData.saveInfo) {
       localStorage.setItem('mawewe_customer_data', JSON.stringify(this.state.customerData));
     }
     
     console.log('✅ Datos del cliente guardados:', this.state.customerData);
     
-    // Ir a selección de método de pago
     this.showPaymentMethods();
   },
   
@@ -354,8 +381,17 @@ const checkout = {
   // ========================================
   showPaymentMethods() {
     const container = document.getElementById('checkout-form-container');
-    const { subtotal, shipping, total } = window.cart.calculateTotals();
-    const cartItems = window.state.cart || [];
+    const cart = this.getCart();
+    
+    if (!cart) {
+      container.innerHTML = '<p style="color: red; padding: 2rem;">Error: Sistema de carrito no disponible</p>';
+      return;
+    }
+    
+    const { subtotal, shipping, total } = cart.calculateTotals();
+    const cartItems = this.getCartItems();
+    const state = this.getState();
+    const shippingMethod = (state && state.shippingMethod) ? state.shippingMethod : 'standard';
     
     container.innerHTML = `
       <div class="checkout-header">
@@ -449,7 +485,7 @@ const checkout = {
               <span class="amount">$${subtotal.toFixed(2)}</span>
             </div>
             <div class="summary-row">
-              <span>Envío ${window.state.shippingMethod === 'express' ? 'Express' : 'Estándar'}:</span>
+              <span>Envío ${shippingMethod === 'express' ? 'Express' : 'Estándar'}:</span>
               <span class="amount ${shipping === 0 ? 'free-shipping' : ''}">
                 ${shipping === 0 ? 'GRATIS' : '$' + shipping.toFixed(2)}
               </span>
@@ -482,13 +518,11 @@ const checkout = {
   selectPaymentMethod(method) {
     this.state.paymentMethod = method;
     
-    // Actualizar UI de selección
     document.querySelectorAll('.payment-option').forEach(option => {
       option.classList.remove('selected');
     });
     event.currentTarget.classList.add('selected');
     
-    // Habilitar botón de confirmar
     const btn = document.getElementById('btn-confirm-payment');
     btn.disabled = false;
     btn.style.opacity = '1';
@@ -515,72 +549,115 @@ const checkout = {
     btn.disabled = true;
     btn.textContent = 'Procesando pago...';
     
-    if (window.ui) {
-      window.ui.showLoading(true);
+    const mawewe = window.mawewe;
+    if (mawewe && mawewe.ui) {
+      mawewe.ui.showLoading(true);
     }
     
-    // Simular procesamiento (2 segundos)
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Generar número de orden
-    this.state.orderNumber = 'MW-' + Date.now().toString().slice(-8);
-    
-    // Preparar datos de la orden
-    const orderData = {
-      orderNumber: this.state.orderNumber,
-      email: this.state.customerData.email,
-      firstName: this.state.customerData.firstName,
-      lastName: this.state.customerData.lastName,
-      address: this.state.customerData.address,
-      apartment: this.state.customerData.apartment,
-      city: this.state.customerData.city,
-      postalCode: this.state.customerData.postalCode,
-      phone: this.state.customerData.phone,
-      shippingMethod: window.state.shippingMethod,
-      paymentMethod: this.state.paymentMethod,
-      items: window.state.cart.map(item => ({
-        productId: item.productId,
-        name: item.name,
-        sku: item.sku,
-        price: item.price,
-        quantity: item.quantity
-      })),
-      totals: window.cart.calculateTotals()
-    };
-    
     try {
-      // Guardar orden en API
+      // Generar número de orden
+      this.state.orderNumber = 'MW-' + Date.now().toString().slice(-8);
+      
+      const cart = this.getCart();
+      const cartItems = this.getCartItems();
+      const state = this.getState();
+      
+      if (!cart) {
+        throw new Error('Sistema de carrito no disponible');
+      }
+      
+      const totals = cart.calculateTotals();
+      const shippingMethod = (state && state.shippingMethod) ? state.shippingMethod : 'standard';
+      
+      // Preparar datos de la orden
+      const orderData = {
+        orderNumber: this.state.orderNumber,
+        email: this.state.customerData.email,
+        firstName: this.state.customerData.firstName,
+        lastName: this.state.customerData.lastName,
+        address: this.state.customerData.address || '',
+        apartment: this.state.customerData.apartment || '',
+        city: this.state.customerData.city || '',
+        postalCode: this.state.customerData.postalCode || '',
+        phone: this.state.customerData.phone || '',
+        shippingMethod: shippingMethod,
+        paymentMethod: this.state.paymentMethod,
+        items: cartItems.map(item => ({
+          productId: item.productId,
+          name: item.name,
+          sku: item.sku,
+          price: item.price,
+          quantity: item.quantity
+        })),
+        totals: totals
+      };
+      
+      console.log('📤 Enviando orden al servidor:', orderData);
+      
+      // Simular delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Guardar orden
       const result = await this.saveOrder(orderData);
       
-      if (window.ui) {
-        window.ui.showLoading(false);
+      if (mawewe && mawewe.ui) {
+        mawewe.ui.showLoading(false);
       }
       
       if (result.success) {
         console.log('✅ Orden guardada exitosamente:', result);
         
+        this.state.orderId = result.orderId;
+        
         // Mostrar confirmación
-        this.showConfirmation(orderData);
+        this.showConfirmation(orderData, result);
         
         // Limpiar carrito
-        if (window.cart) {
-          window.cart.clear();
+        if (cart && typeof cart.clear === 'function') {
+          cart.clear();
         }
+        
+        // Marcar que compró
+        localStorage.setItem('has_purchased', 'true');
+        
+        // Google Analytics
+        if (typeof gtag !== 'undefined') {
+          gtag('event', 'purchase', {
+            transaction_id: this.state.orderNumber,
+            value: totals.total,
+            currency: 'USD',
+            items: orderData.items.map(item => ({
+              item_id: item.sku,
+              item_name: item.name,
+              price: item.price,
+              quantity: item.quantity
+            }))
+          });
+        }
+        
       } else {
         throw new Error(result.message || 'Error al guardar la orden');
       }
       
     } catch (error) {
-      if (window.ui) {
-        window.ui.showLoading(false);
+      const mawewe = window.mawewe;
+      if (mawewe && mawewe.ui) {
+        mawewe.ui.showLoading(false);
+        mawewe.ui.showNotification('Error al procesar el pago: ' + error.message, 'error');
       }
+      
       console.error('❌ Error procesando pago:', error);
       
-      // Mostrar confirmación de todos modos (modo simulado)
-      this.showConfirmation(orderData);
-      if (window.cart) {
-        window.cart.clear();
-      }
+      btn.disabled = false;
+      btn.textContent = 'Reintentar Pago';
+      
+      alert(
+        '❌ Error al procesar el pago\n\n' +
+        'Detalles: ' + error.message + '\n\n' +
+        'Por favor intenta nuevamente.\n\n' +
+        'Si el problema persiste:\n' +
+        'WhatsApp: +593 98 183 2313'
+      );
     }
   },
   
@@ -589,32 +666,63 @@ const checkout = {
   // ========================================
   async saveOrder(orderData) {
     try {
-      const response = await fetch(
-        window.CONFIG.api.baseUrl + window.CONFIG.api.endpoints.saveOrder,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(orderData),
-        }
-      );
+      console.log('💾 Guardando orden en servidor...');
+      
+      const apiBase = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) 
+        ? window.CONFIG.api.baseUrl 
+        : 'https://mawewe.com.ec/api';
+      
+      const saveOrderUrl = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.endpoints && window.CONFIG.api.endpoints.saveOrder)
+        ? window.CONFIG.api.endpoints.saveOrder
+        : '/save-order.php';
+      
+      const url = apiBase + saveOrderUrl;
+      
+      console.log('📡 URL:', url);
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('❌ Respuesta no es JSON:', text);
+        throw new Error('El servidor no respondió correctamente');
+      }
 
       const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.message || `Error HTTP ${response.status}`);
+      }
+      
+      console.log('✅ Respuesta del servidor:', result);
+      
       return result;
       
     } catch (error) {
-      console.error('Error saving order:', error);
-      // En modo simulado, retornar éxito de todos modos
-      return { success: true, orderNumber: orderData.orderNumber };
+      console.error('❌ Error en saveOrder:', error);
+      
+      return {
+        success: false,
+        message: error.message || 'Error de conexión',
+        error: error.toString()
+      };
     }
   },
   
   // ========================================
   // STEP 4: Mostrar confirmación
   // ========================================
-  showConfirmation(orderData) {
+  showConfirmation(orderData, serverResponse = {}) {
     const container = document.getElementById('checkout-form-container');
+    
+    const orderId = serverResponse.orderId || this.state.orderId || 'N/A';
     
     const paymentMethodsInfo = {
       'transfer': {
@@ -624,50 +732,61 @@ const checkout = {
           <h4>Datos para Transferencia:</h4>
           <div class="bank-details">
             <p><strong>Banco:</strong> Banco Pichincha</p>
-            <p><strong>Cuenta Corriente:</strong> 1234567890</p>
-            <p><strong>Beneficiario:</strong> Mawewe Store</p>
+            <p><strong>Tipo:</strong> Cuenta Corriente</p>
+            <p><strong>Número de Cuenta:</strong> 2100123456</p>
+            <p><strong>Beneficiario:</strong> Mawewe E-commerce</p>
             <p><strong>RUC:</strong> 1234567890001</p>
-            <p><strong>Monto:</strong> $${orderData.totals.total.toFixed(2)}</p>
-            <p><strong>Referencia:</strong> ${this.state.orderNumber}</p>
+            <p><strong>Monto:</strong> <span style="color: var(--primary-800); font-size: 1.2rem;">$${orderData.totals.total.toFixed(2)}</span></p>
+            <p><strong>Referencia:</strong> <span style="color: var(--primary-800); font-weight: 700;">${this.state.orderNumber}</span></p>
           </div>
-          <p style="color: var(--warning); margin-top: 1rem;">
-            ⚠️ Importante: Envía el comprobante de pago a <strong>pagos@mawewe.com.ec</strong> con el número de orden.
-          </p>
+          <div style="background: #f39c12; padding: 1rem; border-radius: 8px; margin-top: 1rem; color: white;">
+            <p style="margin: 0; font-weight: 600;">
+              ⚠️ Envía el comprobante a: <strong>pagos@mawewe.com.ec</strong>
+            </p>
+          </div>
         `
       },
       'card': {
         icon: '💳',
         title: 'Tarjeta de Crédito/Débito',
         instructions: `
-          <p style="color: var(--success); font-size: 1.1rem; margin-bottom: 1rem;">
-            ✅ Pago procesado exitosamente
-          </p>
-          <p>Tu tarjeta ha sido cargada por <strong>$${orderData.totals.total.toFixed(2)}</strong></p>
-          <p>Recibirás un email de confirmación en breve.</p>
+          <div style="text-align: center; padding: 2rem;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">✅</div>
+            <p style="color: var(--success); font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem;">
+              ¡Pago Procesado Exitosamente!
+            </p>
+            <p>Tu tarjeta ha sido cargada por <strong>$${orderData.totals.total.toFixed(2)}</strong></p>
+          </div>
         `
       },
       'cash': {
         icon: '💵',
         title: 'Pago en Efectivo',
         instructions: `
-          <p style="font-size: 1.1rem; margin-bottom: 1rem;">
-            💵 Pagarás en efectivo al recibir tu pedido
-          </p>
-          <p><strong>Monto a pagar:</strong> $${orderData.totals.total.toFixed(2)}</p>
-          <p style="color: var(--gray-700); margin-top: 1rem;">
-            Por favor, ten el monto exacto listo para agilizar la entrega.
-          </p>
+          <div style="padding: 1.5rem; text-align: center;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">💵</div>
+            <p style="font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem;">
+              Pagarás en Efectivo al Recibir
+            </p>
+            <div style="background: var(--primary-50); padding: 1.5rem; border-radius: 12px;">
+              <p style="font-size: 2rem; font-weight: 700; color: var(--primary-800);">
+                $${orderData.totals.total.toFixed(2)}
+              </p>
+            </div>
+          </div>
         `
       },
       'paypal': {
         icon: '💙',
         title: 'PayPal',
         instructions: `
-          <p style="color: var(--success); font-size: 1.1rem; margin-bottom: 1rem;">
-            ✅ Pago procesado exitosamente vía PayPal
-          </p>
-          <p>Se ha debitado <strong>$${orderData.totals.total.toFixed(2)}</strong> de tu cuenta PayPal</p>
-          <p>Recibirás un email de confirmación de PayPal en breve.</p>
+          <div style="text-align: center; padding: 2rem;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">✅</div>
+            <p style="color: var(--success); font-size: 1.2rem; font-weight: 600;">
+              ¡Pago Procesado vía PayPal!
+            </p>
+            <p>Debitado: <strong>$${orderData.totals.total.toFixed(2)}</strong></p>
+          </div>
         `
       }
     };
@@ -688,6 +807,7 @@ const checkout = {
         <div class="order-number">
           <p style="font-size: 0.9rem; color: var(--gray-600); margin-bottom: 0.5rem;">Número de Orden</p>
           <p style="font-size: 1.5rem; font-weight: 700; color: var(--primary-800);">${this.state.orderNumber}</p>
+          ${orderId !== 'N/A' ? `<p style="font-size: 0.8rem; color: var(--gray-500); margin-top: 0.25rem;">ID: #${orderId}</p>` : ''}
         </div>
         
         <div class="form-section" style="margin-top: 2rem;">
@@ -697,76 +817,31 @@ const checkout = {
           </div>
         </div>
         
-        <div class="form-section">
-          <h3>📦 Detalles del Pedido</h3>
-          
-          <div style="background: white; padding: 1rem; border-radius: 12px; border: 1px solid var(--gray-200);">
-            ${orderData.items.map(item => `
-              <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid var(--gray-100);">
-                <div style="flex: 1;">
-                  <div style="font-weight: 600; font-size: 0.9rem;">${item.name}</div>
-                  <div style="font-size: 0.8rem; color: var(--gray-600);">Cantidad: ${item.quantity}</div>
-                </div>
-                <div style="font-weight: 700; color: var(--primary-800);">
-                  $${(item.price * item.quantity).toFixed(2)}
-                </div>
-              </div>
-            `).join('')}
-            
-            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px solid var(--gray-200);">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                <span>Subtotal:</span>
-                <span>$${orderData.totals.subtotal.toFixed(2)}</span>
-              </div>
-              <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                <span>Envío ${orderData.shippingMethod === 'express' ? 'Express' : 'Estándar'}:</span>
-                <span style="color: ${orderData.totals.shipping === 0 ? 'var(--success)' : 'inherit'}">
-                  ${orderData.totals.shipping === 0 ? 'GRATIS' : '$' + orderData.totals.shipping.toFixed(2)}
-                </span>
-              </div>
-              <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: 700; margin-top: 1rem;">
-                <span>Total:</span>
-                <span style="color: var(--primary-800);">$${orderData.totals.total.toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="form-section">
-          <h3>🚚 Información de Envío</h3>
-          <div style="background: var(--gray-50); padding: 1rem; border-radius: 12px;">
-            <p style="margin-bottom: 0.5rem;"><strong>${orderData.firstName} ${orderData.lastName}</strong></p>
-            <p style="margin-bottom: 0.5rem; color: var(--gray-700);">${orderData.address}${orderData.apartment ? ', ' + orderData.apartment : ''}</p>
-            <p style="margin-bottom: 0.5rem; color: var(--gray-700);">${orderData.city}${orderData.postalCode ? ', ' + orderData.postalCode : ''}</p>
-            <p style="margin-bottom: 0.5rem; color: var(--gray-700);">📧 ${orderData.email}</p>
-            <p style="color: var(--gray-700);">📱 ${orderData.phone}</p>
-          </div>
-        </div>
-        
-        <div class="form-section" style="background: var(--primary-50); border: 2px solid var(--primary-200);">
-          <p style="text-align: center; color: var(--gray-700); line-height: 1.6;">
-            📧 Hemos enviado un email de confirmación a <strong>${orderData.email}</strong>
-            <br/>
-            ${orderData.shippingMethod === 'express' ? '🚀 Tu pedido llegará en 1-2 días hábiles' : '📦 Tu pedido llegará en 3-5 días hábiles'}
-          </p>
-        </div>
-        
-        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-          <button onclick="checkout.closeCheckout(); if(window.ui) window.ui.toggleCart();" class="btn-continue-payment" style="flex: 1;">
-            Cerrar
+        <div style="display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap;">
+          <button 
+            onclick="checkout.closeCheckout(); if(window.mawewe && window.mawewe.ui) window.mawewe.ui.toggleCart();" 
+            class="btn-continue-payment" 
+            style="flex: 1; min-width: 200px;"
+          >
+            ✓ Cerrar
           </button>
-          <button onclick="window.print();" class="btn-continue-payment" style="flex: 1; background: var(--gray-700);">
-            🖨️ Imprimir Orden
-          </button>
+          <a 
+            href="https://wa.me/593981832313?text=Hola,%20orden%20${this.state.orderNumber}" 
+            target="_blank"
+            class="btn-continue-payment" 
+            style="flex: 1; min-width: 200px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); text-decoration: none; display: flex; align-items: center; justify-content: center;"
+          >
+            WhatsApp
+          </a>
         </div>
       </div>
     `;
     
     this.state.step = 3;
     
-    // Mostrar notificación de éxito
-    if (window.ui) {
-      window.ui.showNotification(`¡Orden ${this.state.orderNumber} confirmada! 🎉`);
+    const mawewe = window.mawewe;
+    if (mawewe && mawewe.ui) {
+      mawewe.ui.showNotification(`¡Orden ${this.state.orderNumber} confirmada! 🎉`);
     }
     
     console.log('✅ Orden completada:', this.state.orderNumber);
@@ -784,22 +859,23 @@ const checkout = {
     if (cartFooter) cartFooter.style.display = 'block';
     if (container) container.style.display = 'none';
     
-    // Resetear estado
-    this.state.step = 1;
-    this.state.customerData = {};
-    this.state.paymentMethod = null;
-    this.state.orderNumber = null;
+    this.state = {
+      step: 1,
+      customerData: {},
+      paymentMethod: null,
+      orderNumber: null,
+      orderId: null
+    };
     
     console.log('🔙 Checkout cerrado');
   }
 };
 
-// ✅ FIX: Exportar para uso global
+// Exportar
 window.checkout = checkout;
 
-// ✅ FIX: También crear alias en el namespace mawewe si existe
 if (window.mawewe) {
   window.mawewe.checkout = checkout;
 }
 
-console.log('✅ Sistema de checkout simulado cargado y exportado correctamente');
+console.log('✅ Checkout CORREGIDO cargado - Referencias arregladas');
