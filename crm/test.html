@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba del Sistema - MAWEWE</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            background: linear-gradient(135deg, #8C004B, #6B0038);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            color: #8C004B;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .test-item {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #ccc;
+        }
+        .test-item.success {
+            background: #d4edda;
+            border-left-color: #28a745;
+        }
+        .test-item.error {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+        }
+        .test-item.warning {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+        }
+        .test-item.info {
+            background: #d1ecf1;
+            border-left-color: #17a2b8;
+        }
+        .test-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .test-result {
+            font-size: 14px;
+            color: #666;
+        }
+        button {
+            background: #8C004B;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #6B0038;
+        }
+        .code {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #8C004B;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Prueba del Sistema MAWEWE/ELPALACIO</h1>
+        
+        <div class="card">
+            <h2>📋 Información del Sistema</h2>
+            <div id="systemInfo">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Cargando información...</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>🔧 Pruebas de Configuración</h2>
+            <div id="configTests"></div>
+        </div>
+        
+        <div class="card">
+            <h2>🌐 Pruebas de API</h2>
+            <button onclick="testAPI()">▶ Ejecutar Pruebas de API</button>
+            <div id="apiTests"></div>
+        </div>
+        
+        <div class="card">
+            <h2>💾 Pruebas de LocalStorage</h2>
+            <button onclick="testStorage()">▶ Ejecutar Pruebas de Storage</button>
+            <div id="storageTests"></div>
+        </div>
+        
+        <div class="card">
+            <h2>🔗 Enlaces Rápidos</h2>
+            <button onclick="location.href='index.html'">🏠 Inicio</button>
+            <button onclick="location.href='login.html'">🔐 Login</button>
+            <button onclick="location.href='dashboard.html'">📊 Dashboard</button>
+            <button onclick="testClearStorage()">🗑️ Limpiar Storage</button>
+        </div>
+    </div>
+    
+    <script src="js/config.js"></script>
+    <script>
+        // Función para mostrar resultado de prueba
+        function showTest(containerId, name, result, type = 'info', details = '') {
+            const container = document.getElementById(containerId);
+            const testItem = document.createElement('div');
+            testItem.className = `test-item ${type}`;
+            testItem.innerHTML = `
+                <div class="test-name">${name}</div>
+                <div class="test-result">${result}</div>
+                ${details ? `<div class="code">${details}</div>` : ''}
+            `;
+            container.appendChild(testItem);
+        }
+        
+        // Información del sistema
+        function loadSystemInfo() {
+            const container = document.getElementById('systemInfo');
+            container.innerHTML = `
+                <div class="test-item info">
+                    <div class="test-name">Versión del Sistema</div>
+                    <div class="test-result">${CONFIG.VERSION}</div>
+                </div>
+                <div class="test-item info">
+                    <div class="test-name">Nombre de la Aplicación</div>
+                    <div class="test-result">${CONFIG.APP_NAME}</div>
+                </div>
+                <div class="test-item info">
+                    <div class="test-name">URL de la API</div>
+                    <div class="test-result">${CONFIG.API_URL}</div>
+                </div>
+                <div class="test-item info">
+                    <div class="test-name">Navegador</div>
+                    <div class="test-result">${navigator.userAgent}</div>
+                </div>
+                <div class="test-item info">
+                    <div class="test-name">Fecha y Hora</div>
+                    <div class="test-result">${new Date().toLocaleString('es-EC')}</div>
+                </div>
+            `;
+        }
+        
+        // Pruebas de configuración
+        function testConfig() {
+            const container = document.getElementById('configTests');
+            container.innerHTML = '';
+            
+            // Test 1: CONFIG existe
+            if (typeof CONFIG !== 'undefined') {
+                showTest('configTests', '✅ CONFIG está definido', 'El objeto de configuración está cargado correctamente', 'success');
+            } else {
+                showTest('configTests', '❌ CONFIG no está definido', 'El archivo config.js no se cargó correctamente', 'error');
+                return;
+            }
+            
+            // Test 2: API_URL
+            if (CONFIG.API_URL) {
+                showTest('configTests', '✅ API_URL configurada', `URL: ${CONFIG.API_URL}`, 'success');
+            } else {
+                showTest('configTests', '❌ API_URL no configurada', 'Falta la URL de la API', 'error');
+            }
+            
+            // Test 3: Endpoints
+            if (CONFIG.ENDPOINTS) {
+                const endpointsCount = Object.keys(CONFIG.ENDPOINTS).length;
+                showTest('configTests', '✅ Endpoints configurados', `${endpointsCount} grupos de endpoints disponibles`, 'success', JSON.stringify(CONFIG.ENDPOINTS, null, 2));
+            } else {
+                showTest('configTests', '❌ Endpoints no configurados', 'Faltan los endpoints de la API', 'error');
+            }
+            
+            // Test 4: Funciones helper
+            const helpers = ['getUrl', 'getToken', 'getUser', 'isAuthenticated'];
+            const missingHelpers = helpers.filter(h => typeof CONFIG[h] !== 'function');
+            
+            if (missingHelpers.length === 0) {
+                showTest('configTests', '✅ Funciones helper disponibles', `${helpers.length} funciones helper cargadas`, 'success');
+            } else {
+                showTest('configTests', '⚠️ Algunas funciones helper faltan', `Faltan: ${missingHelpers.join(', ')}`, 'warning');
+            }
+        }
+        
+        // Pruebas de API
+        async function testAPI() {
+            const container = document.getElementById('apiTests');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>Ejecutando pruebas...</p></div>';
+            
+            setTimeout(async () => {
+                container.innerHTML = '';
+                
+                // Test 1: Productos
+                try {
+                    showTest('apiTests', '🔄 Probando /products.php...', 'Enviando petición...', 'info');
+                    
+                    const response = await fetch(`${CONFIG.API_URL}/products.php`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.products) {
+                        showTest('apiTests', '✅ API de Productos funciona', `${data.products.length} productos encontrados`, 'success', `Total: ${data.total}\nCategorías: ${data.categories?.length || 0}`);
+                    } else {
+                        showTest('apiTests', '❌ API de Productos falló', data.message || 'Respuesta inválida', 'error');
+                    }
+                } catch (error) {
+                    showTest('apiTests', '❌ Error en API de Productos', error.message, 'error');
+                }
+                
+                // Test 2: Reports Dashboard
+                try {
+                    showTest('apiTests', '🔄 Probando /reports.php?action=dashboard...', 'Enviando petición...', 'info');
+                    
+                    const response = await fetch(`${CONFIG.API_URL}/reports.php?action=dashboard`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        showTest('apiTests', '✅ API de Reportes funciona', 'Dashboard disponible', 'success', JSON.stringify(data, null, 2));
+                    } else {
+                        showTest('apiTests', '⚠️ API de Reportes respondió', data.message || 'Sin datos', 'warning');
+                    }
+                } catch (error) {
+                    showTest('apiTests', '❌ Error en API de Reportes', error.message, 'error');
+                }
+                
+                // Test 3: Employees
+                try {
+                    showTest('apiTests', '🔄 Probando /employees.php?action=list...', 'Enviando petición...', 'info');
+                    
+                    const response = await fetch(`${CONFIG.API_URL}/employees.php?action=list`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.employees) {
+                        showTest('apiTests', '✅ API de Empleados funciona', `${data.employees.length} empleados encontrados`, 'success');
+                    } else {
+                        showTest('apiTests', '⚠️ API de Empleados respondió', data.message || 'Sin datos', 'warning');
+                    }
+                } catch (error) {
+                    showTest('apiTests', '❌ Error en API de Empleados', error.message, 'error');
+                }
+            }, 500);
+        }
+        
+        // Pruebas de Storage
+        function testStorage() {
+            const container = document.getElementById('storageTests');
+            container.innerHTML = '';
+            
+            // Test 1: localStorage disponible
+            if (typeof localStorage !== 'undefined') {
+                showTest('storageTests', '✅ localStorage disponible', 'El navegador soporta localStorage', 'success');
+            } else {
+                showTest('storageTests', '❌ localStorage NO disponible', 'El navegador no soporta localStorage', 'error');
+                return;
+            }
+            
+            // Test 2: Escribir y leer
+            try {
+                const testKey = 'mawewe_test_key';
+                const testValue = { test: true, timestamp: Date.now() };
+                
+                localStorage.setItem(testKey, JSON.stringify(testValue));
+                const retrieved = JSON.parse(localStorage.getItem(testKey));
+                localStorage.removeItem(testKey);
+                
+                if (retrieved && retrieved.test === true) {
+                    showTest('storageTests', '✅ Escritura/Lectura funciona', 'localStorage lee y escribe correctamente', 'success');
+                } else {
+                    showTest('storageTests', '❌ Escritura/Lectura falló', 'No se pudo leer el valor escrito', 'error');
+                }
+            } catch (error) {
+                showTest('storageTests', '❌ Error en Storage', error.message, 'error');
+            }
+            
+            // Test 3: Verificar datos de sesión
+            const user = CONFIG.getUser();
+            const token = CONFIG.getToken();
+            
+            if (user && token) {
+                showTest('storageTests', '✅ Sesión activa encontrada', `Usuario: ${user.nombre}`, 'success', JSON.stringify(user, null, 2));
+            } else {
+                showTest('storageTests', 'ℹ️ No hay sesión activa', 'No se encontraron datos de usuario en localStorage', 'info');
+            }
+            
+            // Test 4: Espacio disponible
+            let totalSize = 0;
+            for (let key in localStorage) {
+                if (localStorage.hasOwnProperty(key)) {
+                    totalSize += localStorage[key].length + key.length;
+                }
+            }
+            
+            const sizeKB = (totalSize / 1024).toFixed(2);
+            const maxSizeKB = 5120; // ~5MB
+            const percentUsed = ((totalSize / (maxSizeKB * 1024)) * 100).toFixed(2);
+            
+            showTest('storageTests', 'ℹ️ Uso de localStorage', `${sizeKB} KB usados (${percentUsed}% del límite)`, 'info');
+        }
+        
+        // Limpiar storage
+        function testClearStorage() {
+            if (confirm('¿Estás seguro de que quieres limpiar el localStorage? Esto cerrará tu sesión.')) {
+                localStorage.clear();
+                showTest('storageTests', '✅ localStorage limpiado', 'Todos los datos fueron eliminados', 'success');
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            }
+        }
+        
+        // Ejecutar al cargar
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSystemInfo();
+            testConfig();
+        });
+    </script>
+</body>
+</html>
