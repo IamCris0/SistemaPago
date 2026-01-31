@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Empleado - Mawewe CRM</title>
+    <link rel="stylesheet" href="css/employee.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <h1>🏪 Mawewe CRM</h1>
+                <p id="employeeName">Cargando...</p>
+            </div>
+            <div class="header-right">
+                <button class="btn-header" onclick="location.reload()">
+                    <span>🔄</span> Actualizar
+                </button>
+                <button class="btn-header btn-logout" onclick="logout()">
+                    <span>🚪</span> Cerrar Sesión
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Alert -->
+        <div id="alert" class="alert"></div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: linear-gradient(135deg, #4CAF50, #45a049);">
+                    <span>📅</span>
+                </div>
+                <div class="stat-info">
+                    <h3>Días Trabajados</h3>
+                    <div class="stat-value" id="daysWorked">0</div>
+                    <div class="stat-label">Este mes</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon" style="background: linear-gradient(135deg, #2196F3, #1976D2);">
+                    <span>⏱️</span>
+                </div>
+                <div class="stat-info">
+                    <h3>Horas Totales</h3>
+                    <div class="stat-value" id="totalHours">0h</div>
+                    <div class="stat-label">Este mes</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon" style="background: linear-gradient(135deg, #FF9800, #F57C00);">
+                    <span>📊</span>
+                </div>
+                <div class="stat-info">
+                    <h3>Promedio Diario</h3>
+                    <div class="stat-value" id="avgHours">0h</div>
+                    <div class="stat-label">Por día trabajado</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Section -->
+        <div class="card">
+            <div class="card-header">
+                <h2>📅 Control de Asistencia</h2>
+                <div class="card-badge" id="statusBadge">
+                    <span id="statusText">Sin registro</span>
+                </div>
+            </div>
+
+            <div class="attendance-controls">
+                <button class="btn-attendance btn-check-in" id="btnCheckIn" onclick="checkIn()">
+                    <div class="btn-icon">🕐</div>
+                    <div class="btn-content">
+                        <div class="btn-title">Marcar Entrada</div>
+                        <div class="btn-subtitle">Registra tu hora de llegada</div>
+                    </div>
+                </button>
+
+                <button class="btn-attendance btn-check-out" id="btnCheckOut" onclick="checkOut()" disabled>
+                    <div class="btn-icon">🕐</div>
+                    <div class="btn-content">
+                        <div class="btn-title">Marcar Salida</div>
+                        <div class="btn-subtitle">Registra tu hora de salida</div>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Current Status -->
+            <div class="current-status" id="currentStatus" style="display: none;">
+                <h3>⏱️ Estado Actual</h3>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <div class="status-icon" style="background: #4CAF50;">🕐</div>
+                        <div class="status-info">
+                            <div class="status-label">Hora de Entrada</div>
+                            <div class="status-value" id="checkInTime">--:--</div>
+                        </div>
+                    </div>
+
+                    <div class="status-item">
+                        <div class="status-icon" style="background: #2196F3;">⏱️</div>
+                        <div class="status-info">
+                            <div class="status-label">Tiempo Transcurrido</div>
+                            <div class="status-value" id="elapsedTime">0h 0m</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Section -->
+        <div class="card">
+            <div class="card-header">
+                <h2>📊 Historial del Mes</h2>
+                <div class="card-subtitle" id="historyMonth">Enero 2026</div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Entrada</th>
+                            <th>Salida</th>
+                            <th>Horas</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody">
+                        <tr>
+                            <td colspan="5" class="table-loading">
+                                <div class="loading-spinner"></div>
+                                <p>Cargando historial...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/employee.js"></script>
+</body>
+</html>

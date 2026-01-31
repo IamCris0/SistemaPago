@@ -1,258 +1,226 @@
-# 🚀 Mawewe CRM - Desarrollo Local
+# 🏪 Mawewe CRM v2.0 - Sistema Profesional
 
-## 📁 Estructura del Proyecto
+## ✨ Características
+
+✅ **Sistema completamente funcional** conectado a tu API en producción  
+✅ **Diseño moderno y profesional** con animaciones suaves  
+✅ **100% responsive** - funciona en móviles, tablets y desktop  
+✅ **Panel de Empleado** con control de asistencia en tiempo real  
+✅ **Panel de Administrador** con gestión completa  
+✅ **Sin errores de carga** - optimizado para tu base de datos  
+
+## 📁 Estructura de Archivos
 
 ```
-crm-dev/
-├── index.html                      # 🏠 Página principal
-├── login.html                      # 🔐 Login
-├── package.json                    # 📦 Configuración npm
-├── create-crm-tables.sql          # 🗄️ Script de BD
-├── README-CRM.md                   # 📚 Documentación completa
-├── INSTALACION-RAPIDA.md          # ⚡ Guía rápida
-├── api/                           # 🔌 Backend
-│   ├── employees.php              # Gestión de empleados
-│   ├── attendance.php             # Control de asistencia
-│   └── reports.php                # Reportes
-├── employee/                      # 👤 Panel Empleado
-│   ├── panel.html
-│   └── panel.js
-├── admin/                         # 👔 Panel Admin
-│   ├── panel.html
-│   ├── panel.css
-│   └── panel.js
-└── assets/                        # 📦 Recursos
-    ├── css/
-    └── js/
-        └── config.js              # Configuración
+mawewe-crm/
+├── index.html              # Login principal
+├── employee.html           # Panel de empleado
+├── admin.html              # Panel de administrador
+├── css/
+│   ├── employee.css       # Estilos del panel empleado
+│   └── admin.css          # Estilos del panel admin
+└── js/
+    ├── config.js          # Configuración global
+    ├── employee.js        # Lógica del panel empleado
+    └── admin.js           # Lógica del panel admin
 ```
 
-## 🎯 Inicio Rápido
+## 🚀 Instalación en tu Servidor
 
-### 1. Abrir Terminal en esta carpeta
+### Paso 1: Subir Archivos
 
-```bash
-cd crm-dev
+Sube todos los archivos a tu servidor en la ruta que prefieras:
+
+**Opción A:** En la raíz
+```
+/public_html/
+├── index.html
+├── employee.html
+├── admin.html
+├── css/
+└── js/
 ```
 
-### 2. Iniciar Servidor Local
-
-**Opción A - Automático (Recomendado):**
-```bash
-npm start
+**Opción B:** En carpeta /crm/
+```
+/public_html/crm/
+├── index.html
+├── employee.html
+├── admin.html
+├── css/
+└── js/
 ```
 
-**Opción B - Manual:**
-```bash
-npx serve
+### Paso 2: Verificar la API
+
+Tu API ya está funcionando en:
+```
+https://mawewe.com.ec/api/
 ```
 
-**Opción C - Puerto Específico:**
-```bash
-npx serve -p 3000
-```
+El sistema ya está configurado para conectarse automáticamente.
 
-### 3. Abrir en el Navegador
+### Paso 3: Probar el Sistema
 
-El servidor te mostrará la URL, normalmente:
-```
-http://localhost:3000
-```
+1. Abre en tu navegador:
+   - `https://mawewe.com.ec/` (si subiste a raíz)
+   - `https://mawewe.com.ec/crm/` (si subiste a carpeta crm)
 
-## 🔐 Credenciales de Prueba
+2. Usa las credenciales de prueba:
 
-### Administrador:
-- **Cédula:** `2100064753`
-- **Nombre:** VARGAS CASTILLO MANUEL
+**Administrador:**
+- Cédula: `2100064753`
 
-### Empleados:
-- **Cédula:** `2100603790` - BRAVO CAIZA VALERIA
-- **Cédula:** `2100996897` - CUELLO VARGAS JORGE
-- **Cédula:** `2101050959` - LOPEZ MENDOZA SERGIO
+**Empleados:**
+- Cédula: `2100603790` (Valeria)
+- Cédula: `2100996897` (Jorge)
+- Cédula: `2101050959` (Sergio)
 
-## 🛠️ Comandos Disponibles
+## ✅ Características del Sistema
 
-```bash
-npm start          # Iniciar servidor (puerto automático)
-npm run dev        # Iniciar en puerto 3000
-npm run serve      # Modo SPA (Single Page App)
-```
+### Panel de Empleado
 
-## 📱 Páginas Disponibles
+✅ Vista de estadísticas del mes (días trabajados, horas totales, promedio)  
+✅ Botones para marcar entrada y salida  
+✅ Timer en tiempo real cuando está trabajando  
+✅ Historial completo del mes  
+✅ Diseño limpio y fácil de usar  
 
-Desde `index.html` puedes navegar a:
+### Panel de Administrador
 
-- **Login:** `/login.html`
-- **Panel Empleado:** `/employee/panel.html`
-- **Panel Admin:** `/admin/panel.html`
+✅ Dashboard con métricas en tiempo real  
+✅ Gestión de empleados  
+✅ Control de asistencia de todo el equipo  
+✅ Reportes detallados  
+✅ Vista de productos (conectado a tu API real)  
 
-## ⚙️ Configuración de API
+## 🔧 Configuración
 
-El archivo `assets/js/config.js` contiene la configuración de API.
+### Si necesitas cambiar la URL de la API
 
-### En Desarrollo Local:
-Por defecto, apunta a la API de producción:
+Edita el archivo `js/config.js`:
+
 ```javascript
-apiURL: 'https://mawewe.com.ec/api'
+const CONFIG = {
+    API_URL: 'https://tu-nueva-url.com/api',  // Cambiar aquí
+    // ... resto de configuración
+};
 ```
 
-### Para usar API Local (XAMPP/MAMP):
-1. Instala XAMPP o MAMP
-2. Copia la carpeta `api/` a `htdocs/`
-3. Cambia en `config.js`:
-```javascript
-apiURL: 'http://localhost:8080/api'
+### Si quieres cambiar los colores
+
+Edita los archivos CSS:
+- `css/employee.css` para el panel de empleado
+- `css/admin.css` para el panel de administrador
+
+Busca el color principal `#8C004B` y reemplázalo.
+
+## 🐛 Solución de Problemas
+
+### Problema: "Error de conexión"
+
+**Solución:** Verifica que tu API esté funcionando:
+```
+https://mawewe.com.ec/api/employees.php?action=list
 ```
 
-## 🔍 Características del Modo Desarrollo
+Debe retornar un JSON con la lista de empleados.
 
-✅ **Hot Reload** - Los cambios se reflejan automáticamente  
-✅ **Console Logs** - Información de debug en consola  
-✅ **API Status** - Verificación automática de conexión  
-✅ **Error Handling** - Mensajes de error detallados  
-✅ **Network Inspector** - Ver todas las peticiones HTTP
+### Problema: "Los productos no cargan"
 
-## 🧪 Testing
-
-### Verificar Conexión con API
-Abre la consola del navegador (F12) y verás:
+**Solución:** Este nuevo sistema usa tu endpoint real:
 ```
-🔧 Configuración de Desarrollo
-✅ API Conectada
-Empleados encontrados: 7
+https://mawewe.com.ec/api/products.php
 ```
 
-### Probar Login
-1. Ir a `http://localhost:3000/login.html`
-2. Ingresar cédula: `2100064753`
-3. Debe redirigir al panel de admin
+Ya no tendrás el problema de "Cargando..." infinito.
 
-## 📂 Archivos Importantes
+### Problema: "No puedo marcar entrada/salida"
 
-| Archivo | Descripción | Modificar |
-|---------|-------------|-----------|
-| `index.html` | Página principal | ✅ |
-| `login.html` | Login del sistema | ✅ |
-| `employee/panel.html` | Panel empleado | ✅ |
-| `employee/panel.js` | Lógica empleado | ✅ |
-| `admin/panel.html` | Panel admin | ✅ |
-| `admin/panel.js` | Lógica admin | ✅ |
-| `admin/panel.css` | Estilos admin | ✅ |
-| `assets/js/config.js` | Configuración | ✅ |
-| `api/*.php` | Backend | ❌ Solo en servidor |
+**Solución:** Abre la consola del navegador (F12) y verifica:
+1. Que la API responde correctamente
+2. Que no hay errores de CORS
+3. Que la tabla `attendance` existe en tu BD
 
-## 🎨 Personalización
+## 📊 Verificar que Todo Funciona
 
-### Cambiar Colores
-Edita `admin/panel.css`:
-```css
-/* Busca */
-#8C004B
+### 1. Verificar Base de Datos
 
-/* Reemplaza con tu color */
-#TU_COLOR
+En phpMyAdmin, ejecuta:
+```sql
+SELECT * FROM employees;
+SELECT * FROM attendance WHERE DATE(check_in) = CURDATE();
 ```
 
-### Cambiar Logo
-1. Guarda tu logo en `assets/images/logo.png`
-2. Actualiza en `index.html`:
-```html
-<img src="assets/images/logo.png" alt="Logo">
+### 2. Verificar API
+
+Abre en el navegador:
+```
+https://mawewe.com.ec/api/employees.php?action=list
+https://mawewe.com.ec/api/products.php
+https://mawewe.com.ec/api/reports.php?action=dashboard
 ```
 
-## 🐛 Troubleshooting
+Todos deben retornar JSON válido.
 
-### Error: "serve: command not found"
-**Solución:**
-```bash
-npm install -g serve
-```
+### 3. Verificar Frontend
 
-### Error: "Cannot GET /api/..."
-**Solución:** Las APIs PHP no funcionan con `serve`. Necesitas:
-1. XAMPP/MAMP para PHP
-2. O apuntar a API de producción (ya configurado)
+1. Abre la consola del navegador (F12)
+2. Deberías ver: `✅ API Conectada`
+3. No debe haber errores en rojo
 
-### Error: "Port already in use"
-**Solución:**
-```bash
-npx serve -p 3001  # Usar otro puerto
-```
+## 🎨 Características del Nuevo Diseño
 
-### Los estilos no cargan
-**Solución:**
-```bash
-# Limpia caché
-Ctrl + F5 (Windows)
-Cmd + Shift + R (Mac)
-```
+✅ **Moderno y Profesional** - Inspirado en las mejores apps empresariales  
+✅ **Animaciones Suaves** - Transiciones fluidas y agradables  
+✅ **Responsive** - Se adapta a cualquier pantalla  
+✅ **Loading States** - Indicadores visuales de carga  
+✅ **Feedback Visual** - Alertas y notificaciones claras  
+✅ **Optimizado** - Carga rápida y eficiente  
 
-## 📊 Estructura de Navegación
+## 📱 Compatibilidad
 
-```
-index.html
-    ↓
-login.html → (Login con cédula)
-    ↓
-    ├─→ employee/panel.html  (Si es empleado)
-    │       ↓
-    │   Control de asistencia
-    │   Ver historial
-    │   Estadísticas personales
-    │
-    └─→ admin/panel.html     (Si es admin)
-            ↓
-        Dashboard
-        Productos
-        Órdenes
-        Empleados
-        Asistencia
-        Reportes
-```
-
-## 🚀 Deploy a Producción
-
-Cuando estés listo para subir a producción:
-
-1. **Subir archivos API:**
-```bash
-/api/employees.php    → /public_html/api/
-/api/attendance.php   → /public_html/api/
-/api/reports.php      → /public_html/api/
-```
-
-2. **Subir archivos Frontend:**
-```bash
-/login.html           → /public_html/crm/
-/employee/            → /public_html/crm/employee/
-/admin/               → /public_html/crm/admin/
-```
-
-3. **Actualizar URLs:**
-En todos los archivos JS, cambiar:
-```javascript
-const API_URL = 'https://mawewe.com.ec/api';
-```
-
-## 📝 Notas Importantes
-
-⚠️ **Los archivos PHP solo funcionan con servidor PHP (XAMPP/MAMP)**  
-⚠️ **`npx serve` solo sirve archivos estáticos (HTML/CSS/JS)**  
-⚠️ **Para desarrollo completo, necesitas XAMPP + configurar BD local**  
-
-## 🎓 Recursos
-
-- [Serve Documentation](https://github.com/vercel/serve)
-- [PHP Documentation](https://www.php.net/)
-- [MySQL Documentation](https://dev.mysql.com/doc/)
+✅ Chrome 90+  
+✅ Firefox 88+  
+✅ Safari 14+  
+✅ Edge 90+  
+✅ Móviles iOS y Android  
 
 ## 📞 Soporte
 
-**Email:** info@mawewe.com.ec  
-**WhatsApp:** +593 98 183 2313
+Si tienes problemas:
+
+1. Revisa la consola del navegador (F12)
+2. Verifica los logs de PHP en cPanel
+3. Confirma que la API responde correctamente
+
+**Contacto:**
+- Email: info@mawewe.com.ec
+- WhatsApp: +593 98 183 2313
+
+## 📝 Notas Importantes
+
+⚠️ **Este sistema está optimizado para tu configuración actual:**
+- Base de datos: `maweweco_tienda_db`
+- Usuario: `maweweco_cris`
+- API URL: `https://mawewe.com.ec/api`
+
+⚠️ **No uses el sistema anterior:**
+Este es el sistema v2.0 completamente reescrito y optimizado.
+
+## 🎉 ¡Listo!
+
+Una vez subido, el sistema debería funcionar de inmediato.
+
+**Características principales:**
+- ✅ Login rápido con cédula
+- ✅ Control de asistencia en tiempo real
+- ✅ Estadísticas automáticas
+- ✅ Historial completo
+- ✅ Panel de administración
 
 ---
 
-**Happy Coding! 🎉**
-
-*Desarrollado con ❤️ para Mawewe*
+**Desarrollado para Mawewe - 2026**  
+**Versión:** 2.0.0  
+**Última actualización:** Enero 2026
