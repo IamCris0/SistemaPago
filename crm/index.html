@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mawewe CRM - Sistema de Gestión</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 50px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .card h2 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #333;
+            text-align: center;
+        }
+
+        .card p {
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .card.primary {
+            background: linear-gradient(135deg, #8C004B 0%, #6B0038 100%);
+            color: white;
+        }
+
+        .card.primary h2,
+        .card.primary p {
+            color: white;
+        }
+
+        .info-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .info-section h3 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .info-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #8C004B;
+        }
+
+        .info-item h4 {
+            font-size: 14px;
+            color: #8C004B;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-item p {
+            font-size: 16px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .credentials {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .credentials h4 {
+            color: #856404;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .credentials ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .credentials li {
+            padding: 8px 0;
+            color: #856404;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .credentials li strong {
+            color: #664d03;
+        }
+
+        .dev-tools {
+            background: #d1ecf1;
+            border-left: 4px solid #0c5460;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .dev-tools h4 {
+            color: #0c5460;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .dev-tools code {
+            background: #0c5460;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            display: block;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 36px;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏪 Mawewe CRM</h1>
+            <p>Sistema de Gestión Empresarial - Desarrollo Local</p>
+        </div>
+
+        <div class="cards-grid">
+            <a href="login.html" class="card primary">
+                <div class="card-icon">🔐</div>
+                <h2>Iniciar Sesión</h2>
+                <p>Accede al sistema con tu cédula. Disponible para empleados y administradores.</p>
+            </a>
+
+            <a href="employee/panel.html" class="card">
+                <div class="card-icon">👤</div>
+                <h2>Panel Empleado</h2>
+                <p>Vista previa del panel de empleado con control de asistencia.</p>
+            </a>
+
+            <a href="admin/panel.html" class="card">
+                <div class="card-icon">👔</div>
+                <h2>Panel Admin</h2>
+                <p>Vista previa del panel de administrador con todas las funciones.</p>
+            </a>
+        </div>
+
+        <div class="info-section">
+            <h3>📊 Información del Sistema</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <h4>Versión</h4>
+                    <p>1.0.0</p>
+                </div>
+                <div class="info-item">
+                    <h4>Tecnologías</h4>
+                    <p>HTML5, CSS3, JavaScript</p>
+                </div>
+                <div class="info-item">
+                    <h4>Backend</h4>
+                    <p>PHP + MySQL</p>
+                </div>
+                <div class="info-item">
+                    <h4>Estado</h4>
+                    <p>✅ Desarrollo</p>
+                </div>
+            </div>
+
+            <div class="credentials">
+                <h4>🔐 Credenciales de Prueba</h4>
+                <ul>
+                    <li><strong>Administrador:</strong> 2100064753 (VARGAS CASTILLO MANUEL)</li>
+                    <li><strong>Empleado 1:</strong> 2100603790 (BRAVO CAIZA VALERIA)</li>
+                    <li><strong>Empleado 2:</strong> 2100996897 (CUELLO VARGAS JORGE)</li>
+                    <li><strong>Empleado 3:</strong> 2101050959 (LOPEZ MENDOZA SERGIO)</li>
+                </ul>
+            </div>
+
+            <div class="dev-tools">
+                <h4>🛠️ Herramientas de Desarrollo</h4>
+                <p><strong>Iniciar servidor local:</strong></p>
+                <code>npx serve</code>
+                <p style="margin-top: 15px;"><strong>O con puerto específico:</strong></p>
+                <code>npx serve -p 3000</code>
+                <p style="margin-top: 15px; color: #0c5460; font-size: 13px;">
+                    El servidor se iniciará en: <strong>http://localhost:3000</strong>
+                </p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2026 Mawewe - Sistema CRM</p>
+            <p>Desarrollado para Joyería Mawewe - Lago Agrio, Ecuador</p>
+        </div>
+    </div>
+
+    <script>
+        // Verificar si estamos en modo desarrollo
+        const isDevelopment = window.location.hostname === 'localhost' || 
+                            window.location.hostname === '127.0.0.1';
+
+        if (isDevelopment) {
+            console.log('%c🚀 Modo Desarrollo Activado', 'color: #8C004B; font-size: 20px; font-weight: bold;');
+            console.log('%cAPI URL:', 'color: #666; font-weight: bold;', 'http://localhost:3000/api');
+            console.log('%cBase URL:', 'color: #666; font-weight: bold;', window.location.origin);
+            console.log('\n📝 Comandos útiles:');
+            console.log('  - npx serve          : Iniciar servidor');
+            console.log('  - npx serve -p 3000  : Iniciar en puerto 3000');
+            console.log('  - npx serve -s       : Modo SPA (Single Page App)');
+        }
+
+        // Mostrar información del sistema
+        console.log('%c📊 Sistema Mawewe CRM', 'color: #8C004B; font-size: 16px; font-weight: bold;');
+        console.log('Versión: 1.0.0');
+        console.log('Fecha: Enero 2026');
+        console.log('Estado:', isDevelopment ? 'Desarrollo' : 'Producción');
+    </script>
+</body>
+</html>

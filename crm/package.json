@@ -1,0 +1,24 @@
+{
+  "name": "mawewe-crm",
+  "version": "1.0.0",
+  "description": "Sistema CRM para Mawewe - Gestión de empleados, asistencia y reportes",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve",
+    "dev": "npx serve -p 3000",
+    "serve": "npx serve -s -p 3000",
+    "open": "npx serve -p 3000 & open http://localhost:3000"
+  },
+  "keywords": [
+    "crm",
+    "mawewe",
+    "attendance",
+    "employees",
+    "management"
+  ],
+  "author": "Mawewe Team",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}
