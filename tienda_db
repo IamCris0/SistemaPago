@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost:3306
--- Tiempo de generación: 30-01-2026 a las 20:15:55
+-- Tiempo de generación: 31-01-2026 a las 12:03:24
 -- Versión del servidor: 10.6.20-MariaDB-cll-lve
 -- Versión de PHP: 8.1.34
 
@@ -21,6 +21,36 @@ SET time_zone = "+00:00";
 -- Base de datos: `maweweco_tienda_db`
 --
 
+DELIMITER $$
+--
+-- Procedimientos
+--
+$$
+
+$$
+
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura Stand-in para la vista `active_employees_stats`
+-- (Véase abajo para la vista actual)
+--
+CREATE TABLE `active_employees_stats` (
+`id` int(11)
+,`nombre` varchar(200)
+,`cedula` varchar(10)
+,`cargo` varchar(100)
+,`sucursal` varchar(100)
+,`is_admin` tinyint(1)
+,`active` tinyint(1)
+,`created_at` timestamp
+,`updated_at` timestamp
+,`total_attendance` bigint(21)
+,`total_hours_worked` decimal(27,2)
+);
+
 -- --------------------------------------------------------
 
 --
@@ -31,16 +61,11 @@ CREATE TABLE `attendance` (
   `id` int(11) NOT NULL,
   `employee_id` int(11) NOT NULL,
   `date` date NOT NULL,
-  `check_in` time DEFAULT NULL,
-  `check_out` time DEFAULT NULL,
-  `break_start` time DEFAULT NULL,
-  `break_end` time DEFAULT NULL,
-  `total_hours` decimal(4,2) DEFAULT NULL,
-  `status` enum('presente','tarde','ausente','permiso','falta') DEFAULT 'presente',
+  `check_in` datetime NOT NULL,
+  `check_out` datetime DEFAULT NULL,
+  `hours_worked` decimal(5,2) DEFAULT 0.00,
   `notes` text DEFAULT NULL,
-  `ip_address` varchar(45) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -50,58 +75,24 @@ CREATE TABLE `attendance` (
 -- (Véase abajo para la vista actual)
 --
 CREATE TABLE `attendance_report` (
-`employee_code` varchar(50)
-,`employee_name` varchar(201)
-,`position` varchar(100)
-,`department` enum('ventas','almacen','administracion','gerencia')
-,`date` date
-,`check_in` time
-,`check_out` time
-,`total_hours` decimal(4,2)
-,`status` enum('presente','tarde','ausente','permiso','falta')
-,`punctuality` varchar(8)
 );
 
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `customers`
+-- Estructura de tabla para la tabla `audit_log`
 --
 
-CREATE TABLE `customers` (
-  `id` int(11) NOT NULL,
-  `customer_code` varchar(50) NOT NULL,
-  `first_name` varchar(100) NOT NULL,
-  `last_name` varchar(100) NOT NULL,
-  `email` varchar(255) NOT NULL,
-  `phone` varchar(50) DEFAULT NULL,
-  `address` text DEFAULT NULL,
-  `city` varchar(100) DEFAULT NULL,
-  `postal_code` varchar(20) DEFAULT NULL,
-  `customer_type` enum('regular','vip','mayorista') DEFAULT 'regular',
-  `total_purchases` decimal(10,2) DEFAULT 0.00,
-  `total_orders` int(11) DEFAULT 0,
-  `last_purchase_date` date DEFAULT NULL,
-  `notes` text DEFAULT NULL,
-  `status` enum('activo','inactivo','bloqueado') DEFAULT 'activo',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `customer_interactions`
---
-
-CREATE TABLE `customer_interactions` (
-  `id` int(11) NOT NULL,
-  `customer_id` int(11) NOT NULL,
-  `employee_id` int(11) DEFAULT NULL,
-  `interaction_type` enum('llamada','email','whatsapp','visita','soporte','venta') NOT NULL,
-  `subject` varchar(255) DEFAULT NULL,
-  `notes` text DEFAULT NULL,
-  `interaction_date` timestamp NOT NULL DEFAULT current_timestamp(),
+CREATE TABLE `audit_log` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `user_id` int(11) UNSIGNED DEFAULT NULL COMMENT 'ID del usuario que realizó la acción',
+  `action` varchar(50) NOT NULL COMMENT 'Tipo de acción: CREATE, UPDATE, DELETE, LOGIN, etc.',
+  `entity_type` varchar(50) DEFAULT NULL COMMENT 'Tipo de entidad: EMPLOYEE, PRODUCT, ORDER, etc.',
+  `entity_id` int(11) UNSIGNED DEFAULT NULL COMMENT 'ID de la entidad afectada',
+  `old_value` text DEFAULT NULL COMMENT 'Valor anterior (JSON)',
+  `new_value` text DEFAULT NULL COMMENT 'Valor nuevo (JSON)',
+  `description` text DEFAULT NULL COMMENT 'Descripción de la acción',
+  `ip_address` varchar(45) DEFAULT NULL COMMENT 'IP del usuario',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -114,39 +105,33 @@ CREATE TABLE `customer_interactions` (
 CREATE TABLE `employees` (
   `id` int(11) NOT NULL,
   `employee_code` varchar(50) NOT NULL,
+  `cedula` varchar(10) DEFAULT NULL,
   `first_name` varchar(100) NOT NULL,
   `last_name` varchar(100) NOT NULL,
+  `nombre` varchar(200) DEFAULT NULL,
   `email` varchar(255) NOT NULL,
   `phone` varchar(50) DEFAULT NULL,
+  `photo` varchar(500) DEFAULT NULL,
   `position` varchar(100) NOT NULL,
-  `department` enum('ventas','almacen','administracion','gerencia') DEFAULT 'ventas',
+  `cargo` varchar(100) DEFAULT 'Vendedor',
+  `department` varchar(50) DEFAULT 'ventas',
+  `sucursal` varchar(100) DEFAULT 'JOYERIA MATRIZ',
   `password_hash` varchar(255) NOT NULL,
+  `is_admin` tinyint(1) DEFAULT 0,
   `hire_date` date NOT NULL,
   `salary` decimal(10,2) DEFAULT NULL,
-  `status` enum('activo','inactivo','vacaciones','licencia') DEFAULT 'activo',
-  `photo` varchar(500) DEFAULT NULL,
+  `status` varchar(20) DEFAULT 'activo',
+  `active` tinyint(1) DEFAULT 1,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Estructura de tabla para la tabla `leave_requests`
+-- Volcado de datos para la tabla `employees`
 --
 
-CREATE TABLE `leave_requests` (
-  `id` int(11) NOT NULL,
-  `employee_id` int(11) NOT NULL,
-  `leave_type` enum('vacaciones','enfermedad','personal','maternidad','otro') NOT NULL,
-  `start_date` date NOT NULL,
-  `end_date` date NOT NULL,
-  `reason` text DEFAULT NULL,
-  `status` enum('pendiente','aprobado','rechazado') DEFAULT 'pendiente',
-  `approved_by` int(11) DEFAULT NULL,
-  `approved_date` timestamp NULL DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+INSERT INTO `employees` (`id`, `employee_code`, `cedula`, `first_name`, `last_name`, `nombre`, `email`, `phone`, `photo`, `position`, `cargo`, `department`, `sucursal`, `password_hash`, `is_admin`, `hire_date`, `salary`, `status`, `active`, `created_at`, `updated_at`) VALUES
+(1, 'ADMIN001', '2100064753', 'MANUEL', 'VARGAS', 'MANUEL VARGAS', 'admin@mawewe.com.ec', '0987654321', NULL, 'Gerente General', 'Gerente General', 'gerencia', 'JOYERIA MATRIZ', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1, '2024-01-01', 2500.00, 'activo', 1, '2026-01-31 17:02:55', '2026-01-31 17:02:55');
 
 -- --------------------------------------------------------
 
@@ -177,6 +162,17 @@ CREATE TABLE `orders` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Volcado de datos para la tabla `orders`
+--
+
+INSERT INTO `orders` (`id`, `customer_id`, `assigned_employee_id`, `order_number`, `email`, `first_name`, `last_name`, `address`, `apartment`, `city`, `postal_code`, `phone`, `shipping_method`, `payment_method`, `subtotal`, `shipping_cost`, `total`, `status`, `created_at`, `updated_at`) VALUES
+(38, NULL, NULL, 'MW20260131-0001', 'gcristopher417@gmail.com', 'Cristopher', 'Gonzalez', 'Bellavista', 'Av.Joffre Lima', 'Santa Rosa', '20005', '0962709953', 'standard', 'card', 34.99, 0.00, 34.99, 'completed', '2026-01-31 01:45:44', '2026-01-31 01:45:44'),
+(39, NULL, NULL, 'MW20260131-0002', 'gcristopher417@gmail.com', 'Cristopher', 'Gonzalez', 'Bellavista', 'Av.Joffre Lima', 'Santa Rosa', '20005', '0962709953', 'standard', 'card', 34.99, 0.00, 34.99, 'completed', '2026-01-31 01:46:31', '2026-01-31 01:46:31'),
+(40, NULL, NULL, 'MW20260131-0003', 'gcristopher417@gmail.com', 'Cristopher', 'Gonzalez', 'Bellavista', '4B', 'Santa Rosa', '20005', '0962709953', 'standard', 'cash', 183.97, 0.00, 183.97, 'pending_payment', '2026-01-31 15:22:49', '2026-01-31 15:22:49'),
+(41, NULL, NULL, 'MW20260131-0004', 'gcristopher417@gmail.com', 'Cristopher', 'Gonzalez', 'Bellavista', 'Av.Joffre Lima', 'Santa Rosa', '20005', '0962709953', 'standard', 'transfer', 34.99, 0.00, 34.99, 'pending_payment', '2026-01-31 15:23:55', '2026-01-31 15:23:55'),
+(42, NULL, NULL, 'MW20260131-0005', 'gcristopher417@gmail.com', 'Cristopher', 'Gonzalez', 'Bellavista', 'Av.Joffre Lima', 'Santa Rosa', '20005', '0962709953', 'standard', 'card', 104.97, 0.00, 104.97, 'completed', '2026-01-31 15:36:34', '2026-01-31 15:36:34');
+
 -- --------------------------------------------------------
 
 --
@@ -194,6 +190,20 @@ CREATE TABLE `order_items` (
   `subtotal` decimal(10,2) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `order_items`
+--
+
+INSERT INTO `order_items` (`id`, `order_id`, `product_id`, `product_name`, `product_sku`, `price`, `quantity`, `subtotal`, `created_at`) VALUES
+(31, 38, 1, 'POLO LINEA COLOR BLANCO PURO CLARO', 'ROP-AME-001', 34.99, 1, 34.99, '2026-01-31 01:45:44'),
+(32, 39, 1, 'POLO LINEA COLOR BLANCO PURO CLARO', 'ROP-AME-001', 34.99, 1, 34.99, '2026-01-31 01:46:31'),
+(33, 40, 1, 'POLO LINEA COLOR BLANCO PURO CLARO', 'ROP-AME-001', 34.99, 1, 34.99, '2026-01-31 15:22:49'),
+(34, 40, 6, 'POLO MC SLIM NERU LINEA NEGRO SOMBRÍO ULTRAOSCURO', 'ROP-AME-005', 34.99, 1, 34.99, '2026-01-31 15:22:49'),
+(35, 40, 8, 'SKINNY TONO OSCURO TIRO BAJO AZUL', 'ROP-AME-009', 78.99, 1, 78.99, '2026-01-31 15:22:49'),
+(36, 40, 25, 'FIGURA HASBRO HULK 30cm', 'JUG-002', 35.00, 1, 35.00, '2026-01-31 15:22:49'),
+(37, 41, 2, 'POLO LINEA COLOR AZUL PUREZA CLARO', 'ROP-AME-002', 34.99, 1, 34.99, '2026-01-31 15:23:55'),
+(38, 42, 1, 'POLO LINEA COLOR BLANCO PURO CLARO', 'ROP-AME-001', 34.99, 3, 104.97, '2026-01-31 15:36:34');
 
 -- --------------------------------------------------------
 
@@ -225,13 +235,13 @@ CREATE TABLE `products` (
 --
 
 INSERT INTO `products` (`id`, `sku`, `name`, `category`, `subcategory`, `price`, `description`, `image`, `images`, `stock`, `featured`, `rating`, `review_count`, `active`, `created_at`, `updated_at`) VALUES
-(1, 'ROP-AME-001', 'POLO LINEA COLOR BLANCO PURO CLARO', 'ropa', 'americanino', 34.99, 'Camiseta polo para mujer, cuello camisero, manga corta, botones en frente, estampado. Confeccionada con mezcla de algodón que te brindan suavidad. Perfecta para crear un outfit clásico, casual y juvenil con tu mejor estilo cualquier día de la semana. Su diseño te brinda la comodidad y frescura que necesitas para lucir siempre increíble. Combínala con jean tono medio y tenis. PRENDA: 96% ALGODON 4% ELASTOMERO', 'assets/img/ropa/AMERICANINO/ROP-AME-001-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-001-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-001-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-001-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 22:53:20'),
-(2, 'ROP-AME-002', 'POLO LINEA COLOR AZUL PUREZA CLARO', 'ropa', 'americanino', 34.99, 'Camiseta polo para mujer, cuello camisero, manga corta, botones en frente, estampado. Confeccionada con mezcla de algodón que te brindan suavidad. Perfecta para crear un outfit clásico, casual y juvenil con tu mejor estilo cualquier día de la semana. Su diseño te brinda la comodidad y frescura que necesitas para lucir siempre increíble. Combínala con jean tono medio y tenis. PRENDA: 96% ALGODON 4% ELASTOMERO', 'assets/img/ropa/AMERICANINO/ROP-AME-002-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-002-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-002-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-002-3.jpeg\"]', 4, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 23:03:45'),
+(1, 'ROP-AME-001', 'POLO LINEA COLOR BLANCO PURO CLARO', 'ropa', 'americanino', 34.99, 'Camiseta polo para mujer, cuello camisero, manga corta, botones en frente, estampado. Confeccionada con mezcla de algodón que te brindan suavidad. Perfecta para crear un outfit clásico, casual y juvenil con tu mejor estilo cualquier día de la semana. Su diseño te brinda la comodidad y frescura que necesitas para lucir siempre increíble. Combínala con jean tono medio y tenis. PRENDA: 96% ALGODON 4% ELASTOMERO', 'assets/img/ropa/AMERICANINO/ROP-AME-001-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-001-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-001-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-001-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-31 15:37:28'),
+(2, 'ROP-AME-002', 'POLO LINEA COLOR AZUL PUREZA CLARO', 'ropa', 'americanino', 34.99, 'Camiseta polo para mujer, cuello camisero, manga corta, botones en frente, estampado. Confeccionada con mezcla de algodón que te brindan suavidad. Perfecta para crear un outfit clásico, casual y juvenil con tu mejor estilo cualquier día de la semana. Su diseño te brinda la comodidad y frescura que necesitas para lucir siempre increíble. Combínala con jean tono medio y tenis. PRENDA: 96% ALGODON 4% ELASTOMERO', 'assets/img/ropa/AMERICANINO/ROP-AME-002-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-002-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-002-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-002-3.jpeg\"]', 3, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-31 15:23:55'),
 (3, 'ROP-AME-003', 'POLO LINEA COLOR MORADO PETALO CLARO', 'ropa', 'americanino', 34.99, 'Camiseta polo para mujer, cuello camisero, manga corta, botones en frente, estampado. Confeccionada con mezcla de algodón que te brindan suavidad. Perfecta para crear un outfit clásico, casual y juvenil con tu mejor estilo cualquier día de la semana. Su diseño te brinda la comodidad y frescura que necesitas para lucir siempre increíble. Combínala con jean tono medio y tenis. PRENDA: 96% ALGODON 4% ELASTOMERO', 'assets/img/ropa/AMERICANINO/ROP-AME-003-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-003-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-003-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-003-3.jpeg\"]', 4, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
 (5, 'ROP-AME-004', 'POLO LINEA COLOR VERDE AMBIENTE MEDIO', 'ropa', 'americanino', 34.99, 'Camiseta polo para mujer, cuello camisero, manga corta, botones en frente, estampado. Confeccionada con mezcla de algodón que te brindan suavidad. Perfecta para crear un outfit clásico, casual y juvenil con tu mejor estilo cualquier día de la semana. Su diseño te brinda la comodidad y frescura que necesitas para lucir siempre increíble. Combínala con jean tono medio y tenis. PRENDA: 96% ALGODON 4% ELASTOMERO', 'assets/img/ropa/AMERICANINO/ROP-AME-004-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-004-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-004-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-004-3.jpeg\"]', 4, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
-(6, 'ROP-AME-005', 'POLO MC SLIM NERU LINEA NEGRO SOMBRÍO ULTRAOSCURO', 'ropa', 'americanino', 34.99, 'Camiseta polo para hombre de corte slim con cuello tipo Neru, diseñada para un estilo moderno y elegante. Confeccionada en tejido suave y resistente que aporta comodidad y libertad de movimiento. Su color negro sombrío ultraoscuro ofrece versatilidad para combinar con jeans, pantalones casuales o incluso atuendos más formales. Ideal para quienes buscan una prenda fresca, ligera y con un toque sofisticado. Detalles minimalistas en costuras y acabado premium que realzan la silueta masculina. PRENDA:96% algodón, 4% elastómero', 'assets/img/ropa/AMERICANINO/ROP-AME-005-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-005-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-005-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-005-3.jpeg\"]', 2, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(6, 'ROP-AME-005', 'POLO MC SLIM NERU LINEA NEGRO SOMBRÍO ULTRAOSCURO', 'ropa', 'americanino', 34.99, 'Camiseta polo para hombre de corte slim con cuello tipo Neru, diseñada para un estilo moderno y elegante. Confeccionada en tejido suave y resistente que aporta comodidad y libertad de movimiento. Su color negro sombrío ultraoscuro ofrece versatilidad para combinar con jeans, pantalones casuales o incluso atuendos más formales. Ideal para quienes buscan una prenda fresca, ligera y con un toque sofisticado. Detalles minimalistas en costuras y acabado premium que realzan la silueta masculina. PRENDA:96% algodón, 4% elastómero', 'assets/img/ropa/AMERICANINO/ROP-AME-005-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-005-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-005-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-005-3.jpeg\"]', 1, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-31 15:22:49'),
 (7, 'ROP-AME-008', 'JEGGING TONO MEDIO TIRO MEDIO AZUL', 'ropa', 'americanino', 78.99, 'Jegging tono medio tiro medio azul Americanino para mujer, confeccionado en mezclilla stretch que brinda comodidad y ajuste perfecto. Ideal para un look casual y moderno.', 'assets/img/ropa/AMERICANINO/ROP-AME-008-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-008-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-008-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-008-3.jpeg\"]', 2, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 19:44:41'),
-(8, 'ROP-AME-009', 'SKINNY TONO OSCURO TIRO BAJO AZUL', 'ropa', 'americanino', 78.99, 'Jean Skinny Tono Oscuro Ajuste Perfecto Hombre Este jean skinny en tono oscuro representa la perfecta fusión entre tradición denim y modernidad urbana. Diseñado para quien valora la libertad de expresión y la calidad auténtica que solo Americanino puede ofrecer. Super versátil para expresar tu libertad de autoexpresión en cada aventura urbana.', 'assets/img/ropa/AMERICANINO/ROP-AME-009-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-009-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-009-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-009-3.jpeg\"]', 2, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 19:44:41'),
+(8, 'ROP-AME-009', 'SKINNY TONO OSCURO TIRO BAJO AZUL', 'ropa', 'americanino', 78.99, 'Jean Skinny Tono Oscuro Ajuste Perfecto Hombre Este jean skinny en tono oscuro representa la perfecta fusión entre tradición denim y modernidad urbana. Diseñado para quien valora la libertad de expresión y la calidad auténtica que solo Americanino puede ofrecer. Super versátil para expresar tu libertad de autoexpresión en cada aventura urbana.', 'assets/img/ropa/AMERICANINO/ROP-AME-009-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-009-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-009-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-009-3.jpeg\"]', 1, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-31 15:22:49'),
 (9, 'ROP-AME-010', 'SKINNY TONO MEDIO TIRO BAJO', 'ropa', 'americanino', 78.99, 'Jean Skinny Tiro Bajo Ajuste Perfecto Hombre Este jean skinny conecta la herencia denim de Americanino con la libertad total de movimiento. Diseñado para quien valora la calidad técnica y busca expresar su estilo auténtico. Super versátil para tu evolución continua de estilo, te va a encantar cómo se adapta a cada momento de tu día.', 'assets/img/ropa/AMERICANINO/ROP-AME-010-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-010-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-010-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-010-3.jpeg\"]', 2, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 19:44:41'),
 (10, 'ROP-AME-011', 'SLIM & STRAIGHT NEGRO TIRO MEDIO', 'ropa', 'americanino', 84.99, 'Jeans para hombre con corte Slim & Straight y tiro medio, diseñados para un ajuste moderno y cómodo. Confeccionados en denim de alta calidad que combina resistencia y suavidad al tacto, ofreciendo libertad de movimiento y durabilidad. Su tono negro intenso aporta versatilidad, ideal para looks casuales o más sofisticados. El diseño recto en la pierna estiliza la silueta, mientras que el corte slim asegura un fit contemporáneo. Perfectos para combinar con camisetas, polos o camisas, convirtiéndose en una prenda esencial del guardarropa masculino.', 'assets/img/ropa/AMERICANINO/ROP-AME-011-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-011-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-011-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-011-3.jpeg\"]', 2, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 19:44:41'),
 (11, 'ROP-AME-012', 'NEW CHINO', 'ropa', 'americanino', 64.99, 'Pantalón para hombre. Diseño tipo Chino. Cuenta con tiro medio y un fit semiajustado. Ajuste de cierre y botón.', 'assets/img/ropa/AMERICANINO/ROP-AME-012-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-012-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-012-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-012-3.jpeg\"]', 2, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 19:44:41'),
@@ -246,7 +256,7 @@ INSERT INTO `products` (`id`, `sku`, `name`, `category`, `subcategory`, `price`,
 (22, 'PEL-007', 'LABUBU 35cm', 'peluches', 'personajes', 27.00, 'Peluche Labubu. Tamaño: 35cm. Producto de alta calidad, trending toy del momento.', 'assets/img/peluches/LABUBU/PEL-007-1.jpeg', '[\"assets/img/peluches/LABUBU/PEL-007-1.jpeg\",\"assets/img/peluches/LABUBU/PEL-007-2.jpeg\",\"assets/img/peluches/LABUBU/PEL-007-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
 (23, 'PEL-008', 'PELUCHE RAPUNZEL PRINCESA', 'peluches', 'personajes', 30.00, 'Peluche de Rapunzel Princesa. Tamaño: 45cm. Producto de alta calidad, ideal para regalo.', 'assets/img/peluches/PELUCHE-RAPUNZEL-PRINCESA/PEL-008-1.jpeg', '[\"assets/img/peluches/PELUCHE-RAPUNZEL-PRINCESA/PEL-008-1.jpeg\",\"assets/img/peluches/PELUCHE-RAPUNZEL-PRINCESA/PEL-008-2.jpeg\",\"assets/img/peluches/PELUCHE-RAPUNZEL-PRINCESA/PEL-008-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
 (24, 'JUG-001', 'BARBIE DE LA PELICULA HPJ96', 'juguetes', 'niña', 115.00, 'Muñeca Barbie de la película oficial HPJ96. Figura coleccionable de alta calidad con detalles auténticos de la película. Ideal para jugar y coleccionar.', 'assets/img/juguetes/BARBIE-DE-LA-PELICULA-HPJ96/JUG-001-1.jpeg', '[\"assets/img/juguetes/BARBIE-DE-LA-PELICULA-HPJ96/JUG-001-1.jpeg\",\"assets/img/juguetes/BARBIE-DE-LA-PELICULA-HPJ96/JUG-001-2.jpeg\",\"assets/img/juguetes/BARBIE-DE-LA-PELICULA-HPJ96/JUG-001-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
-(25, 'JUG-002', 'FIGURA HASBRO HULK 30cm', 'juguetes', 'niño', 35.00, 'Figura de acción oficial de Hasbro - Hulk 30cm. Articulaciones móviles y detalles realistas. Perfecto para fans de Marvel y coleccionistas.', 'assets/img/juguetes/FIGURA-HASBRO-HULK-30CM/JUG-002-1.jpeg', '[\"assets/img/juguetes/FIGURA-HASBRO-HULK-30CM/JUG-002-1.jpeg\",\"assets/img/juguetes/FIGURA-HASBRO-HULK-30CM/JUG-002-2.jpeg\",\"assets/img/juguetes/FIGURA-HASBRO-HULK-30CM/JUG-002-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(25, 'JUG-002', 'FIGURA HASBRO HULK 30cm', 'juguetes', 'niño', 35.00, 'Figura de acción oficial de Hasbro - Hulk 30cm. Articulaciones móviles y detalles realistas. Perfecto para fans de Marvel y coleccionistas.', 'assets/img/juguetes/FIGURA-HASBRO-HULK-30CM/JUG-002-1.jpeg', '[\"assets/img/juguetes/FIGURA-HASBRO-HULK-30CM/JUG-002-1.jpeg\",\"assets/img/juguetes/FIGURA-HASBRO-HULK-30CM/JUG-002-2.jpeg\",\"assets/img/juguetes/FIGURA-HASBRO-HULK-30CM/JUG-002-3.jpeg\"]', 4, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-31 15:22:49'),
 (26, 'JUG-003', 'LEGO BOTANICALS PETIT', 'juguetes', 'lego', 105.00, 'Set LEGO Botanicals Petit. Construcción decorativa de flores y plantas. Ideal para adultos y adolescentes. Pieza de exhibición única y relajante de armar.', 'assets/img/juguetes/LEGO-BOTANICALS-PETIT/JUG-003-1.jpeg', '[\"assets/img/juguetes/LEGO-BOTANICALS-PETIT/JUG-003-1.jpeg\",\"assets/img/juguetes/LEGO-BOTANICALS-PETIT/JUG-003-2.jpeg\",\"assets/img/juguetes/LEGO-BOTANICALS-PETIT/JUG-003-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
 (27, 'JUG-004', 'LEGO CREATOR 3n1 Loro', 'juguetes', 'lego', 70.00, 'Set LEGO Creator 3 en 1 - Loro. Construye 3 modelos diferentes con un solo set. Estimula la creatividad y ofrece múltiples opciones de construcción.', 'assets/img/juguetes/LEGO-CREATOR-3N1-LORO/JUG-004-1.jpeg', '[\"assets/img/juguetes/LEGO-CREATOR-3N1-LORO/JUG-004-1.jpeg\",\"assets/img/juguetes/LEGO-CREATOR-3N1-LORO/JUG-004-2.jpeg\",\"assets/img/juguetes/LEGO-CREATOR-3N1-LORO/JUG-004-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
 (29, 'JUG-006', 'MUÑECA BEBÉ CON BACKPACK', 'juguetes', 'niña', 29.00, 'Muñeca bebé con mochila incluida. Perfecta para juego de roles y desarrollo de habilidades de cuidado. Incluye accesorios y ropa adorable.', 'assets/img/juguetes/MUNECA-BEBE-CON-BACKPACK/JUG-006-1.jpeg', '[\"assets/img/juguetes/MUNECA-BEBE-CON-BACKPACK/JUG-006-1.jpeg\",\"assets/img/juguetes/MUNECA-BEBE-CON-BACKPACK/JUG-006-2.jpeg\",\"assets/img/juguetes/MUNECA-BEBE-CON-BACKPACK/JUG-006-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
@@ -279,21 +289,51 @@ INSERT INTO `products` (`id`, `sku`, `name`, `category`, `subcategory`, `price`,
 (61, 'ACC-004', 'GUANTES ARQUERO ENTRENAMIENTO AURIK', 'accesorios', 'deportivo', 42.00, 'Guantes de Arquero para Entrenamiento marca Aurik. Palma con grip superior. Protección en dedos. Ajuste cómodo con muñequera. Ideales para práctica.', 'assets/img/accesorios/GUANTES-ARQUERO-AURIK/ACC-004-1.jpeg', '[\"assets/img/accesorios/GUANTES-ARQUERO-AURIK/ACC-004-1.jpeg\",\"assets/img/accesorios/GUANTES-ARQUERO-AURIK/ACC-004-2.jpeg\",\"assets/img/accesorios/GUANTES-ARQUERO-AURIK/ACC-004-3.jpeg\"]', 8, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
 (62, 'ACC-005', 'PITOS PAIDIAO WHISTLE', 'accesorios', 'deportivo', 12.00, 'Pitos deportivos PAIDIAO Whistle. Sonido potente y claro. Material resistente. Ideal para entrenadores, árbitros y uso deportivo en general.', 'assets/img/accesorios/PITOS-PAIDIAO/ACC-005-1.jpeg', '[\"assets/img/accesorios/PITOS-PAIDIAO/ACC-005-1.jpeg\",\"assets/img/accesorios/PITOS-PAIDIAO/ACC-005-2.jpeg\",\"assets/img/accesorios/PITOS-PAIDIAO/ACC-005-3.jpeg\"]', 15, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51');
 
+--
+-- Disparadores `products`
+--
+DELIMITER $$
+CREATE TRIGGER `products_after_update` AFTER UPDATE ON `products` FOR EACH ROW BEGIN
+    IF OLD.name != NEW.name OR OLD.price != NEW.price OR OLD.stock != NEW.stock THEN
+        INSERT INTO audit_log (action, entity_type, entity_id, description)
+        VALUES ('UPDATE', 'PRODUCT', NEW.id, CONCAT('Producto modificado: ', NEW.name));
+    END IF;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `products_before_delete` BEFORE DELETE ON `products` FOR EACH ROW BEGIN
+    INSERT INTO audit_log (action, entity_type, entity_id, description)
+    VALUES ('DELETE', 'PRODUCT', OLD.id, CONCAT('Producto eliminado: ', OLD.name));
+END
+$$
+DELIMITER ;
+
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `work_schedules`
+-- Estructura Stand-in para la vista `recent_activity`
+-- (Véase abajo para la vista actual)
 --
+CREATE TABLE `recent_activity` (
+`id` int(11) unsigned
+,`action` varchar(50)
+,`entity_type` varchar(50)
+,`entity_id` int(11) unsigned
+,`description` text
+,`created_at` timestamp
+,`user_name` varchar(200)
+,`user_role` varchar(100)
+);
 
-CREATE TABLE `work_schedules` (
-  `id` int(11) NOT NULL,
-  `employee_id` int(11) NOT NULL,
-  `day_of_week` enum('lunes','martes','miercoles','jueves','viernes','sabado','domingo') NOT NULL,
-  `start_time` time NOT NULL,
-  `end_time` time NOT NULL,
-  `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- --------------------------------------------------------
+
+--
+-- Estructura para la vista `active_employees_stats`
+--
+DROP TABLE IF EXISTS `active_employees_stats`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`maweweco_cris`@`45.189.57.40` SQL SECURITY DEFINER VIEW `active_employees_stats`  AS SELECT `e`.`id` AS `id`, `e`.`nombre` AS `nombre`, `e`.`cedula` AS `cedula`, `e`.`cargo` AS `cargo`, `e`.`sucursal` AS `sucursal`, `e`.`is_admin` AS `is_admin`, `e`.`active` AS `active`, `e`.`created_at` AS `created_at`, `e`.`updated_at` AS `updated_at`, count(distinct `att`.`id`) AS `total_attendance`, sum(`att`.`hours_worked`) AS `total_hours_worked` FROM (`employees` `e` left join `attendance` `att` on(`e`.`id` = `att`.`employee_id`)) WHERE `e`.`active` = 1 GROUP BY `e`.`id` ;
 
 -- --------------------------------------------------------
 
@@ -304,6 +344,15 @@ DROP TABLE IF EXISTS `attendance_report`;
 
 CREATE ALGORITHM=UNDEFINED DEFINER=`maweweco_cris`@`45.189.57.40` SQL SECURITY DEFINER VIEW `attendance_report`  AS SELECT `e`.`employee_code` AS `employee_code`, concat(`e`.`first_name`,' ',`e`.`last_name`) AS `employee_name`, `e`.`position` AS `position`, `e`.`department` AS `department`, `a`.`date` AS `date`, `a`.`check_in` AS `check_in`, `a`.`check_out` AS `check_out`, `a`.`total_hours` AS `total_hours`, `a`.`status` AS `status`, CASE WHEN `a`.`check_in` > `ws`.`start_time` THEN 'TARDE' ELSE 'A TIEMPO' END AS `punctuality` FROM ((`attendance` `a` join `employees` `e` on(`a`.`employee_id` = `e`.`id`)) left join `work_schedules` `ws` on(`e`.`id` = `ws`.`employee_id` and dayname(`a`.`date`) = case `ws`.`day_of_week` when 'lunes' then 'Monday' when 'martes' then 'Tuesday' when 'miercoles' then 'Wednesday' when 'jueves' then 'Thursday' when 'viernes' then 'Friday' when 'sabado' then 'Saturday' when 'domingo' then 'Sunday' end)) ;
 
+-- --------------------------------------------------------
+
+--
+-- Estructura para la vista `recent_activity`
+--
+DROP TABLE IF EXISTS `recent_activity`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`maweweco_cris`@`45.189.57.40` SQL SECURITY DEFINER VIEW `recent_activity`  AS SELECT `a`.`id` AS `id`, `a`.`action` AS `action`, `a`.`entity_type` AS `entity_type`, `a`.`entity_id` AS `entity_id`, `a`.`description` AS `description`, `a`.`created_at` AS `created_at`, `e`.`nombre` AS `user_name`, `e`.`cargo` AS `user_role` FROM (`audit_log` `a` left join `employees` `e` on(`a`.`user_id` = `e`.`id`)) ORDER BY `a`.`created_at` DESC LIMIT 0, 100 ;
+
 --
 -- Índices para tablas volcadas
 --
@@ -313,50 +362,27 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`maweweco_cris`@`45.189.57.40` SQL SECURITY D
 --
 ALTER TABLE `attendance`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `unique_employee_date` (`employee_id`,`date`),
-  ADD KEY `idx_date` (`date`),
-  ADD KEY `idx_employee` (`employee_id`);
+  ADD KEY `idx_employee_date` (`employee_id`,`date`),
+  ADD KEY `idx_date` (`date`);
 
 --
--- Indices de la tabla `customers`
+-- Indices de la tabla `audit_log`
 --
-ALTER TABLE `customers`
+ALTER TABLE `audit_log`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `customer_code` (`customer_code`),
-  ADD UNIQUE KEY `email` (`email`),
-  ADD KEY `idx_customer_code` (`customer_code`),
-  ADD KEY `idx_email` (`email`),
-  ADD KEY `idx_customer_type` (`customer_type`);
-
---
--- Indices de la tabla `customer_interactions`
---
-ALTER TABLE `customer_interactions`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `employee_id` (`employee_id`),
-  ADD KEY `idx_customer` (`customer_id`),
-  ADD KEY `idx_date` (`interaction_date`);
+  ADD KEY `idx_user_id` (`user_id`),
+  ADD KEY `idx_entity` (`entity_type`,`entity_id`),
+  ADD KEY `idx_action` (`action`),
+  ADD KEY `idx_created_at` (`created_at`);
 
 --
 -- Indices de la tabla `employees`
 --
 ALTER TABLE `employees`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `employee_code` (`employee_code`),
-  ADD UNIQUE KEY `email` (`email`),
-  ADD KEY `idx_employee_code` (`employee_code`),
-  ADD KEY `idx_status` (`status`),
-  ADD KEY `idx_department` (`department`);
-
---
--- Indices de la tabla `leave_requests`
---
-ALTER TABLE `leave_requests`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `employee_id` (`employee_id`),
-  ADD KEY `approved_by` (`approved_by`),
-  ADD KEY `idx_status` (`status`),
-  ADD KEY `idx_dates` (`start_date`,`end_date`);
+  ADD UNIQUE KEY `uk_employee_code` (`employee_code`),
+  ADD UNIQUE KEY `uk_email` (`email`),
+  ADD UNIQUE KEY `uk_cedula` (`cedula`);
 
 --
 -- Indices de la tabla `orders`
@@ -370,7 +396,8 @@ ALTER TABLE `orders`
   ADD KEY `idx_payment_method` (`payment_method`),
   ADD KEY `idx_order_number` (`order_number`),
   ADD KEY `fk_orders_customer` (`customer_id`),
-  ADD KEY `fk_orders_employee` (`assigned_employee_id`);
+  ADD KEY `fk_orders_employee` (`assigned_employee_id`),
+  ADD KEY `idx_created_at` (`created_at`);
 
 --
 -- Indices de la tabla `order_items`
@@ -388,14 +415,8 @@ ALTER TABLE `products`
   ADD UNIQUE KEY `sku` (`sku`),
   ADD KEY `idx_category` (`category`),
   ADD KEY `idx_featured` (`featured`),
-  ADD KEY `idx_active` (`active`);
-
---
--- Indices de la tabla `work_schedules`
---
-ALTER TABLE `work_schedules`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `unique_employee_day` (`employee_id`,`day_of_week`);
+  ADD KEY `idx_active` (`active`),
+  ADD KEY `idx_sku` (`sku`);
 
 --
 -- AUTO_INCREMENT de las tablas volcadas
@@ -408,52 +429,34 @@ ALTER TABLE `attendance`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT de la tabla `customers`
+-- AUTO_INCREMENT de la tabla `audit_log`
 --
-ALTER TABLE `customers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de la tabla `customer_interactions`
---
-ALTER TABLE `customer_interactions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `audit_log`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT de la tabla `employees`
 --
 ALTER TABLE `employees`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de la tabla `leave_requests`
---
-ALTER TABLE `leave_requests`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
 
 --
 -- AUTO_INCREMENT de la tabla `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
 -- AUTO_INCREMENT de la tabla `products`
 --
 ALTER TABLE `products`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=102;
-
---
--- AUTO_INCREMENT de la tabla `work_schedules`
---
-ALTER TABLE `work_schedules`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Restricciones para tablas volcadas
@@ -464,20 +467,6 @@ ALTER TABLE `work_schedules`
 --
 ALTER TABLE `attendance`
   ADD CONSTRAINT `attendance_ibfk_1` FOREIGN KEY (`employee_id`) REFERENCES `employees` (`id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `customer_interactions`
---
-ALTER TABLE `customer_interactions`
-  ADD CONSTRAINT `customer_interactions_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `customer_interactions_ibfk_2` FOREIGN KEY (`employee_id`) REFERENCES `employees` (`id`) ON DELETE SET NULL;
-
---
--- Filtros para la tabla `leave_requests`
---
-ALTER TABLE `leave_requests`
-  ADD CONSTRAINT `leave_requests_ibfk_1` FOREIGN KEY (`employee_id`) REFERENCES `employees` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `leave_requests_ibfk_2` FOREIGN KEY (`approved_by`) REFERENCES `employees` (`id`) ON DELETE SET NULL;
 
 --
 -- Filtros para la tabla `orders`
@@ -492,12 +481,6 @@ ALTER TABLE `orders`
 ALTER TABLE `order_items`
   ADD CONSTRAINT `fk_order_items_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_order_items_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`);
-
---
--- Filtros para la tabla `work_schedules`
---
-ALTER TABLE `work_schedules`
-  ADD CONSTRAINT `work_schedules_ibfk_1` FOREIGN KEY (`employee_id`) REFERENCES `employees` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
