@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost:3306
--- Tiempo de generación: 25-01-2026 a las 13:59:16
+-- Tiempo de generación: 30-01-2026 a las 20:15:55
 -- Versión del servidor: 10.6.20-MariaDB-cll-lve
 -- Versión de PHP: 8.1.34
 
@@ -24,13 +24,141 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `attendance`
+--
+
+CREATE TABLE `attendance` (
+  `id` int(11) NOT NULL,
+  `employee_id` int(11) NOT NULL,
+  `date` date NOT NULL,
+  `check_in` time DEFAULT NULL,
+  `check_out` time DEFAULT NULL,
+  `break_start` time DEFAULT NULL,
+  `break_end` time DEFAULT NULL,
+  `total_hours` decimal(4,2) DEFAULT NULL,
+  `status` enum('presente','tarde','ausente','permiso','falta') DEFAULT 'presente',
+  `notes` text DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura Stand-in para la vista `attendance_report`
+-- (Véase abajo para la vista actual)
+--
+CREATE TABLE `attendance_report` (
+`employee_code` varchar(50)
+,`employee_name` varchar(201)
+,`position` varchar(100)
+,`department` enum('ventas','almacen','administracion','gerencia')
+,`date` date
+,`check_in` time
+,`check_out` time
+,`total_hours` decimal(4,2)
+,`status` enum('presente','tarde','ausente','permiso','falta')
+,`punctuality` varchar(8)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `customers`
+--
+
+CREATE TABLE `customers` (
+  `id` int(11) NOT NULL,
+  `customer_code` varchar(50) NOT NULL,
+  `first_name` varchar(100) NOT NULL,
+  `last_name` varchar(100) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `phone` varchar(50) DEFAULT NULL,
+  `address` text DEFAULT NULL,
+  `city` varchar(100) DEFAULT NULL,
+  `postal_code` varchar(20) DEFAULT NULL,
+  `customer_type` enum('regular','vip','mayorista') DEFAULT 'regular',
+  `total_purchases` decimal(10,2) DEFAULT 0.00,
+  `total_orders` int(11) DEFAULT 0,
+  `last_purchase_date` date DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `status` enum('activo','inactivo','bloqueado') DEFAULT 'activo',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `customer_interactions`
+--
+
+CREATE TABLE `customer_interactions` (
+  `id` int(11) NOT NULL,
+  `customer_id` int(11) NOT NULL,
+  `employee_id` int(11) DEFAULT NULL,
+  `interaction_type` enum('llamada','email','whatsapp','visita','soporte','venta') NOT NULL,
+  `subject` varchar(255) DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `interaction_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `employees`
+--
+
+CREATE TABLE `employees` (
+  `id` int(11) NOT NULL,
+  `employee_code` varchar(50) NOT NULL,
+  `first_name` varchar(100) NOT NULL,
+  `last_name` varchar(100) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `phone` varchar(50) DEFAULT NULL,
+  `position` varchar(100) NOT NULL,
+  `department` enum('ventas','almacen','administracion','gerencia') DEFAULT 'ventas',
+  `password_hash` varchar(255) NOT NULL,
+  `hire_date` date NOT NULL,
+  `salary` decimal(10,2) DEFAULT NULL,
+  `status` enum('activo','inactivo','vacaciones','licencia') DEFAULT 'activo',
+  `photo` varchar(500) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `leave_requests`
+--
+
+CREATE TABLE `leave_requests` (
+  `id` int(11) NOT NULL,
+  `employee_id` int(11) NOT NULL,
+  `leave_type` enum('vacaciones','enfermedad','personal','maternidad','otro') NOT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
+  `reason` text DEFAULT NULL,
+  `status` enum('pendiente','aprobado','rechazado') DEFAULT 'pendiente',
+  `approved_by` int(11) DEFAULT NULL,
+  `approved_date` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `orders`
 --
 
 CREATE TABLE `orders` (
   `id` int(11) NOT NULL,
+  `customer_id` int(11) DEFAULT NULL,
+  `assigned_employee_id` int(11) DEFAULT NULL,
   `order_number` varchar(100) DEFAULT NULL,
-  `paypal_order_id` varchar(100) NOT NULL,
   `email` varchar(255) NOT NULL,
   `first_name` varchar(100) NOT NULL,
   `last_name` varchar(100) NOT NULL,
@@ -97,77 +225,152 @@ CREATE TABLE `products` (
 --
 
 INSERT INTO `products` (`id`, `sku`, `name`, `category`, `subcategory`, `price`, `description`, `image`, `images`, `stock`, `featured`, `rating`, `review_count`, `active`, `created_at`, `updated_at`) VALUES
-(1, 'ROP-AME-001', 'POLO LINEA COLOR BLANCO PURO CLARO', 'ropa', 'americanino', 34.99, 'Camiseta polo para mujer, cuello camisero, manga corta, botones en frente, estampado. Confeccionada con mezcla de algodón que te brindan suavidad. Perfecta para crear un outfit clásico, casual y juvenil con tu mejor estilo cualquier día de la semana. Su diseño te brinda la comodidad y frescura que necesitas para lucir siempre increíble. Combínala con jean tono medio y tenis. PRENDA: 96% ALGODON 4% ELASTOMERO', 'assets/img/ropa/AMERICANINO/ROP-AME-001-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-001-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-001-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-001-3.jpeg\"]', 4, 0, 0.0, 0, 1, '2026-01-17 23:05:08', '2026-01-17 23:05:08'),
-(2, 'ROP-AME-002', 'POLO LINEA COLOR AZUL PUREZA CLARO', 'ropa', 'americanino', 34.99, 'Camiseta polo para mujer, cuello camisero, manga corta, botones en frente, estampado. Confeccionada con mezcla de algodón que te brindan suavidad. Perfecta para crear un outfit clásico, casual y juvenil con tu mejor estilo cualquier día de la semana. Su diseño te brinda la comodidad y frescura que necesitas para lucir siempre increíble. Combínala con jean tono medio y tenis. PRENDA: 96% ALGODON 4% ELASTOMERO', 'assets/img/ropa/AMERICANINO/ROP-AME-002-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-002-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-002-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-002-3.jpeg\"]', 4, 0, 0.0, 0, 1, '2026-01-17 23:06:22', '2026-01-17 23:06:22'),
-(3, 'ROP-AME-003', 'POLO LINEA COLOR MORADO PETALO CLARO', 'ropa', 'americanino', 34.99, 'Camiseta polo para mujer, cuello camisero, manga corta, botones en frente, estampado. Confeccionada con mezcla de algodón que te brindan suavidad. Perfecta para crear un outfit clásico, casual y juvenil con tu mejor estilo cualquier día de la semana. Su diseño te brinda la comodidad y frescura que necesitas para lucir siempre increíble. Combínala con jean tono medio y tenis. PRENDA: 96% ALGODON 4% ELASTOMERO', 'assets/img/ropa/AMERICANINO/ROP-AME-003-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-003-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-003-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-003-3.jpeg\"]', 4, 0, 0.0, 0, 1, '2026-01-17 23:10:09', '2026-01-17 23:10:09'),
-(5, 'ROP-AME-004', 'POLO LINEA COLOR VERDE AMBIENTE MEDIO', 'ropa', 'americanino', 34.99, 'Camiseta polo para mujer, cuello camisero, manga corta, botones en frente, estampado. Confeccionada con mezcla de algodón que te brindan suavidad. Perfecta para crear un outfit clásico, casual y juvenil con tu mejor estilo cualquier día de la semana. Su diseño te brinda la comodidad y frescura que necesitas para lucir siempre increíble. Combínala con jean tono medio y tenis. PRENDA: 96% ALGODON 4% ELASTOMERO', 'assets/img/ropa/AMERICANINO/ROP-AME-004-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-004-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-004-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-004-3.jpeg\"]', 4, 0, 0.0, 0, 1, '2026-01-17 23:11:41', '2026-01-17 23:11:41'),
-(6, 'ROP-AME-005', 'POLO MC SLIM NERU LINEA NEGRO SOMBRÍO ULTRAOSCURO', 'ropa', 'americanino', 34.99, 'Camiseta polo para hombre de corte slim con cuello tipo Neru, diseñada para un estilo moderno y elegante. Confeccionada en tejido suave y resistente que aporta comodidad y libertad de movimiento. Su color negro sombrío ultraoscuro ofrece versatilidad para combinar con jeans, pantalones casuales o incluso atuendos más formales. Ideal para quienes buscan una prenda fresca, ligera y con un toque sofisticado. Detalles minimalistas en costuras y acabado premium que realzan la silueta masculina. PRENDA:96% algodón, 4% elastómero', 'assets/img/ropa/AMERICANINO/ROP-AME-005-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-005-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-005-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-005-3.jpeg\"]', 2, 0, 0.0, 0, 1, '2026-01-17 23:16:06', '2026-01-17 23:19:03'),
-(7, 'ROP-AME-006', 'BOXER ALGODON X2 LINEA', 'ropa', 'americanino', 34.99, 'Boxer de algodón para hombre, cómodo y resistente. Ideal para el uso diario.', 'assets/img/ropa/AMERICANINO/ROP-AME-006-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-006-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-006-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-006-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-17 23:20:44', '2026-01-18 00:07:51'),
-(8, 'ROP-AME-007', 'GORRA 6 CASCOS INDIO BORDADO', 'ropa', 'americanino', 22.99, 'Boxer de algodón para hombre, cómodo y resistente. Ideal para el uso diario.', 'assets/img/ropa/AMERICANINO/ROP-AME-007-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-007-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-007-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-007-3.jpeg\"]', 1, 0, 0.0, 0, 1, '2026-01-17 23:24:52', '2026-01-18 00:07:58'),
-(10, 'ROP-AME-008', 'JEGGING TONO MEDIO TIRO MEDIO AZUL', 'ropa', 'americanino', 78.99, 'Jegging tono medio tiro medio azul Americanino para mujer, confeccionado en mezclilla stretch que brinda comodidad y ajuste perfecto. Ideal para un look casual y moderno.', 'assets/img/ropa/AMERICANINO/ROP-AME-008-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-008-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-008-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-008-3.jpeg\"]', 2, 0, 0.0, 0, 1, '2026-01-18 00:11:31', '2026-01-18 00:11:31'),
-(12, 'ROP-AME-009', 'SKINNY TONO OSCURO TIRO BAJO AZUL', 'ropa', 'americanino', 78.99, 'Jean Skinny Tono Oscuro Ajuste Perfecto Hombre Este jean skinny en tono oscuro representa la perfecta fusión entre tradición denim y modernidad urbana. Diseñado para quien valora la libertad de expresión y la calidad auténtica que solo Americanino puede ofrecer. Super versátil para expresar tu libertad de autoexpresión en cada aventura urbana.', 'assets/img/ropa/AMERICANINO/ROP-AME-009-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-009-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-009-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-009-3.jpeg\"]', 2, 0, 0.0, 0, 1, '2026-01-18 00:20:15', '2026-01-18 00:20:15'),
-(13, 'ROP-AME-010', 'SKINNY TONO MEDIO TIRO BAJO', 'ropa', 'americanino', 78.99, 'Jean Skinny Tiro Bajo Ajuste Perfecto Hombre Este jean skinny conecta la herencia denim de Americanino con la libertad total de movimiento. Diseñado para quien valora la calidad técnica y busca expresar su estilo auténtico. Super versátil para tu evolución continua de estilo, te va a encantar cómo se adapta a cada momento de tu día.', 'assets/img/ropa/AMERICANINO/ROP-AME-010-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-010-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-010-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-010-3.jpeg\"]', 2, 0, 0.0, 0, 1, '2026-01-18 00:22:39', '2026-01-18 00:22:39'),
-(14, 'ROP-AME-011', 'SLIM & STRAIGHT NEGRO TIRO MEDIO', 'ropa', 'americanino', 84.99, 'Jeans para hombre con corte Slim & Straight y tiro medio, diseñados para un ajuste moderno y cómodo. Confeccionados en denim de alta calidad que combina resistencia y suavidad al tacto, ofreciendo libertad de movimiento y durabilidad. Su tono negro intenso aporta versatilidad, ideal para looks casuales o más sofisticados. El diseño recto en la pierna estiliza la silueta, mientras que el corte slim asegura un fit contemporáneo. Perfectos para combinar con camisetas, polos o camisas, convirtiéndose en una prenda esencial del guardarropa masculino.', 'assets/img/ropa/AMERICANINO/ROP-AME-011-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-011-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-011-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-011-3.jpeg\"]', 2, 0, 0.0, 0, 1, '2026-01-18 00:28:49', '2026-01-18 00:28:49'),
-(15, 'ROP-AME-012', 'NEW CHINO', 'ropa', 'americanino', 64.99, 'Pantalón para hombre. Diseño tipo Chino. Cuenta con tiro medio y un fit semiajustado. Ajuste de cierre y botón.', 'assets/img/ropa/AMERICANINO/ROP-AME-012-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-012-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-012-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-012-3.jpeg\"]', 2, 0, 0.0, 0, 1, '2026-01-18 00:31:09', '2026-01-18 00:31:09'),
-(16, 'PEL-001', 'PELUCHE JAZMIN PRINCESA', 'peluches', 'personajes', 30.00, 'Peluche de Jazmin Princesa. Tamaño: 45cm. Producto de alta calidad, ideal para regalo.', 'assets/img/peluches/PELUCHE-JAZMIN-PRINCESA/PEL-001-1.jpeg', '[\"assets/img/peluches/PELUCHE-JAZMIN-PRINCESA/PEL-001-1.jpeg\",\"assets/img/peluches/PELUCHE-JAZMIN-PRINCESA/PEL-001-2.jpeg\",\"assets/img/peluches/PELUCHE-JAZMIN-PRINCESA/PEL-001-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-21 03:12:47', '2026-01-21 03:12:47'),
-(17, 'PEL-002', 'PELUCHE SONIC EL ERIZO', 'peluches', 'personajes', 55.00, 'Peluche de Sonic el Erizo. Tamaño: 65cm. Producto de alta calidad, ideal para fanáticos de Sonic.', 'assets/img/peluches/PELUCHE-SONIC-EL-ERIZO/PEL-002-1.jpeg', '[\"assets/img/peluches/PELUCHE-SONIC-EL-ERIZO/PEL-002-1.jpeg\",\"assets/img/peluches/PELUCHE-SONIC-EL-ERIZO/PEL-002-2.jpeg\",\"assets/img/peluches/PELUCHE-SONIC-EL-ERIZO/PEL-002-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-21 03:12:47', '2026-01-21 03:12:47'),
-(18, 'PEL-003', 'PELUCHE LA SIRENITA ARIEL', 'peluches', 'personajes', 30.00, 'Peluche de la Sirenita Ariel. Tamaño: 45cm. Producto de alta calidad, ideal para niñas.', 'assets/img/peluches/PELUCHE-LA-SIRENITA-ARIEL/PEL-003-1.jpeg', '[\"assets/img/peluches/PELUCHE-LA-SIRENITA-ARIEL/PEL-003-1.jpeg\",\"assets/img/peluches/PELUCHE-LA-SIRENITA-ARIEL/PEL-003-2.jpeg\",\"assets/img/peluches/PELUCHE-LA-SIRENITA-ARIEL/PEL-003-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-21 03:12:47', '2026-01-21 03:12:47'),
-(19, 'PEL-004', 'GATO MOTICA NEGRO', 'peluches', 'animales', 18.00, 'Peluche de Gato Motica Negro. Tamaño: 25cm. Producto de alta calidad, suave y adorable.', 'assets/img/peluches/GATO-MOTICA-NEGRO/PEL-004-1.jpeg', '[\"assets/img/peluches/GATO-MOTICA-NEGRO/PEL-004-1.jpeg\",\"assets/img/peluches/GATO-MOTICA-NEGRO/PEL-004-2.jpeg\",\"assets/img/peluches/GATO-MOTICA-NEGRO/PEL-004-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-21 03:12:48', '2026-01-21 03:12:48'),
-(20, 'PEL-005', 'PELUCHE HELLO KITTY 35cm', 'peluches', 'personajes', 20.00, 'Peluche de Hello Kitty. Tamaño: 35cm. Producto de alta calidad, ideal para coleccionistas.', 'assets/img/peluches/PELUCHE-HELLO-KITTY/PEL-005-1.jpeg', '[\"assets/img/peluches/PELUCHE-HELLO-KITTY/PEL-005-1.jpeg\",\"assets/img/peluches/PELUCHE-HELLO-KITTY/PEL-005-2.jpeg\",\"assets/img/peluches/PELUCHE-HELLO-KITTY/PEL-005-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-21 03:12:48', '2026-01-21 03:12:48'),
-(21, 'PEL-006', 'PELUCHE HELLO KITTY 65cm', 'peluches', 'personajes', 58.00, 'Peluche de Hello Kitty. Tamaño: 65cm. Producto de alta calidad, versión grande ideal para regalo especial.', 'assets/img/peluches/PELUCHE-HELLO-KITTY/PEL-006-1.jpeg', '[\"assets/img/peluches/PELUCHE-HELLO-KITTY/PEL-006-1.jpeg\",\"assets/img/peluches/PELUCHE-HELLO-KITTY/PEL-006-2.jpeg\",\"assets/img/peluches/PELUCHE-HELLO-KITTY/PEL-006-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-21 03:12:48', '2026-01-21 03:12:48'),
-(22, 'PEL-007', 'LABUBU 35cm', 'peluches', 'personajes', 27.00, 'Peluche Labubu. Tamaño: 35cm. Producto de alta calidad, trending toy del momento.', 'assets/img/peluches/LABUBU/PEL-007-1.jpeg', '[\"assets/img/peluches/LABUBU/PEL-007-1.jpeg\",\"assets/img/peluches/LABUBU/PEL-007-2.jpeg\",\"assets/img/peluches/LABUBU/PEL-007-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-21 03:12:48', '2026-01-21 03:12:48'),
-(23, 'PEL-008', 'PELUCHE RAPUNZEL PRINCESA', 'peluches', 'personajes', 30.00, 'Peluche de Rapunzel Princesa. Tamaño: 45cm. Producto de alta calidad, ideal para regalo.', 'assets/img/peluches/PELUCHE-RAPUNZEL-PRINCESA/PEL-008-1.jpeg', '[\"assets/img/peluches/PELUCHE-RAPUNZEL-PRINCESA/PEL-008-1.jpeg\",\"assets/img/peluches/PELUCHE-RAPUNZEL-PRINCESA/PEL-008-2.jpeg\",\"assets/img/peluches/PELUCHE-RAPUNZEL-PRINCESA/PEL-008-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-21 03:14:21', '2026-01-21 03:14:21'),
-(24, 'JUG-001', 'BARBIE DE LA PELICULA HPJ96', 'juguetes', 'niña', 115.00, 'Muñeca Barbie de la película oficial HPJ96. Figura coleccionable de alta calidad con detalles auténticos de la película. Ideal para jugar y coleccionar.', 'assets/img/juguetes/BARBIE-DE-LA-PELICULA-HPJ96/JUG-001-1.jpeg', '[\"assets/img/juguetes/BARBIE-DE-LA-PELICULA-HPJ96/JUG-001-1.jpeg\",\"assets/img/juguetes/BARBIE-DE-LA-PELICULA-HPJ96/JUG-001-2.jpeg\",\"assets/img/juguetes/BARBIE-DE-LA-PELICULA-HPJ96/JUG-001-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-21 03:46:00', '2026-01-21 03:46:00'),
-(25, 'JUG-002', 'FIGURA HASBRO HULK 30cm', 'juguetes', 'niño', 35.00, 'Figura de acción oficial de Hasbro - Hulk 30cm. Articulaciones móviles y detalles realistas. Perfecto para fans de Marvel y coleccionistas.', 'assets/img/juguetes/FIGURA-HASBRO-HULK-30CM/JUG-002-1.jpeg', '[\"assets/img/juguetes/FIGURA-HASBRO-HULK-30CM/JUG-002-1.jpeg\",\"assets/img/juguetes/FIGURA-HASBRO-HULK-30CM/JUG-002-2.jpeg\",\"assets/img/juguetes/FIGURA-HASBRO-HULK-30CM/JUG-002-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-21 03:46:00', '2026-01-21 03:46:00'),
-(26, 'JUG-003', 'LEGO BOTANICALS PETIT', 'juguetes', 'lego', 105.00, 'Set LEGO Botanicals Petit. Construcción decorativa de flores y plantas. Ideal para adultos y adolescentes. Pieza de exhibición única y relajante de armar.', 'assets/img/juguetes/LEGO-BOTANICALS-PETIT/JUG-003-1.jpeg', '[\"assets/img/juguetes/LEGO-BOTANICALS-PETIT/JUG-003-1.jpeg\",\"assets/img/juguetes/LEGO-BOTANICALS-PETIT/JUG-003-2.jpeg\",\"assets/img/juguetes/LEGO-BOTANICALS-PETIT/JUG-003-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-21 03:46:01', '2026-01-21 03:46:01'),
-(27, 'JUG-004', 'LEGO CREATOR 3n1 Loro', 'juguetes', 'lego', 70.00, 'Set LEGO Creator 3 en 1 - Loro. Construye 3 modelos diferentes con un solo set. Estimula la creatividad y ofrece múltiples opciones de construcción.', 'assets/img/juguetes/LEGO-CREATOR-3N1-LORO/JUG-004-1.jpeg', '[\"assets/img/juguetes/LEGO-CREATOR-3N1-LORO/JUG-004-1.jpeg\",\"assets/img/juguetes/LEGO-CREATOR-3N1-LORO/JUG-004-2.jpeg\",\"assets/img/juguetes/LEGO-CREATOR-3N1-LORO/JUG-004-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-21 03:46:01', '2026-01-21 03:46:01'),
-(29, 'JUG-006', 'MUÑECA BEBÉ CON BACKPACK', 'juguetes', 'niña', 29.00, 'Muñeca bebé con mochila incluida. Perfecta para juego de roles y desarrollo de habilidades de cuidado. Incluye accesorios y ropa adorable.', 'assets/img/juguetes/MUNECA-BEBE-CON-BACKPACK/JUG-006-1.jpeg', '[\"assets/img/juguetes/MUNECA-BEBE-CON-BACKPACK/JUG-006-1.jpeg\",\"assets/img/juguetes/MUNECA-BEBE-CON-BACKPACK/JUG-006-2.jpeg\",\"assets/img/juguetes/MUNECA-BEBE-CON-BACKPACK/JUG-006-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-21 03:46:01', '2026-01-21 03:46:01'),
-(30, 'JUG-007', 'ESPANTACUCO OSITO CUCO LUZ', 'juguetes', 'bebé', 58.00, 'Osito proyector de luz nocturna con música. Ayuda a calmar y dormir al bebé. Proyecciones suaves y melodías relajantes. Ideal para la hora de dormir.', 'assets/img/juguetes/ESPANTACUCO-OSITO-CUCO-LUZ/JUG-007-1.jpeg', '[\"assets/img/juguetes/ESPANTACUCO-OSITO-CUCO-LUZ/JUG-007-1.jpeg\",\"assets/img/juguetes/ESPANTACUCO-OSITO-CUCO-LUZ/JUG-007-2.jpeg\",\"assets/img/juguetes/ESPANTACUCO-OSITO-CUCO-LUZ/JUG-007-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-21 03:46:01', '2026-01-21 03:46:01'),
-(31, 'JOY-001', 'ROSARIO PLATA 925', 'joyas', 'plata-925', 99.00, 'Rosario de plata 925 auténtica. Diseño elegante y resistente. Acabado pulido de alta calidad. Perfecto para uso diario o regalo especial.', 'assets/img/joyas/ROSARIO-PLATA-925/JOY-001-1.jpeg', '[\"assets/img/joyas/ROSARIO-PLATA-925/JOY-001-1.jpeg\",\"assets/img/joyas/ROSARIO-PLATA-925/JOY-001-2.jpeg\",\"assets/img/joyas/ROSARIO-PLATA-925/JOY-001-3.jpeg\"]', 3, 0, 0.0, 0, 1, '2026-01-21 03:46:01', '2026-01-21 03:46:01'),
-(32, 'VIC-001', 'SET CORPORAL BODYCOLOGY SPLASH', 'belleza', 'victorias-secret', 33.00, 'Set corporal Bodycology Splash. Fragancia fresca y duradera. Incluye splash corporal para hidratación y aroma. Presentación ideal para regalo.', 'assets/img/belleza/SET-CORPORAL-BODYCOLOGY-SPLASH/VIC-001-1.jpeg', '[\"assets/img/belleza/SET-CORPORAL-BODYCOLOGY-SPLASH/VIC-001-1.jpeg\",\"assets/img/belleza/SET-CORPORAL-BODYCOLOGY-SPLASH/VIC-001-2.jpeg\",\"assets/img/belleza/SET-CORPORAL-BODYCOLOGY-SPLASH/VIC-001-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-21 03:46:01', '2026-01-21 03:46:01'),
-(37, 'REL-001', 'RELOJ Q & Q METAL GT73-405 15mm', 'relojes', 'casual', 35.00, 'Reloj Q&Q Metal modelo GT73-405. Correa de 15mm. Diseño elegante y resistente. Ideal para uso diario.', 'assets/img/relojes/QQ-METAL-GT73-405/REL-001-1.jpeg', '[\"assets/img/relojes/QQ-METAL-GT73-405/REL-001-1.jpeg\",\"assets/img/relojes/QQ-METAL-GT73-405/REL-001-2.jpeg\",\"assets/img/relojes/QQ-METAL-GT73-405/REL-001-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-25 18:54:23', '2026-01-25 18:54:23'),
-(38, 'REL-002', 'RELOJ Q & Q METAL DORADO C76A004Y', 'relojes', 'elegante', 100.00, 'Reloj Q&Q Metal Dorado modelo C76A004Y. Acabado dorado elegante. Perfecto para ocasiones especiales.', 'assets/img/relojes/QQ-METAL-DORADO-C76A004Y/REL-002-1.jpeg', '[\"assets/img/relojes/QQ-METAL-DORADO-C76A004Y/REL-002-1.jpeg\",\"assets/img/relojes/QQ-METAL-DORADO-C76A004Y/REL-002-2.jpeg\",\"assets/img/relojes/QQ-METAL-DORADO-C76A004Y/REL-002-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-25 18:54:23', '2026-01-25 18:54:23'),
-(39, 'REL-003', 'RELOJ Q & Q METAL DORADO SUPERIOR MUJER', 'relojes', 'mujer', 100.00, 'Reloj Q&Q Metal Dorado Superior para Mujer. Diseño elegante y sofisticado. Acabado dorado de alta calidad.', 'assets/img/relojes/QQ-DORADO-SUPERIOR-MUJER/REL-003-1.jpeg', '[\"assets/img/relojes/QQ-DORADO-SUPERIOR-MUJER/REL-003-1.jpeg\",\"assets/img/relojes/QQ-DORADO-SUPERIOR-MUJER/REL-003-2.jpeg\",\"assets/img/relojes/QQ-DORADO-SUPERIOR-MUJER/REL-003-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-25 18:54:23', '2026-01-25 18:54:23'),
-(40, 'REL-004', 'RELOJ FOSSIL CRONOGRAFO MACHINE DE ACERO', 'relojes', 'premium', 325.00, 'Reloj Fossil Cronógrafo Machine de Acero Inoxidable. Diseño robusto y masculino. Movimiento de cuarzo preciso. Resistente al agua.', 'assets/img/relojes/FOSSIL-CRONOGRAFO-MACHINE/REL-004-1.jpeg', '[\"assets/img/relojes/FOSSIL-CRONOGRAFO-MACHINE/REL-004-1.jpeg\",\"assets/img/relojes/FOSSIL-CRONOGRAFO-MACHINE/REL-004-2.jpeg\",\"assets/img/relojes/FOSSIL-CRONOGRAFO-MACHINE/REL-004-3.jpeg\"]', 3, 1, 0.0, 0, 1, '2026-01-25 18:54:23', '2026-01-25 18:54:23'),
-(41, 'REL-005', 'RELOJ CASIO PARA HOMBRE PANTALLA NEON', 'relojes', 'deportivo', 35.00, 'Reloj Casio para Hombre con Pantalla Neón. Iluminación LED. Resistente al agua. Perfecto para actividades deportivas y uso diario.', 'assets/img/relojes/CASIO-PANTALLA-NEON/REL-005-1.jpeg', '[\"assets/img/relojes/CASIO-PANTALLA-NEON/REL-005-1.jpeg\",\"assets/img/relojes/CASIO-PANTALLA-NEON/REL-005-2.jpeg\",\"assets/img/relojes/CASIO-PANTALLA-NEON/REL-005-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-25 18:54:23', '2026-01-25 18:54:23'),
-(42, 'REL-006', 'DIESEL RELOJ ANALOGICO CUARZO HOMBRE', 'relojes', 'premium', 305.00, 'Reloj Diesel Analógico de Cuarzo para Hombre. Diseño urbano y moderno. Correa de acero inoxidable o cuero. Resistente y elegante.', 'assets/img/relojes/DIESEL-ANALOGICO-CUARZO/REL-006-1.jpeg', '[\"assets/img/relojes/DIESEL-ANALOGICO-CUARZO/REL-006-1.jpeg\",\"assets/img/relojes/DIESEL-ANALOGICO-CUARZO/REL-006-2.jpeg\",\"assets/img/relojes/DIESEL-ANALOGICO-CUARZO/REL-006-3.jpeg\"]', 3, 1, 0.0, 0, 1, '2026-01-25 18:54:23', '2026-01-25 18:54:23'),
-(43, 'REL-007', 'DIESEL RELOJ PULSERA HOMBRE', 'relojes', 'premium', 275.00, 'Reloj de Pulsera Diesel para Hombre. Estilo robusto y masculino. Alta calidad de construcción. Diseño contemporáneo.', 'assets/img/relojes/DIESEL-PULSERA-HOMBRE/REL-007-1.jpeg', '[\"assets/img/relojes/DIESEL-PULSERA-HOMBRE/REL-007-1.jpeg\",\"assets/img/relojes/DIESEL-PULSERA-HOMBRE/REL-007-2.jpeg\",\"assets/img/relojes/DIESEL-PULSERA-HOMBRE/REL-007-3.jpeg\"]', 3, 1, 0.0, 0, 1, '2026-01-25 18:54:23', '2026-01-25 18:54:23'),
-(44, 'REL-008', 'CASIO MW-240 RELOJ ANALOGICO CUARZO', 'relojes', 'clasico', 205.00, 'Casio MW-240 Reloj Analógico de Cuarzo. Diseño clásico y atemporal. Movimiento de cuarzo confiable. Resistente al agua. Correa de acero inoxidable.', 'assets/img/relojes/CASIO-MW-240/REL-008-1.jpeg', '[\"assets/img/relojes/CASIO-MW-240/REL-008-1.jpeg\",\"assets/img/relojes/CASIO-MW-240/REL-008-2.jpeg\",\"assets/img/relojes/CASIO-MW-240/REL-008-3.jpeg\"]', 4, 0, 0.0, 0, 1, '2026-01-25 18:54:23', '2026-01-25 18:54:23'),
-(45, 'PERF-001', 'FRAGANCIA MOSCHINO TOY DAMA', 'perfumes', 'mujer', 180.00, 'Fragancia para Dama Moschino Toy. Aroma fresco y juguetón. Presentación única y divertida. Ideal para mujeres jóvenes y atrevidas.', 'assets/img/perfumes/MOSCHINO-TOY/PERF-001-1.jpeg', '[\"assets/img/perfumes/MOSCHINO-TOY/PERF-001-1.jpeg\",\"assets/img/perfumes/MOSCHINO-TOY/PERF-001-2.jpeg\",\"assets/img/perfumes/MOSCHINO-TOY/PERF-001-3.jpeg\"]', 4, 1, 0.0, 0, 1, '2026-01-25 18:54:23', '2026-01-25 18:54:23'),
-(46, 'PERF-002', 'CAROLINA HERRERA VERY GOOD GIRL', 'perfumes', 'mujer', 305.00, 'Fragancia para Dama Carolina Herrera Very Good Girl. Aroma sofisticado y sensual. Presentación elegante. Para la mujer moderna y segura.', 'assets/img/perfumes/CH-VERY-GOOD-GIRL/PERF-002-1.jpeg', '[\"assets/img/perfumes/CH-VERY-GOOD-GIRL/PERF-002-1.jpeg\",\"assets/img/perfumes/CH-VERY-GOOD-GIRL/PERF-002-2.jpeg\",\"assets/img/perfumes/CH-VERY-GOOD-GIRL/PERF-002-3.jpeg\"]', 3, 1, 0.0, 0, 1, '2026-01-25 18:54:23', '2026-01-25 18:54:23'),
-(47, 'PERF-003', 'LACOSTE POUR ELLE SPARKLING 90ML', 'perfumes', 'mujer', 180.00, 'Perfume Lacoste Pour Elle Sparkling 90 ml. Fragancia fresca y chispeante. Notas frutales y florales. Perfecta para el día a día.', 'assets/img/perfumes/LACOSTE-SPARKLING/PERF-003-1.jpeg', '[\"assets/img/perfumes/LACOSTE-SPARKLING/PERF-003-1.jpeg\",\"assets/img/perfumes/LACOSTE-SPARKLING/PERF-003-2.jpeg\",\"assets/img/perfumes/LACOSTE-SPARKLING/PERF-003-3.jpeg\"]', 4, 0, 0.0, 0, 1, '2026-01-25 18:54:23', '2026-01-25 18:54:23'),
-(48, 'PERF-004', 'BOSS BOTTLED UNITED 100ML', 'perfumes', 'hombre', 230.00, 'BOSS Bottled United de 100 ml. Fragancia masculina vibrante. Notas amaderadas y especiadas. Para el hombre moderno y decidido.', 'assets/img/perfumes/BOSS-BOTTLED-UNITED/PERF-004-1.jpeg', '[\"assets/img/perfumes/BOSS-BOTTLED-UNITED/PERF-004-1.jpeg\",\"assets/img/perfumes/BOSS-BOTTLED-UNITED/PERF-004-2.jpeg\",\"assets/img/perfumes/BOSS-BOTTLED-UNITED/PERF-004-3.jpeg\"]', 3, 1, 0.0, 0, 1, '2026-01-25 18:54:23', '2026-01-25 18:54:23'),
-(49, 'PERF-005', 'PERFUME 212 MEN NYC 100ML', 'perfumes', 'hombre', 240.00, 'Perfume 212 Men NYC 100ML Carolina Herrera. Fragancia urbana y sofisticada. Notas frescas y amaderadas. Ideal para el hombre cosmopolita.', 'assets/img/perfumes/212-MEN-NYC/PERF-005-1.jpeg', '[\"assets/img/perfumes/212-MEN-NYC/PERF-005-1.jpeg\",\"assets/img/perfumes/212-MEN-NYC/PERF-005-2.jpeg\",\"assets/img/perfumes/212-MEN-NYC/PERF-005-3.jpeg\"]', 3, 1, 0.0, 0, 1, '2026-01-25 18:54:23', '2026-01-25 18:54:23'),
-(50, 'PERF-006', 'BAD BOY EDP 100ML', 'perfumes', 'hombre', 260.00, 'Bad Boy Eau de Parfum 100ml Carolina Herrera. Fragancia audaz y provocativa. Notas orientales y especiadas. Para el hombre rebelde y sofisticado.', 'assets/img/perfumes/BAD-BOY-EDP/PERF-006-1.jpeg', '[\"assets/img/perfumes/BAD-BOY-EDP/PERF-006-1.jpeg\",\"assets/img/perfumes/BAD-BOY-EDP/PERF-006-2.jpeg\",\"assets/img/perfumes/BAD-BOY-EDP/PERF-006-3.jpeg\"]', 3, 1, 0.0, 0, 1, '2026-01-25 18:54:23', '2026-01-25 18:54:23'),
-(51, 'VIC-002', 'PERFUME VERY SEXY OASIS 50ML', 'belleza', 'victorias-secret', 110.00, 'Perfume Victoria\'s Secret Very Sexy Oasis 50ml. Fragancia tropical y seductora. Notas frescas y florales. Ideal para clima cálido.', 'assets/img/belleza/VS-VERY-SEXY-OASIS/VIC-002-1.jpeg', '[\"assets/img/belleza/VS-VERY-SEXY-OASIS/VIC-002-1.jpeg\",\"assets/img/belleza/VS-VERY-SEXY-OASIS/VIC-002-2.jpeg\",\"assets/img/belleza/VS-VERY-SEXY-OASIS/VIC-002-3.jpeg\"]', 4, 1, 0.0, 0, 1, '2026-01-25 18:54:23', '2026-01-25 18:54:23'),
-(52, 'VIC-003', 'PERFUME BOMBSHELL INTENSE 50ML', 'belleza', 'victorias-secret', 110.00, 'Perfume Victoria\'s Secret Bombshell Intense 50ml. Versión más intensa del clásico Bombshell. Notas florales y frutales potentes. Larga duración.', 'assets/img/belleza/VS-BOMBSHELL-INTENSE/VIC-003-1.jpeg', '[\"assets/img/belleza/VS-BOMBSHELL-INTENSE/VIC-003-1.jpeg\",\"assets/img/belleza/VS-BOMBSHELL-INTENSE/VIC-003-2.jpeg\",\"assets/img/belleza/VS-BOMBSHELL-INTENSE/VIC-003-3.jpeg\"]', 4, 1, 0.0, 0, 1, '2026-01-25 18:54:23', '2026-01-25 18:54:23'),
-(53, 'VIC-004', 'BOMBSHELL SEDUCTION EAU DE PARFUM', 'belleza', 'victorias-secret', 110.00, 'Bombshell Seduction Eau de Parfum Victoria\'s Secret. Fragancia seductora y sensual. Notas florales orientales. Perfecta para la noche.', 'assets/img/belleza/VS-BOMBSHELL-SEDUCTION/VIC-004-1.jpeg', '[\"assets/img/belleza/VS-BOMBSHELL-SEDUCTION/VIC-004-1.jpeg\",\"assets/img/belleza/VS-BOMBSHELL-SEDUCTION/VIC-004-2.jpeg\",\"assets/img/belleza/VS-BOMBSHELL-SEDUCTION/VIC-004-3.jpeg\"]', 4, 1, 0.0, 0, 1, '2026-01-25 18:54:23', '2026-01-25 18:54:23'),
-(54, 'DEP-001', 'PATIN RECREATIVO AJUSTABLE CANARIAM', 'deportes', 'patinaje', 175.00, 'Patín recreativo ajustable CANARIAM. Tallas ajustables para mayor comodidad. Rodamientos ABEC-7. Ideal para principiantes y recreación.', 'assets/img/deportes/PATIN-CANARIAM/DEP-001-1.jpeg', '[\"assets/img/deportes/PATIN-CANARIAM/DEP-001-1.jpeg\",\"assets/img/deportes/PATIN-CANARIAM/DEP-001-2.jpeg\",\"assets/img/deportes/PATIN-CANARIAM/DEP-001-3.jpeg\"]', 4, 0, 0.0, 0, 1, '2026-01-25 18:54:23', '2026-01-25 18:54:23'),
-(55, 'DEP-002', 'PROTECCIONES CITYRUN VARIAS TALLAS', 'deportes', 'patinaje', 30.00, 'Set de Protecciones CITYRUN. Incluye rodilleras, coderas y muñequeras. Varias tallas disponibles. Protección completa para patinaje.', 'assets/img/deportes/PROTECCIONES-CITYRUN/DEP-002-1.jpeg', '[\"assets/img/deportes/PROTECCIONES-CITYRUN/DEP-002-1.jpeg\",\"assets/img/deportes/PROTECCIONES-CITYRUN/DEP-002-2.jpeg\",\"assets/img/deportes/PROTECCIONES-CITYRUN/DEP-002-3.jpeg\"]', 10, 0, 0.0, 0, 1, '2026-01-25 18:54:23', '2026-01-25 18:54:23'),
-(56, 'DEP-003', 'PATIN SEMIPROFESIONAL BLACK MAGIC', 'deportes', 'patinaje', 185.00, 'Patín semiprofesional ajustable BLACK MAGIC. Rodamientos de alta velocidad. Estructura reforzada. Para patinadores intermedios y avanzados.', 'assets/img/deportes/PATIN-BLACK-MAGIC/DEP-003-1.jpeg', '[\"assets/img/deportes/PATIN-BLACK-MAGIC/DEP-003-1.jpeg\",\"assets/img/deportes/PATIN-BLACK-MAGIC/DEP-003-2.jpeg\",\"assets/img/deportes/PATIN-BLACK-MAGIC/DEP-003-3.jpeg\"]', 3, 1, 0.0, 0, 1, '2026-01-25 18:54:23', '2026-01-25 18:54:23'),
-(57, 'DEP-004', 'CASCO CANARIAM VARIAS TALLAS', 'deportes', 'patinaje', 45.00, 'Casco de seguridad CANARIAM para patinaje. Varias tallas disponibles. Sistema de ventilación. Correas ajustables. Protección certificada.', 'assets/img/deportes/CASCO-CANARIAM/DEP-004-1.jpeg', '[\"assets/img/deportes/CASCO-CANARIAM/DEP-004-1.jpeg\",\"assets/img/deportes/CASCO-CANARIAM/DEP-004-2.jpeg\",\"assets/img/deportes/CASCO-CANARIAM/DEP-004-3.jpeg\"]', 8, 0, 0.0, 0, 1, '2026-01-25 18:54:23', '2026-01-25 18:54:23'),
-(58, 'ACC-001', 'BOLIGRAFO X-PEN CLASSIC MEZZO 127BE', 'accesorios', 'escritura', 45.00, 'Bolígrafo X-Pen Classic Mezzo modelo 127BE. Escritura suave y precisa. Diseño elegante. Ideal para profesionales y estudiantes.', 'assets/img/accesorios/XPEN-MEZZO/ACC-001-1.jpeg', '[\"assets/img/accesorios/XPEN-MEZZO/ACC-001-1.jpeg\",\"assets/img/accesorios/XPEN-MEZZO/ACC-001-2.jpeg\",\"assets/img/accesorios/XPEN-MEZZO/ACC-001-3.jpeg\"]', 10, 0, 0.0, 0, 1, '2026-01-25 18:54:23', '2026-01-25 18:54:23'),
-(59, 'ACC-002', 'BILLETERA RV EN CUERO', 'accesorios', 'cuero', 38.00, 'Billetera RV en cuero genuino. Múltiples compartimentos para tarjetas y billetes. Diseño clásico y duradero. Ideal para uso diario.', 'assets/img/accesorios/BILLETERA-RV-CUERO/ACC-002-1.jpeg', '[\"assets/img/accesorios/BILLETERA-RV-CUERO/ACC-002-1.jpeg\",\"assets/img/accesorios/BILLETERA-RV-CUERO/ACC-002-2.jpeg\",\"assets/img/accesorios/BILLETERA-RV-CUERO/ACC-002-3.jpeg\"]', 8, 0, 0.0, 0, 1, '2026-01-25 18:54:23', '2026-01-25 18:54:23'),
-(60, 'ACC-003', 'PORTA CHEQUERA RV EN CUERO', 'accesorios', 'cuero', 52.00, 'Porta chequera RV en cuero genuino. Diseño elegante y funcional. Protege y organiza tus chequeras. Material de alta calidad.', 'assets/img/accesorios/PORTA-CHEQUERA-RV/ACC-003-1.jpeg', '[\"assets/img/accesorios/PORTA-CHEQUERA-RV/ACC-003-1.jpeg\",\"assets/img/accesorios/PORTA-CHEQUERA-RV/ACC-003-2.jpeg\",\"assets/img/accesorios/PORTA-CHEQUERA-RV/ACC-003-3.jpeg\"]', 6, 0, 0.0, 0, 1, '2026-01-25 18:54:23', '2026-01-25 18:54:23'),
-(61, 'ACC-004', 'GUANTES ARQUERO ENTRENAMIENTO AURIK', 'accesorios', 'deportivo', 42.00, 'Guantes de Arquero para Entrenamiento marca Aurik. Palma con grip superior. Protección en dedos. Ajuste cómodo con muñequera. Ideales para práctica.', 'assets/img/accesorios/GUANTES-ARQUERO-AURIK/ACC-004-1.jpeg', '[\"assets/img/accesorios/GUANTES-ARQUERO-AURIK/ACC-004-1.jpeg\",\"assets/img/accesorios/GUANTES-ARQUERO-AURIK/ACC-004-2.jpeg\",\"assets/img/accesorios/GUANTES-ARQUERO-AURIK/ACC-004-3.jpeg\"]', 8, 0, 0.0, 0, 1, '2026-01-25 18:54:23', '2026-01-25 18:54:23'),
-(62, 'ACC-005', 'PITOS PAIDIAO WHISTLE', 'accesorios', 'deportivo', 12.00, 'Pitos deportivos PAIDIAO Whistle. Sonido potente y claro. Material resistente. Ideal para entrenadores, árbitros y uso deportivo en general.', 'assets/img/accesorios/PITOS-PAIDIAO/ACC-005-1.jpeg', '[\"assets/img/accesorios/PITOS-PAIDIAO/ACC-005-1.jpeg\",\"assets/img/accesorios/PITOS-PAIDIAO/ACC-005-2.jpeg\",\"assets/img/accesorios/PITOS-PAIDIAO/ACC-005-3.jpeg\"]', 15, 0, 0.0, 0, 1, '2026-01-25 18:54:23', '2026-01-25 18:54:23');
+(1, 'ROP-AME-001', 'POLO LINEA COLOR BLANCO PURO CLARO', 'ropa', 'americanino', 34.99, 'Camiseta polo para mujer, cuello camisero, manga corta, botones en frente, estampado. Confeccionada con mezcla de algodón que te brindan suavidad. Perfecta para crear un outfit clásico, casual y juvenil con tu mejor estilo cualquier día de la semana. Su diseño te brinda la comodidad y frescura que necesitas para lucir siempre increíble. Combínala con jean tono medio y tenis. PRENDA: 96% ALGODON 4% ELASTOMERO', 'assets/img/ropa/AMERICANINO/ROP-AME-001-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-001-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-001-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-001-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 22:53:20'),
+(2, 'ROP-AME-002', 'POLO LINEA COLOR AZUL PUREZA CLARO', 'ropa', 'americanino', 34.99, 'Camiseta polo para mujer, cuello camisero, manga corta, botones en frente, estampado. Confeccionada con mezcla de algodón que te brindan suavidad. Perfecta para crear un outfit clásico, casual y juvenil con tu mejor estilo cualquier día de la semana. Su diseño te brinda la comodidad y frescura que necesitas para lucir siempre increíble. Combínala con jean tono medio y tenis. PRENDA: 96% ALGODON 4% ELASTOMERO', 'assets/img/ropa/AMERICANINO/ROP-AME-002-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-002-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-002-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-002-3.jpeg\"]', 4, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 23:03:45'),
+(3, 'ROP-AME-003', 'POLO LINEA COLOR MORADO PETALO CLARO', 'ropa', 'americanino', 34.99, 'Camiseta polo para mujer, cuello camisero, manga corta, botones en frente, estampado. Confeccionada con mezcla de algodón que te brindan suavidad. Perfecta para crear un outfit clásico, casual y juvenil con tu mejor estilo cualquier día de la semana. Su diseño te brinda la comodidad y frescura que necesitas para lucir siempre increíble. Combínala con jean tono medio y tenis. PRENDA: 96% ALGODON 4% ELASTOMERO', 'assets/img/ropa/AMERICANINO/ROP-AME-003-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-003-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-003-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-003-3.jpeg\"]', 4, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(5, 'ROP-AME-004', 'POLO LINEA COLOR VERDE AMBIENTE MEDIO', 'ropa', 'americanino', 34.99, 'Camiseta polo para mujer, cuello camisero, manga corta, botones en frente, estampado. Confeccionada con mezcla de algodón que te brindan suavidad. Perfecta para crear un outfit clásico, casual y juvenil con tu mejor estilo cualquier día de la semana. Su diseño te brinda la comodidad y frescura que necesitas para lucir siempre increíble. Combínala con jean tono medio y tenis. PRENDA: 96% ALGODON 4% ELASTOMERO', 'assets/img/ropa/AMERICANINO/ROP-AME-004-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-004-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-004-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-004-3.jpeg\"]', 4, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(6, 'ROP-AME-005', 'POLO MC SLIM NERU LINEA NEGRO SOMBRÍO ULTRAOSCURO', 'ropa', 'americanino', 34.99, 'Camiseta polo para hombre de corte slim con cuello tipo Neru, diseñada para un estilo moderno y elegante. Confeccionada en tejido suave y resistente que aporta comodidad y libertad de movimiento. Su color negro sombrío ultraoscuro ofrece versatilidad para combinar con jeans, pantalones casuales o incluso atuendos más formales. Ideal para quienes buscan una prenda fresca, ligera y con un toque sofisticado. Detalles minimalistas en costuras y acabado premium que realzan la silueta masculina. PRENDA:96% algodón, 4% elastómero', 'assets/img/ropa/AMERICANINO/ROP-AME-005-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-005-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-005-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-005-3.jpeg\"]', 2, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(7, 'ROP-AME-008', 'JEGGING TONO MEDIO TIRO MEDIO AZUL', 'ropa', 'americanino', 78.99, 'Jegging tono medio tiro medio azul Americanino para mujer, confeccionado en mezclilla stretch que brinda comodidad y ajuste perfecto. Ideal para un look casual y moderno.', 'assets/img/ropa/AMERICANINO/ROP-AME-008-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-008-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-008-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-008-3.jpeg\"]', 2, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 19:44:41'),
+(8, 'ROP-AME-009', 'SKINNY TONO OSCURO TIRO BAJO AZUL', 'ropa', 'americanino', 78.99, 'Jean Skinny Tono Oscuro Ajuste Perfecto Hombre Este jean skinny en tono oscuro representa la perfecta fusión entre tradición denim y modernidad urbana. Diseñado para quien valora la libertad de expresión y la calidad auténtica que solo Americanino puede ofrecer. Super versátil para expresar tu libertad de autoexpresión en cada aventura urbana.', 'assets/img/ropa/AMERICANINO/ROP-AME-009-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-009-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-009-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-009-3.jpeg\"]', 2, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 19:44:41'),
+(9, 'ROP-AME-010', 'SKINNY TONO MEDIO TIRO BAJO', 'ropa', 'americanino', 78.99, 'Jean Skinny Tiro Bajo Ajuste Perfecto Hombre Este jean skinny conecta la herencia denim de Americanino con la libertad total de movimiento. Diseñado para quien valora la calidad técnica y busca expresar su estilo auténtico. Super versátil para tu evolución continua de estilo, te va a encantar cómo se adapta a cada momento de tu día.', 'assets/img/ropa/AMERICANINO/ROP-AME-010-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-010-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-010-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-010-3.jpeg\"]', 2, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 19:44:41'),
+(10, 'ROP-AME-011', 'SLIM & STRAIGHT NEGRO TIRO MEDIO', 'ropa', 'americanino', 84.99, 'Jeans para hombre con corte Slim & Straight y tiro medio, diseñados para un ajuste moderno y cómodo. Confeccionados en denim de alta calidad que combina resistencia y suavidad al tacto, ofreciendo libertad de movimiento y durabilidad. Su tono negro intenso aporta versatilidad, ideal para looks casuales o más sofisticados. El diseño recto en la pierna estiliza la silueta, mientras que el corte slim asegura un fit contemporáneo. Perfectos para combinar con camisetas, polos o camisas, convirtiéndose en una prenda esencial del guardarropa masculino.', 'assets/img/ropa/AMERICANINO/ROP-AME-011-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-011-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-011-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-011-3.jpeg\"]', 2, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 19:44:41'),
+(11, 'ROP-AME-012', 'NEW CHINO', 'ropa', 'americanino', 64.99, 'Pantalón para hombre. Diseño tipo Chino. Cuenta con tiro medio y un fit semiajustado. Ajuste de cierre y botón.', 'assets/img/ropa/AMERICANINO/ROP-AME-012-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-012-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-012-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-012-3.jpeg\"]', 2, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 19:44:41'),
+(12, 'ROP-AME-007', 'GORRAS 6 CASCOS INDIO BORDADO', 'ropa', 'americanino', 22.99, 'Boxer de algodón para hombre, cómodo y resistente. Ideal para el uso diario.', 'assets/img/ropa/AMERICANINO/ROP-AME-007-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-007-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-007-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-007-3.jpeg\"]', 1, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 19:45:23'),
+(13, 'ROP-AME-006', 'BOXER ALGODON X2 LINEA', 'ropa', 'americanino', 34.99, 'Boxer de algodón para hombre, cómodo y resistente. Ideal para el uso diario.', 'assets/img/ropa/AMERICANINO/ROP-AME-006-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-006-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-006-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-006-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 19:44:42'),
+(16, 'PEL-001', 'PELUCHE JAZMIN PRINCESA', 'peluches', 'personajes', 30.00, 'Peluche de Jazmin Princesa. Tamaño: 45cm. Producto de alta calidad, ideal para regalo.', 'assets/img/peluches/PELUCHE-JAZMIN-PRINCESA/PEL-001-1.jpeg', '[\"assets/img/peluches/PELUCHE-JAZMIN-PRINCESA/PEL-001-1.jpeg\",\"assets/img/peluches/PELUCHE-JAZMIN-PRINCESA/PEL-001-2.jpeg\",\"assets/img/peluches/PELUCHE-JAZMIN-PRINCESA/PEL-001-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(17, 'PEL-002', 'PELUCHE SONIC EL ERIZO', 'peluches', 'personajes', 55.00, 'Peluche de Sonic el Erizo. Tamaño: 65cm. Producto de alta calidad, ideal para fanáticos de Sonic.', 'assets/img/peluches/PELUCHE-SONIC-EL-ERIZO/PEL-002-1.jpeg', '[\"assets/img/peluches/PELUCHE-SONIC-EL-ERIZO/PEL-002-1.jpeg\",\"assets/img/peluches/PELUCHE-SONIC-EL-ERIZO/PEL-002-2.jpeg\",\"assets/img/peluches/PELUCHE-SONIC-EL-ERIZO/PEL-002-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(18, 'PEL-003', 'PELUCHE LA SIRENITA ARIEL', 'peluches', 'personajes', 30.00, 'Peluche de la Sirenita Ariel. Tamaño: 45cm. Producto de alta calidad, ideal para niñas.', 'assets/img/peluches/PELUCHE-LA-SIRENITA-ARIEL/PEL-003-1.jpeg', '[\"assets/img/peluches/PELUCHE-LA-SIRENITA-ARIEL/PEL-003-1.jpeg\",\"assets/img/peluches/PELUCHE-LA-SIRENITA-ARIEL/PEL-003-2.jpeg\",\"assets/img/peluches/PELUCHE-LA-SIRENITA-ARIEL/PEL-003-3.jpeg\"]', 4, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 22:59:36'),
+(19, 'PEL-004', 'GATO MOTICA NEGRO', 'peluches', 'animales', 18.00, 'Peluche de Gato Motica Negro. Tamaño: 25cm. Producto de alta calidad, suave y adorable.', 'assets/img/peluches/GATO-MOTICA-NEGRO/PEL-004-1.jpeg', '[\"assets/img/peluches/GATO-MOTICA-NEGRO/PEL-004-1.jpeg\",\"assets/img/peluches/GATO-MOTICA-NEGRO/PEL-004-2.jpeg\",\"assets/img/peluches/GATO-MOTICA-NEGRO/PEL-004-3.jpeg\"]', 4, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 22:59:36'),
+(20, 'PEL-005', 'PELUCHE HELLO KITTY 35cm', 'peluches', 'personajes', 20.00, 'Peluche de Hello Kitty. Tamaño: 35cm. Producto de alta calidad, ideal para coleccionistas.', 'assets/img/peluches/PELUCHE-HELLO-KITTY/PEL-005-1.jpeg', '[\"assets/img/peluches/PELUCHE-HELLO-KITTY/PEL-005-1.jpeg\",\"assets/img/peluches/PELUCHE-HELLO-KITTY/PEL-005-2.jpeg\",\"assets/img/peluches/PELUCHE-HELLO-KITTY/PEL-005-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(21, 'PEL-006', 'PELUCHE HELLO KITTY 65cm', 'peluches', 'personajes', 58.00, 'Peluche de Hello Kitty. Tamaño: 65cm. Producto de alta calidad, versión grande ideal para regalo especial.', 'assets/img/peluches/PELUCHE-HELLO-KITTY/PEL-006-1.jpeg', '[\"assets/img/peluches/PELUCHE-HELLO-KITTY/PEL-006-1.jpeg\",\"assets/img/peluches/PELUCHE-HELLO-KITTY/PEL-006-2.jpeg\",\"assets/img/peluches/PELUCHE-HELLO-KITTY/PEL-006-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(22, 'PEL-007', 'LABUBU 35cm', 'peluches', 'personajes', 27.00, 'Peluche Labubu. Tamaño: 35cm. Producto de alta calidad, trending toy del momento.', 'assets/img/peluches/LABUBU/PEL-007-1.jpeg', '[\"assets/img/peluches/LABUBU/PEL-007-1.jpeg\",\"assets/img/peluches/LABUBU/PEL-007-2.jpeg\",\"assets/img/peluches/LABUBU/PEL-007-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(23, 'PEL-008', 'PELUCHE RAPUNZEL PRINCESA', 'peluches', 'personajes', 30.00, 'Peluche de Rapunzel Princesa. Tamaño: 45cm. Producto de alta calidad, ideal para regalo.', 'assets/img/peluches/PELUCHE-RAPUNZEL-PRINCESA/PEL-008-1.jpeg', '[\"assets/img/peluches/PELUCHE-RAPUNZEL-PRINCESA/PEL-008-1.jpeg\",\"assets/img/peluches/PELUCHE-RAPUNZEL-PRINCESA/PEL-008-2.jpeg\",\"assets/img/peluches/PELUCHE-RAPUNZEL-PRINCESA/PEL-008-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(24, 'JUG-001', 'BARBIE DE LA PELICULA HPJ96', 'juguetes', 'niña', 115.00, 'Muñeca Barbie de la película oficial HPJ96. Figura coleccionable de alta calidad con detalles auténticos de la película. Ideal para jugar y coleccionar.', 'assets/img/juguetes/BARBIE-DE-LA-PELICULA-HPJ96/JUG-001-1.jpeg', '[\"assets/img/juguetes/BARBIE-DE-LA-PELICULA-HPJ96/JUG-001-1.jpeg\",\"assets/img/juguetes/BARBIE-DE-LA-PELICULA-HPJ96/JUG-001-2.jpeg\",\"assets/img/juguetes/BARBIE-DE-LA-PELICULA-HPJ96/JUG-001-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(25, 'JUG-002', 'FIGURA HASBRO HULK 30cm', 'juguetes', 'niño', 35.00, 'Figura de acción oficial de Hasbro - Hulk 30cm. Articulaciones móviles y detalles realistas. Perfecto para fans de Marvel y coleccionistas.', 'assets/img/juguetes/FIGURA-HASBRO-HULK-30CM/JUG-002-1.jpeg', '[\"assets/img/juguetes/FIGURA-HASBRO-HULK-30CM/JUG-002-1.jpeg\",\"assets/img/juguetes/FIGURA-HASBRO-HULK-30CM/JUG-002-2.jpeg\",\"assets/img/juguetes/FIGURA-HASBRO-HULK-30CM/JUG-002-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(26, 'JUG-003', 'LEGO BOTANICALS PETIT', 'juguetes', 'lego', 105.00, 'Set LEGO Botanicals Petit. Construcción decorativa de flores y plantas. Ideal para adultos y adolescentes. Pieza de exhibición única y relajante de armar.', 'assets/img/juguetes/LEGO-BOTANICALS-PETIT/JUG-003-1.jpeg', '[\"assets/img/juguetes/LEGO-BOTANICALS-PETIT/JUG-003-1.jpeg\",\"assets/img/juguetes/LEGO-BOTANICALS-PETIT/JUG-003-2.jpeg\",\"assets/img/juguetes/LEGO-BOTANICALS-PETIT/JUG-003-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(27, 'JUG-004', 'LEGO CREATOR 3n1 Loro', 'juguetes', 'lego', 70.00, 'Set LEGO Creator 3 en 1 - Loro. Construye 3 modelos diferentes con un solo set. Estimula la creatividad y ofrece múltiples opciones de construcción.', 'assets/img/juguetes/LEGO-CREATOR-3N1-LORO/JUG-004-1.jpeg', '[\"assets/img/juguetes/LEGO-CREATOR-3N1-LORO/JUG-004-1.jpeg\",\"assets/img/juguetes/LEGO-CREATOR-3N1-LORO/JUG-004-2.jpeg\",\"assets/img/juguetes/LEGO-CREATOR-3N1-LORO/JUG-004-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(29, 'JUG-006', 'MUÑECA BEBÉ CON BACKPACK', 'juguetes', 'niña', 29.00, 'Muñeca bebé con mochila incluida. Perfecta para juego de roles y desarrollo de habilidades de cuidado. Incluye accesorios y ropa adorable.', 'assets/img/juguetes/MUNECA-BEBE-CON-BACKPACK/JUG-006-1.jpeg', '[\"assets/img/juguetes/MUNECA-BEBE-CON-BACKPACK/JUG-006-1.jpeg\",\"assets/img/juguetes/MUNECA-BEBE-CON-BACKPACK/JUG-006-2.jpeg\",\"assets/img/juguetes/MUNECA-BEBE-CON-BACKPACK/JUG-006-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(30, 'JUG-007', 'ESPANTACUCO OSITO CUCO LUZ', 'juguetes', 'bebé', 58.00, 'Osito proyector de luz nocturna con música. Ayuda a calmar y dormir al bebé. Proyecciones suaves y melodías relajantes. Ideal para la hora de dormir.', 'assets/img/juguetes/ESPANTACUCO-OSITO-CUCO-LUZ/JUG-007-1.jpeg', '[\"assets/img/juguetes/ESPANTACUCO-OSITO-CUCO-LUZ/JUG-007-1.jpeg\",\"assets/img/juguetes/ESPANTACUCO-OSITO-CUCO-LUZ/JUG-007-2.jpeg\",\"assets/img/juguetes/ESPANTACUCO-OSITO-CUCO-LUZ/JUG-007-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(32, 'VIC-001', 'SET CORPORAL BODYCOLOGY SPLASH', 'belleza', 'victorias-secret', 33.00, 'Set corporal Bodycology Splash. Fragancia fresca y duradera. Incluye splash corporal para hidratación y aroma. Presentación ideal para regalo.', 'assets/img/belleza/SET-CORPORAL-BODYCOLOGY-SPLASH/VIC-001-1.jpeg', '[\"assets/img/belleza/SET-CORPORAL-BODYCOLOGY-SPLASH/VIC-001-1.jpeg\",\"assets/img/belleza/SET-CORPORAL-BODYCOLOGY-SPLASH/VIC-001-2.jpeg\",\"assets/img/belleza/SET-CORPORAL-BODYCOLOGY-SPLASH/VIC-001-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(37, 'REL-001', 'RELOJ Q & Q METAL GT73-405 15mm', 'relojes', 'casual', 35.00, 'Reloj Q&Q Metal modelo GT73-405. Correa de 15mm. Diseño elegante y resistente. Ideal para uso diario.', 'assets/img/relojes/QQ-METAL-GT73-405/REL-001-1.jpeg', '[\"assets/img/relojes/QQ-METAL-GT73-405/REL-001-1.jpeg\",\"assets/img/relojes/QQ-METAL-GT73-405/REL-001-2.jpeg\",\"assets/img/relojes/QQ-METAL-GT73-405/REL-001-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(38, 'REL-002', 'RELOJ Q & Q METAL DORADO C76A004Y', 'relojes', 'elegante', 100.00, 'Reloj Q&Q Metal Dorado modelo C76A004Y. Acabado dorado elegante. Perfecto para ocasiones especiales.', 'assets/img/relojes/QQ-METAL-DORADO-C76A004Y/REL-002-1.jpeg', '[\"assets/img/relojes/QQ-METAL-DORADO-C76A004Y/REL-002-1.jpeg\",\"assets/img/relojes/QQ-METAL-DORADO-C76A004Y/REL-002-2.jpeg\",\"assets/img/relojes/QQ-METAL-DORADO-C76A004Y/REL-002-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(39, 'REL-003', 'RELOJ Q & Q METAL DORADO SUPERIOR MUJER', 'relojes', 'mujer', 100.00, 'Reloj Q&Q Metal Dorado Superior para Mujer. Diseño elegante y sofisticado. Acabado dorado de alta calidad.', 'assets/img/relojes/QQ-DORADO-SUPERIOR-MUJER/REL-003-1.jpeg', '[\"assets/img/relojes/QQ-DORADO-SUPERIOR-MUJER/REL-003-1.jpeg\",\"assets/img/relojes/QQ-DORADO-SUPERIOR-MUJER/REL-003-2.jpeg\",\"assets/img/relojes/QQ-DORADO-SUPERIOR-MUJER/REL-003-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(40, 'REL-004', 'RELOJ FOSSIL CRONOGRAFO MACHINE DE ACERO', 'relojes', 'premium', 325.00, 'Reloj Fossil Cronógrafo Machine de Acero Inoxidable. Diseño robusto y masculino. Movimiento de cuarzo preciso. Resistente al agua.', 'assets/img/relojes/FOSSIL-CRONOGRAFO-MACHINE/REL-004-1.jpeg', '[\"assets/img/relojes/FOSSIL-CRONOGRAFO-MACHINE/REL-004-1.jpeg\",\"assets/img/relojes/FOSSIL-CRONOGRAFO-MACHINE/REL-004-2.jpeg\",\"assets/img/relojes/FOSSIL-CRONOGRAFO-MACHINE/REL-004-3.jpeg\"]', 3, 1, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(41, 'REL-005', 'RELOJ CASIO PARA HOMBRE PANTALLA NEON', 'relojes', 'deportivo', 35.00, 'Reloj Casio para Hombre con Pantalla Neón. Iluminación LED. Resistente al agua. Perfecto para actividades deportivas y uso diario.', 'assets/img/relojes/CASIO-PANTALLA-NEON/REL-005-1.jpeg', '[\"assets/img/relojes/CASIO-PANTALLA-NEON/REL-005-1.jpeg\",\"assets/img/relojes/CASIO-PANTALLA-NEON/REL-005-2.jpeg\",\"assets/img/relojes/CASIO-PANTALLA-NEON/REL-005-3.jpeg\"]', 5, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(42, 'REL-006', 'DIESEL RELOJ ANALOGICO CUARZO HOMBRE', 'relojes', 'premium', 305.00, 'Reloj Diesel Analógico de Cuarzo para Hombre. Diseño urbano y moderno. Correa de acero inoxidable o cuero. Resistente y elegante.', 'assets/img/relojes/DIESEL-ANALOGICO-CUARZO/REL-006-1.jpeg', '[\"assets/img/relojes/DIESEL-ANALOGICO-CUARZO/REL-006-1.jpeg\",\"assets/img/relojes/DIESEL-ANALOGICO-CUARZO/REL-006-2.jpeg\",\"assets/img/relojes/DIESEL-ANALOGICO-CUARZO/REL-006-3.jpeg\"]', 3, 1, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(43, 'REL-007', 'DIESEL RELOJ PULSERA HOMBRE', 'relojes', 'premium', 275.00, 'Reloj de Pulsera Diesel para Hombre. Estilo robusto y masculino. Alta calidad de construcción. Diseño contemporáneo.', 'assets/img/relojes/DIESEL-PULSERA-HOMBRE/REL-007-1.jpeg', '[\"assets/img/relojes/DIESEL-PULSERA-HOMBRE/REL-007-1.jpeg\",\"assets/img/relojes/DIESEL-PULSERA-HOMBRE/REL-007-2.jpeg\",\"assets/img/relojes/DIESEL-PULSERA-HOMBRE/REL-007-3.jpeg\"]', 3, 1, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(44, 'REL-008', 'CASIO MW-240 RELOJ ANALOGICO CUARZO', 'relojes', 'clasico', 205.00, 'Casio MW-240 Reloj Analógico de Cuarzo. Diseño clásico y atemporal. Movimiento de cuarzo confiable. Resistente al agua. Correa de acero inoxidable.', 'assets/img/relojes/CASIO-MW-240/REL-008-1.jpeg', '[\"assets/img/relojes/CASIO-MW-240/REL-008-1.jpeg\",\"assets/img/relojes/CASIO-MW-240/REL-008-2.jpeg\",\"assets/img/relojes/CASIO-MW-240/REL-008-3.jpeg\"]', 4, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(45, 'PERF-001', 'FRAGANCIA MOSCHINO TOY DAMA', 'perfumes', 'mujer', 180.00, 'Fragancia para Dama Moschino Toy. Aroma fresco y juguetón. Presentación única y divertida. Ideal para mujeres jóvenes y atrevidas.', 'assets/img/perfumes/MOSCHINO-TOY/PERF-001-1.jpeg', '[\"assets/img/perfumes/MOSCHINO-TOY/PERF-001-1.jpeg\",\"assets/img/perfumes/MOSCHINO-TOY/PERF-001-2.jpeg\",\"assets/img/perfumes/MOSCHINO-TOY/PERF-001-3.jpeg\"]', 4, 1, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(46, 'PERF-002', 'CAROLINA HERRERA VERY GOOD GIRL', 'perfumes', 'mujer', 305.00, 'Fragancia para Dama Carolina Herrera Very Good Girl. Aroma sofisticado y sensual. Presentación elegante. Para la mujer moderna y segura.', 'assets/img/perfumes/CH-VERY-GOOD-GIRL/PERF-002-1.jpeg', '[\"assets/img/perfumes/CH-VERY-GOOD-GIRL/PERF-002-1.jpeg\",\"assets/img/perfumes/CH-VERY-GOOD-GIRL/PERF-002-2.jpeg\",\"assets/img/perfumes/CH-VERY-GOOD-GIRL/PERF-002-3.jpeg\"]', 3, 1, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(47, 'PERF-003', 'LACOSTE POUR ELLE SPARKLING 90ML', 'perfumes', 'mujer', 180.00, 'Perfume Lacoste Pour Elle Sparkling 90 ml. Fragancia fresca y chispeante. Notas frutales y florales. Perfecta para el día a día.', 'assets/img/perfumes/LACOSTE-SPARKLING/PERF-003-1.jpeg', '[\"assets/img/perfumes/LACOSTE-SPARKLING/PERF-003-1.jpeg\",\"assets/img/perfumes/LACOSTE-SPARKLING/PERF-003-2.jpeg\",\"assets/img/perfumes/LACOSTE-SPARKLING/PERF-003-3.jpeg\"]', 4, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(48, 'PERF-004', 'BOSS BOTTLED UNITED 100ML', 'perfumes', 'hombre', 230.00, 'BOSS Bottled United de 100 ml. Fragancia masculina vibrante. Notas amaderadas y especiadas. Para el hombre moderno y decidido.', 'assets/img/perfumes/BOSS-BOTTLED-UNITED/PERF-004-1.jpeg', '[\"assets/img/perfumes/BOSS-BOTTLED-UNITED/PERF-004-1.jpeg\",\"assets/img/perfumes/BOSS-BOTTLED-UNITED/PERF-004-2.jpeg\",\"assets/img/perfumes/BOSS-BOTTLED-UNITED/PERF-004-3.jpeg\"]', 3, 1, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(49, 'PERF-005', 'PERFUME 212 MEN NYC 100ML', 'perfumes', 'hombre', 240.00, 'Perfume 212 Men NYC 100ML Carolina Herrera. Fragancia urbana y sofisticada. Notas frescas y amaderadas. Ideal para el hombre cosmopolita.', 'assets/img/perfumes/212-MEN-NYC/PERF-005-1.jpeg', '[\"assets/img/perfumes/212-MEN-NYC/PERF-005-1.jpeg\",\"assets/img/perfumes/212-MEN-NYC/PERF-005-2.jpeg\",\"assets/img/perfumes/212-MEN-NYC/PERF-005-3.jpeg\"]', 3, 1, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(50, 'PERF-006', 'BAD BOY EDP 100ML', 'perfumes', 'hombre', 260.00, 'Bad Boy Eau de Parfum 100ml Carolina Herrera. Fragancia audaz y provocativa. Notas orientales y especiadas. Para el hombre rebelde y sofisticado.', 'assets/img/perfumes/BAD-BOY-EDP/PERF-006-1.jpeg', '[\"assets/img/perfumes/BAD-BOY-EDP/PERF-006-1.jpeg\",\"assets/img/perfumes/BAD-BOY-EDP/PERF-006-2.jpeg\",\"assets/img/perfumes/BAD-BOY-EDP/PERF-006-3.jpeg\"]', 3, 1, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(51, 'VIC-002', 'PERFUME VERY SEXY OASIS 50ML', 'belleza', 'victorias-secret', 110.00, 'Perfume Victoria\'s Secret Very Sexy Oasis 50ml. Fragancia tropical y seductora. Notas frescas y florales. Ideal para clima cálido.', 'assets/img/belleza/VS-VERY-SEXY-OASIS/VIC-002-1.jpeg', '[\"assets/img/belleza/VS-VERY-SEXY-OASIS/VIC-002-1.jpeg\",\"assets/img/belleza/VS-VERY-SEXY-OASIS/VIC-002-2.jpeg\",\"assets/img/belleza/VS-VERY-SEXY-OASIS/VIC-002-3.jpeg\"]', 4, 1, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(52, 'VIC-003', 'PERFUME BOMBSHELL INTENSE 50ML', 'belleza', 'victorias-secret', 110.00, 'Perfume Victoria\'s Secret Bombshell Intense 50ml. Versión más intensa del clásico Bombshell. Notas florales y frutales potentes. Larga duración.', 'assets/img/belleza/VS-BOMBSHELL-INTENSE/VIC-003-1.jpeg', '[\"assets/img/belleza/VS-BOMBSHELL-INTENSE/VIC-003-1.jpeg\",\"assets/img/belleza/VS-BOMBSHELL-INTENSE/VIC-003-2.jpeg\",\"assets/img/belleza/VS-BOMBSHELL-INTENSE/VIC-003-3.jpeg\"]', 4, 1, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(53, 'VIC-004', 'BOMBSHELL SEDUCTION EAU DE PARFUM', 'belleza', 'victorias-secret', 110.00, 'Bombshell Seduction Eau de Parfum Victoria\'s Secret. Fragancia seductora y sensual. Notas florales orientales. Perfecta para la noche.', 'assets/img/belleza/VS-BOMBSHELL-SEDUCTION/VIC-004-1.jpeg', '[\"assets/img/belleza/VS-BOMBSHELL-SEDUCTION/VIC-004-1.jpeg\",\"assets/img/belleza/VS-BOMBSHELL-SEDUCTION/VIC-004-2.jpeg\",\"assets/img/belleza/VS-BOMBSHELL-SEDUCTION/VIC-004-3.jpeg\"]', 4, 1, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(54, 'DEP-001', 'PATIN RECREATIVO AJUSTABLE CANARIAM', 'deportes', 'patinaje', 175.00, 'Patín recreativo ajustable CANARIAM. Tallas ajustables para mayor comodidad. Rodamientos ABEC-7. Ideal para principiantes y recreación.', 'assets/img/deportes/PATIN-CANARIAM/DEP-001-1.jpeg', '[\"assets/img/deportes/PATIN-CANARIAM/DEP-001-1.jpeg\",\"assets/img/deportes/PATIN-CANARIAM/DEP-001-2.jpeg\",\"assets/img/deportes/PATIN-CANARIAM/DEP-001-3.jpeg\"]', 4, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(55, 'DEP-002', 'PROTECCIONES CITYRUN VARIAS TALLAS', 'deportes', 'patinaje', 30.00, 'Set de Protecciones CITYRUN. Incluye rodilleras, coderas y muñequeras. Varias tallas disponibles. Protección completa para patinaje.', 'assets/img/deportes/PROTECCIONES-CITYRUN/DEP-002-1.jpeg', '[\"assets/img/deportes/PROTECCIONES-CITYRUN/DEP-002-1.jpeg\",\"assets/img/deportes/PROTECCIONES-CITYRUN/DEP-002-2.jpeg\",\"assets/img/deportes/PROTECCIONES-CITYRUN/DEP-002-3.jpeg\"]', 10, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(56, 'DEP-003', 'PATIN SEMIPROFESIONAL BLACK MAGIC', 'deportes', 'patinaje', 185.00, 'Patín semiprofesional ajustable BLACK MAGIC. Rodamientos de alta velocidad. Estructura reforzada. Para patinadores intermedios y avanzados.', 'assets/img/deportes/PATIN-BLACK-MAGIC/DEP-003-1.jpeg', '[\"assets/img/deportes/PATIN-BLACK-MAGIC/DEP-003-1.jpeg\",\"assets/img/deportes/PATIN-BLACK-MAGIC/DEP-003-2.jpeg\",\"assets/img/deportes/PATIN-BLACK-MAGIC/DEP-003-3.jpeg\"]', 3, 1, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(57, 'DEP-004', 'CASCO CANARIAM VARIAS TALLAS', 'deportes', 'patinaje', 45.00, 'Casco de seguridad CANARIAM para patinaje. Varias tallas disponibles. Sistema de ventilación. Correas ajustables. Protección certificada.', 'assets/img/deportes/CASCO-CANARIAM/DEP-004-1.jpeg', '[\"assets/img/deportes/CASCO-CANARIAM/DEP-004-1.jpeg\",\"assets/img/deportes/CASCO-CANARIAM/DEP-004-2.jpeg\",\"assets/img/deportes/CASCO-CANARIAM/DEP-004-3.jpeg\"]', 8, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(58, 'ACC-001', 'BOLIGRAFO X-PEN CLASSIC MEZZO 127BE', 'accesorios', 'escritura', 45.00, 'Bolígrafo X-Pen Classic Mezzo modelo 127BE. Escritura suave y precisa. Diseño elegante. Ideal para profesionales y estudiantes.', 'assets/img/accesorios/XPEN-MEZZO/ACC-001-1.jpeg', '[\"assets/img/accesorios/XPEN-MEZZO/ACC-001-1.jpeg\",\"assets/img/accesorios/XPEN-MEZZO/ACC-001-2.jpeg\",\"assets/img/accesorios/XPEN-MEZZO/ACC-001-3.jpeg\"]', 10, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(59, 'ACC-002', 'BILLETERA RV EN CUERO', 'accesorios', 'cuero', 38.00, 'Billetera RV en cuero genuino. Múltiples compartimentos para tarjetas y billetes. Diseño clásico y duradero. Ideal para uso diario.', 'assets/img/accesorios/BILLETERA-RV-CUERO/ACC-002-1.jpeg', '[\"assets/img/accesorios/BILLETERA-RV-CUERO/ACC-002-1.jpeg\",\"assets/img/accesorios/BILLETERA-RV-CUERO/ACC-002-2.jpeg\",\"assets/img/accesorios/BILLETERA-RV-CUERO/ACC-002-3.jpeg\"]', 8, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(60, 'ACC-003', 'PORTA CHEQUERA RV EN CUERO', 'accesorios', 'cuero', 52.00, 'Porta chequera RV en cuero genuino. Diseño elegante y funcional. Protege y organiza tus chequeras. Material de alta calidad.', 'assets/img/accesorios/PORTA-CHEQUERA-RV/ACC-003-1.jpeg', '[\"assets/img/accesorios/PORTA-CHEQUERA-RV/ACC-003-1.jpeg\",\"assets/img/accesorios/PORTA-CHEQUERA-RV/ACC-003-2.jpeg\",\"assets/img/accesorios/PORTA-CHEQUERA-RV/ACC-003-3.jpeg\"]', 6, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(61, 'ACC-004', 'GUANTES ARQUERO ENTRENAMIENTO AURIK', 'accesorios', 'deportivo', 42.00, 'Guantes de Arquero para Entrenamiento marca Aurik. Palma con grip superior. Protección en dedos. Ajuste cómodo con muñequera. Ideales para práctica.', 'assets/img/accesorios/GUANTES-ARQUERO-AURIK/ACC-004-1.jpeg', '[\"assets/img/accesorios/GUANTES-ARQUERO-AURIK/ACC-004-1.jpeg\",\"assets/img/accesorios/GUANTES-ARQUERO-AURIK/ACC-004-2.jpeg\",\"assets/img/accesorios/GUANTES-ARQUERO-AURIK/ACC-004-3.jpeg\"]', 8, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
+(62, 'ACC-005', 'PITOS PAIDIAO WHISTLE', 'accesorios', 'deportivo', 12.00, 'Pitos deportivos PAIDIAO Whistle. Sonido potente y claro. Material resistente. Ideal para entrenadores, árbitros y uso deportivo en general.', 'assets/img/accesorios/PITOS-PAIDIAO/ACC-005-1.jpeg', '[\"assets/img/accesorios/PITOS-PAIDIAO/ACC-005-1.jpeg\",\"assets/img/accesorios/PITOS-PAIDIAO/ACC-005-2.jpeg\",\"assets/img/accesorios/PITOS-PAIDIAO/ACC-005-3.jpeg\"]', 15, 0, 0.0, 0, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `work_schedules`
+--
+
+CREATE TABLE `work_schedules` (
+  `id` int(11) NOT NULL,
+  `employee_id` int(11) NOT NULL,
+  `day_of_week` enum('lunes','martes','miercoles','jueves','viernes','sabado','domingo') NOT NULL,
+  `start_time` time NOT NULL,
+  `end_time` time NOT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura para la vista `attendance_report`
+--
+DROP TABLE IF EXISTS `attendance_report`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`maweweco_cris`@`45.189.57.40` SQL SECURITY DEFINER VIEW `attendance_report`  AS SELECT `e`.`employee_code` AS `employee_code`, concat(`e`.`first_name`,' ',`e`.`last_name`) AS `employee_name`, `e`.`position` AS `position`, `e`.`department` AS `department`, `a`.`date` AS `date`, `a`.`check_in` AS `check_in`, `a`.`check_out` AS `check_out`, `a`.`total_hours` AS `total_hours`, `a`.`status` AS `status`, CASE WHEN `a`.`check_in` > `ws`.`start_time` THEN 'TARDE' ELSE 'A TIEMPO' END AS `punctuality` FROM ((`attendance` `a` join `employees` `e` on(`a`.`employee_id` = `e`.`id`)) left join `work_schedules` `ws` on(`e`.`id` = `ws`.`employee_id` and dayname(`a`.`date`) = case `ws`.`day_of_week` when 'lunes' then 'Monday' when 'martes' then 'Tuesday' when 'miercoles' then 'Wednesday' when 'jueves' then 'Thursday' when 'viernes' then 'Friday' when 'sabado' then 'Saturday' when 'domingo' then 'Sunday' end)) ;
 
 --
 -- Índices para tablas volcadas
 --
 
 --
+-- Indices de la tabla `attendance`
+--
+ALTER TABLE `attendance`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_employee_date` (`employee_id`,`date`),
+  ADD KEY `idx_date` (`date`),
+  ADD KEY `idx_employee` (`employee_id`);
+
+--
+-- Indices de la tabla `customers`
+--
+ALTER TABLE `customers`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `customer_code` (`customer_code`),
+  ADD UNIQUE KEY `email` (`email`),
+  ADD KEY `idx_customer_code` (`customer_code`),
+  ADD KEY `idx_email` (`email`),
+  ADD KEY `idx_customer_type` (`customer_type`);
+
+--
+-- Indices de la tabla `customer_interactions`
+--
+ALTER TABLE `customer_interactions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `employee_id` (`employee_id`),
+  ADD KEY `idx_customer` (`customer_id`),
+  ADD KEY `idx_date` (`interaction_date`);
+
+--
+-- Indices de la tabla `employees`
+--
+ALTER TABLE `employees`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `employee_code` (`employee_code`),
+  ADD UNIQUE KEY `email` (`email`),
+  ADD KEY `idx_employee_code` (`employee_code`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_department` (`department`);
+
+--
+-- Indices de la tabla `leave_requests`
+--
+ALTER TABLE `leave_requests`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `employee_id` (`employee_id`),
+  ADD KEY `approved_by` (`approved_by`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_dates` (`start_date`,`end_date`);
+
+--
 -- Indices de la tabla `orders`
 --
 ALTER TABLE `orders`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `paypal_order_id` (`paypal_order_id`),
   ADD UNIQUE KEY `order_number` (`order_number`),
   ADD KEY `idx_email` (`email`),
   ADD KEY `idx_status` (`status`),
   ADD KEY `idx_created` (`created_at`),
   ADD KEY `idx_payment_method` (`payment_method`),
-  ADD KEY `idx_order_number` (`order_number`);
+  ADD KEY `idx_order_number` (`order_number`),
+  ADD KEY `fk_orders_customer` (`customer_id`),
+  ADD KEY `fk_orders_employee` (`assigned_employee_id`);
 
 --
 -- Indices de la tabla `order_items`
@@ -188,30 +391,100 @@ ALTER TABLE `products`
   ADD KEY `idx_active` (`active`);
 
 --
+-- Indices de la tabla `work_schedules`
+--
+ALTER TABLE `work_schedules`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_employee_day` (`employee_id`,`day_of_week`);
+
+--
 -- AUTO_INCREMENT de las tablas volcadas
 --
+
+--
+-- AUTO_INCREMENT de la tabla `attendance`
+--
+ALTER TABLE `attendance`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `customers`
+--
+ALTER TABLE `customers`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `customer_interactions`
+--
+ALTER TABLE `customer_interactions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `employees`
+--
+ALTER TABLE `employees`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `leave_requests`
+--
+ALTER TABLE `leave_requests`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
 -- AUTO_INCREMENT de la tabla `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT de la tabla `products`
 --
 ALTER TABLE `products`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=102;
+
+--
+-- AUTO_INCREMENT de la tabla `work_schedules`
+--
+ALTER TABLE `work_schedules`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Restricciones para tablas volcadas
 --
+
+--
+-- Filtros para la tabla `attendance`
+--
+ALTER TABLE `attendance`
+  ADD CONSTRAINT `attendance_ibfk_1` FOREIGN KEY (`employee_id`) REFERENCES `employees` (`id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `customer_interactions`
+--
+ALTER TABLE `customer_interactions`
+  ADD CONSTRAINT `customer_interactions_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `customer_interactions_ibfk_2` FOREIGN KEY (`employee_id`) REFERENCES `employees` (`id`) ON DELETE SET NULL;
+
+--
+-- Filtros para la tabla `leave_requests`
+--
+ALTER TABLE `leave_requests`
+  ADD CONSTRAINT `leave_requests_ibfk_1` FOREIGN KEY (`employee_id`) REFERENCES `employees` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `leave_requests_ibfk_2` FOREIGN KEY (`approved_by`) REFERENCES `employees` (`id`) ON DELETE SET NULL;
+
+--
+-- Filtros para la tabla `orders`
+--
+ALTER TABLE `orders`
+  ADD CONSTRAINT `fk_orders_customer` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_orders_employee` FOREIGN KEY (`assigned_employee_id`) REFERENCES `employees` (`id`) ON DELETE SET NULL;
 
 --
 -- Filtros para la tabla `order_items`
@@ -219,6 +492,12 @@ ALTER TABLE `products`
 ALTER TABLE `order_items`
   ADD CONSTRAINT `fk_order_items_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_order_items_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`);
+
+--
+-- Filtros para la tabla `work_schedules`
+--
+ALTER TABLE `work_schedules`
+  ADD CONSTRAINT `work_schedules_ibfk_1` FOREIGN KEY (`employee_id`) REFERENCES `employees` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
