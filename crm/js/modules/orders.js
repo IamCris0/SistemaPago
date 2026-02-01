@@ -1,412 +1,622 @@
 /**
- * MÓDULO DE ÓRDENES - CRUD COMPLETO
- * Con funcionalidades reales de gestión
+ * MÓDULO DE ÓRDENES - SISTEMA MAWEWE
+ * ✅ Visualización completa de órdenes
+ * ✅ Filtros por estado, búsqueda y fechas
+ * ✅ Actualización de estado y seguimiento
+ * ✅ Vista detallada de orden
+ * ✅ Estadísticas en tiempo real
  */
 
-Modules.Orders = {
-    data: [],
-    currentPage: 1,
-    pageSize: 15,
-    filterStatus: 'all',
-    selectedOrder: null,
+const OrdersModule = {
     
-    async load() {
-        console.log('📦 Cargando módulo Órdenes COMPLETO');
-        await this.fetchOrders();
-        this.render();
+    API_URL: 'api/orders.php',
+    currentOrders: [],
+    filteredOrders: [],
+    
+    // Estados disponibles
+    statuses: {
+        'pending': { label: 'Pendiente', color: 'warning', icon: 'clock' },
+        'confirmed': { label: 'Confirmado', color: 'info', icon: 'check-circle' },
+        'processing': { label: 'Procesando', color: 'primary', icon: 'cog' },
+        'shipped': { label: 'Enviado', color: 'success', icon: 'truck' },
+        'delivered': { label: 'Entregado', color: 'success', icon: 'check-double' },
+        'cancelled': { label: 'Cancelado', color: 'danger', icon: 'times-circle' }
     },
     
-    async fetchOrders() {
-        try {
-            showLoading();
-            
-            const response = await fetch(`${CONFIG.API_URL}/orders.php?action=list&page=${this.currentPage}&limit=${this.pageSize}&status=${this.filterStatus}`);
-            const data = await response.json();
-            
-            if (data.success) {
-                this.data = data.orders;
-                console.log('✅ Órdenes cargadas:', this.data.length);
-                return this.data;
-            } else {
-                throw new Error('No se pudieron cargar las órdenes');
-            }
-        } catch (error) {
-            console.error('Error fetching orders:', error);
-            showToast('Error', 'No se pudieron cargar las órdenes', 'error');
-            return [];
-        } finally {
-            hideLoading();
+    // Estados de pago
+    paymentStatuses: {
+        'pending': { label: 'Pendiente', color: 'warning' },
+        'paid': { label: 'Pagado', color: 'success' },
+        'refunded': { label: 'Reembolsado', color: 'info' },
+        'failed': { label: 'Fallido', color: 'danger' }
+    },
+    
+    /**
+     * Inicializar módulo
+     */
+    init() {
+        console.log('🚀 Inicializando módulo de órdenes...');
+        this.attachEventListeners();
+        this.loadOrders();
+    },
+    
+    /**
+     * Adjuntar event listeners
+     */
+    attachEventListeners() {
+        // Filtro de estado
+        const statusFilter = document.getElementById('orderStatusFilter');
+        if (statusFilter) {
+            statusFilter.addEventListener('change', () => this.applyFilters());
         }
-    },
-    
-    render() {
-        const container = document.getElementById('module-orders');
-        if (!container) return;
         
-        const completed = this.data.filter(o => o.status === 'completed').length;
-        const pending = this.data.filter(o => o.status === 'pending_payment').length;
-        const processing = this.data.filter(o => o.status === 'processing').length;
-        const totalRevenue = this.data.reduce((sum, o) => sum + o.total, 0);
-        
-        container.innerHTML = `
-            <div class="page-header">
-                <div class="page-header-top">
-                    <div>
-                        <h1 class="page-title">📦 Gestión de Órdenes</h1>
-                        <p class="page-description">Control completo de pedidos y ventas</p>
-                    </div>
-                    <button class="btn btn-outline" onclick="Modules.Orders.load()">
-                        🔄 Actualizar
-                    </button>
-                </div>
-            </div>
-            
-            <div class="stats-row">
-                <div class="stat-box success">
-                    <div class="stat-box-icon">✓</div>
-                    <div class="stat-box-label">Completadas</div>
-                    <div class="stat-box-value">${completed}</div>
-                </div>
-                <div class="stat-box warning">
-                    <div class="stat-box-icon">⏱</div>
-                    <div class="stat-box-label">Pendientes</div>
-                    <div class="stat-box-value">${pending}</div>
-                </div>
-                <div class="stat-box info">
-                    <div class="stat-box-icon">🔄</div>
-                    <div class="stat-box-label">En Proceso</div>
-                    <div class="stat-box-value">${processing}</div>
-                </div>
-                <div class="stat-box primary">
-                    <div class="stat-box-icon">💰</div>
-                    <div class="stat-box-label">Total Ventas</div>
-                    <div class="stat-box-value">${formatCurrency(totalRevenue)}</div>
-                </div>
-            </div>
-            
-            <div class="data-table-wrapper">
-                <div class="table-header">
-                    <div class="table-title">Órdenes Recientes</div>
-                    <div class="table-actions">
-                        <div class="search-box">
-                            <input type="text" 
-                                   placeholder="Buscar órdenes..." 
-                                   onkeyup="Modules.Orders.handleSearch(this.value)">
-                        </div>
-                        <select class="filter-dropdown" onchange="Modules.Orders.handleFilter(this.value)">
-                            <option value="all" ${this.filterStatus === 'all' ? 'selected' : ''}>Todos los estados</option>
-                            <option value="completed" ${this.filterStatus === 'completed' ? 'selected' : ''}>Completadas</option>
-                            <option value="pending_payment" ${this.filterStatus === 'pending_payment' ? 'selected' : ''}>Pendientes</option>
-                            <option value="processing" ${this.filterStatus === 'processing' ? 'selected' : ''}>En Proceso</option>
-                            <option value="cancelled" ${this.filterStatus === 'cancelled' ? 'selected' : ''}>Canceladas</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Orden #</th>
-                            <th>Cliente</th>
-                            <th>Email</th>
-                            <th>Items</th>
-                            <th>Total</th>
-                            <th>Estado</th>
-                            <th>Fecha</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${this.data.length > 0 ? this.data.map(order => `
-                            <tr>
-                                <td><strong>${order.order_number}</strong></td>
-                                <td>${order.first_name} ${order.last_name}</td>
-                                <td>${order.email}</td>
-                                <td>${order.item_count} items</td>
-                                <td><strong>${formatCurrency(order.total)}</strong></td>
-                                <td>
-                                    <span class="chip ${this.getStatusClass(order.status)}">
-                                        ${this.getStatusText(order.status)}
-                                    </span>
-                                </td>
-                                <td>${formatDateTime(order.created_at)}</td>
-                                <td>
-                                    <div class="col-actions">
-                                        <button class="btn-icon btn-icon-view" 
-                                                onclick="Modules.Orders.viewOrder(${order.id})"
-                                                title="Ver">
-                                            👁
-                                        </button>
-                                        <button class="btn-icon btn-icon-edit" 
-                                                onclick="Modules.Orders.changeStatus(${order.id}, '${order.status}')"
-                                                title="Cambiar Estado">
-                                            ✏️
-                                        </button>
-                                        <button class="btn-icon btn-icon-delete" 
-                                                onclick="Modules.Orders.deleteOrder(${order.id})"
-                                                title="Eliminar">
-                                            🗑️
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `).join('') : `
-                            <tr>
-                                <td colspan="8" style="text-align: center; padding: 3rem; color: #6B7280;">
-                                    <div style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
-                                    <div>No hay órdenes disponibles</div>
-                                </td>
-                            </tr>
-                        `}
-                    </tbody>
-                </table>
-            </div>
-        `;
-    },
-    
-    getStatusClass(status) {
-        const classes = {
-            'completed': 'chip-success',
-            'pending_payment': 'chip-warning',
-            'processing': 'chip-info',
-            'cancelled': 'chip-danger'
-        };
-        return classes[status] || 'chip-secondary';
-    },
-    
-    getStatusText(status) {
-        const texts = {
-            'completed': '✓ Completada',
-            'pending_payment': '⏱ Pendiente Pago',
-            'processing': '🔄 En Proceso',
-            'cancelled': '✕ Cancelada'
-        };
-        return texts[status] || status;
-    },
-    
-    handleSearch(term) {
-        console.log('Buscando:', term);
-        // Implementar búsqueda local
-    },
-    
-    async handleFilter(status) {
-        this.filterStatus = status;
-        this.currentPage = 1;
-        await this.load();
-    },
-    
-    async viewOrder(orderId) {
-        try {
-            showLoading();
-            
-            const response = await fetch(`${CONFIG.API_URL}/orders.php?action=get&id=${orderId}`);
-            const data = await response.json();
-            
-            if (data.success) {
-                this.showOrderModal(data.order);
-            }
-        } catch (error) {
-            showToast('Error', error.message, 'error');
-        } finally {
-            hideLoading();
-        }
-    },
-    
-    showOrderModal(order) {
-        const modalHTML = `
-            <div class="modal-overlay active" id="orderViewModal">
-                <div class="modal-dialog" style="max-width: 800px;">
-                    <div class="modal-header">
-                        <h3 class="modal-title">📦 Orden ${order.order_number}</h3>
-                        <button class="modal-close" onclick="document.getElementById('orderViewModal').remove()">✕</button>
-                    </div>
-                    <div class="modal-body">
-                        <div style="display: grid; gap: 24px;">
-                            <!-- Información del Cliente -->
-                            <div style="background: #F9FAFB; padding: 20px; border-radius: 8px;">
-                                <h4 style="margin-bottom: 16px; color: #111827;">👤 Cliente</h4>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                                    <div>
-                                        <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px;">NOMBRE</div>
-                                        <div style="font-weight: 600;">${order.first_name} ${order.last_name}</div>
-                                    </div>
-                                    <div>
-                                        <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px;">EMAIL</div>
-                                        <div style="font-weight: 600;">${order.email}</div>
-                                    </div>
-                                    <div>
-                                        <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px;">TELÉFONO</div>
-                                        <div style="font-weight: 600;">${order.phone || 'N/A'}</div>
-                                    </div>
-                                    <div>
-                                        <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px;">CIUDAD</div>
-                                        <div style="font-weight: 600;">${order.city || 'N/A'}</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Productos -->
-                            <div>
-                                <h4 style="margin-bottom: 16px; color: #111827;">🛍️ Productos (${order.items?.length || 0})</h4>
-                                <div style="border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden;">
-                                    ${order.items?.map(item => `
-                                        <div style="display: flex; align-items: center; gap: 16px; padding: 16px; border-bottom: 1px solid #F3F4F6;">
-                                            <img src="${item.image || 'assets/img/no-image.png'}" 
-                                                 style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
-                                            <div style="flex: 1;">
-                                                <div style="font-weight: 600; margin-bottom: 4px;">${item.product_name}</div>
-                                                <div style="font-size: 13px; color: #6B7280;">SKU: ${item.product_sku}</div>
-                                            </div>
-                                            <div style="text-align: right;">
-                                                <div style="font-weight: 600;">${item.quantity} x ${formatCurrency(item.price)}</div>
-                                                <div style="font-size: 14px; color: #10B981; font-weight: 700;">${formatCurrency(item.subtotal)}</div>
-                                            </div>
-                                        </div>
-                                    `).join('') || '<div style="padding: 20px; text-align: center; color: #999;">Sin items</div>'}
-                                </div>
-                            </div>
-                            
-                            <!-- Totales -->
-                            <div style="background: #F9FAFB; padding: 20px; border-radius: 8px;">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-                                    <span>Subtotal:</span>
-                                    <strong>${formatCurrency(order.subtotal)}</strong>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-                                    <span>Envío:</span>
-                                    <strong>${formatCurrency(order.shipping_cost)}</strong>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; padding-top: 12px; border-top: 2px solid #E5E7EB; font-size: 18px;">
-                                    <strong>Total:</strong>
-                                    <strong style="color: #10B981;">${formatCurrency(order.total)}</strong>
-                                </div>
-                            </div>
-                            
-                            <!-- Estado y Método de Pago -->
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                                <div>
-                                    <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px;">ESTADO</div>
-                                    <span class="chip ${this.getStatusClass(order.status)}">${this.getStatusText(order.status)}</span>
-                                </div>
-                                <div>
-                                    <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px;">MÉTODO DE PAGO</div>
-                                    <div style="font-weight: 600; text-transform: uppercase;">${order.payment_method}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-secondary" onclick="document.getElementById('orderViewModal').remove()">Cerrar</button>
-                        <button class="btn btn-primary" onclick="document.getElementById('orderViewModal').remove(); Modules.Orders.changeStatus(${order.id}, '${order.status}')">
-                            ✏️ Cambiar Estado
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-    },
-    
-    async changeStatus(orderId, currentStatus) {
-        const statuses = [
-            { value: 'pending_payment', label: 'Pendiente Pago' },
-            { value: 'processing', label: 'En Proceso' },
-            { value: 'completed', label: 'Completada' },
-            { value: 'cancelled', label: 'Cancelada' }
-        ];
-        
-        const modalHTML = `
-            <div class="modal-overlay active" id="statusModal">
-                <div class="modal-dialog" style="max-width: 400px;">
-                    <div class="modal-header">
-                        <h3 class="modal-title">✏️ Cambiar Estado</h3>
-                        <button class="modal-close" onclick="document.getElementById('statusModal').remove()">✕</button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="form-field">
-                            <label>Nuevo Estado</label>
-                            <select id="newStatus" class="form-control">
-                                ${statuses.map(s => `
-                                    <option value="${s.value}" ${s.value === currentStatus ? 'selected' : ''}>
-                                        ${s.label}
-                                    </option>
-                                `).join('')}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-secondary" onclick="document.getElementById('statusModal').remove()">Cancelar</button>
-                        <button class="btn btn-primary" onclick="Modules.Orders.saveStatus(${orderId})">💾 Guardar</button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-    },
-    
-    async saveStatus(orderId) {
-        const newStatus = document.getElementById('newStatus').value;
-        
-        try {
-            showLoading();
-            
-            const response = await fetch(`${CONFIG.API_URL}/orders.php?action=update-status`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${CONFIG.getToken()}`
-                },
-                body: JSON.stringify({
-                    id: orderId,
-                    status: newStatus
-                })
+        // Búsqueda
+        const searchInput = document.getElementById('orderSearch');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(this.searchTimeout);
+                this.searchTimeout = setTimeout(() => this.applyFilters(), 300);
             });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                showToast('Éxito', 'Estado actualizado correctamente', 'success');
-                document.getElementById('statusModal')?.remove();
-                await this.load();
-            } else {
-                throw new Error(data.message);
-            }
-        } catch (error) {
-            showToast('Error', error.message, 'error');
-        } finally {
-            hideLoading();
+        }
+        
+        // Filtros de fecha
+        const dateFrom = document.getElementById('orderDateFrom');
+        const dateTo = document.getElementById('orderDateTo');
+        if (dateFrom) dateFrom.addEventListener('change', () => this.applyFilters());
+        if (dateTo) dateTo.addEventListener('change', () => this.applyFilters());
+        
+        // Botón refrescar
+        const refreshBtn = document.getElementById('refreshOrders');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => this.loadOrders());
         }
     },
     
-    async deleteOrder(orderId) {
-        if (!confirm('¿Está seguro de eliminar esta orden? Esta acción no se puede deshacer.')) return;
+    /**
+     * Cargar órdenes desde la API
+     */
+    async loadOrders() {
+        const container = document.getElementById('ordersTableBody');
+        const statsContainer = document.getElementById('ordersStats');
+        
+        if (!container) {
+            console.error('Container de órdenes no encontrado');
+            return;
+        }
         
         try {
-            showLoading();
+            // Mostrar loading
+            container.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2 mb-0">Cargando órdenes...</p>
+                    </td>
+                </tr>
+            `;
             
-            const response = await fetch(`${CONFIG.API_URL}/orders.php?action=delete&id=${orderId}`, {
-                method: 'DELETE',
+            // Obtener filtros actuales
+            const params = new URLSearchParams();
+            
+            const statusFilter = document.getElementById('orderStatusFilter');
+            if (statusFilter && statusFilter.value !== 'all') {
+                params.append('status', statusFilter.value);
+            }
+            
+            const searchInput = document.getElementById('orderSearch');
+            if (searchInput && searchInput.value.trim()) {
+                params.append('search', searchInput.value.trim());
+            }
+            
+            const dateFrom = document.getElementById('orderDateFrom');
+            if (dateFrom && dateFrom.value) {
+                params.append('date_from', dateFrom.value);
+            }
+            
+            const dateTo = document.getElementById('orderDateTo');
+            if (dateTo && dateTo.value) {
+                params.append('date_to', dateTo.value);
+            }
+            
+            const url = params.toString() ? `${this.API_URL}?${params.toString()}` : this.API_URL;
+            
+            const response = await fetch(url, {
+                method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${CONFIG.getToken()}`
+                    'Content-Type': 'application/json'
                 }
             });
             
-            const data = await response.json();
+            const result = await response.json();
             
-            if (data.success) {
-                showToast('Éxito', 'Orden eliminada correctamente', 'success');
-                await this.load();
-            } else {
-                throw new Error(data.message);
+            if (!result.success) {
+                throw new Error(result.message || 'Error al cargar órdenes');
             }
+            
+            this.currentOrders = result.data || [];
+            this.filteredOrders = this.currentOrders;
+            
+            console.log(`✅ ${this.currentOrders.length} órdenes cargadas`);
+            
+            // Renderizar
+            this.renderOrders();
+            this.updateStats();
+            
         } catch (error) {
-            showToast('Error', error.message, 'error');
-        } finally {
-            hideLoading();
+            console.error('❌ Error al cargar órdenes:', error);
+            container.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center py-4 text-danger">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                        <p class="mb-0">Error al cargar órdenes: ${error.message}</p>
+                        <button class="btn btn-sm btn-primary mt-2" onclick="OrdersModule.loadOrders()">
+                            <i class="fas fa-redo"></i> Reintentar
+                        </button>
+                    </td>
+                </tr>
+            `;
         }
+    },
+    
+    /**
+     * Aplicar filtros locales
+     */
+    applyFilters() {
+        // Reload desde API con filtros
+        this.loadOrders();
+    },
+    
+    /**
+     * Renderizar órdenes en la tabla
+     */
+    renderOrders() {
+        const container = document.getElementById('ordersTableBody');
+        
+        if (!container) return;
+        
+        if (this.filteredOrders.length === 0) {
+            container.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center py-4 text-muted">
+                        <i class="fas fa-inbox fa-3x mb-3 opacity-50"></i>
+                        <p class="mb-0">No se encontraron órdenes</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        container.innerHTML = this.filteredOrders.map(order => `
+            <tr>
+                <td>
+                    <strong class="text-primary">${this.escapeHtml(order.order_number)}</strong>
+                </td>
+                <td>
+                    <div>${this.escapeHtml(order.customer_name)}</div>
+                    <small class="text-muted">${this.escapeHtml(order.customer_email)}</small>
+                </td>
+                <td class="text-center">
+                    <span class="badge bg-secondary">${order.items_count || 0}</span>
+                </td>
+                <td class="text-end">
+                    <strong>$${this.formatMoney(order.total)}</strong>
+                </td>
+                <td class="text-center">
+                    ${this.renderStatusBadge(order.status)}
+                </td>
+                <td class="text-center">
+                    ${this.renderPaymentStatusBadge(order.payment_status)}
+                </td>
+                <td>
+                    <small>${this.formatDate(order.created_at)}</small>
+                </td>
+                <td class="text-center">
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button class="btn btn-outline-primary" onclick="OrdersModule.viewOrder(${order.id})" title="Ver detalles">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-outline-success" onclick="OrdersModule.updateOrderStatus(${order.id})" title="Actualizar estado">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    },
+    
+    /**
+     * Actualizar estadísticas
+     */
+    updateStats() {
+        const statsContainer = document.getElementById('ordersStats');
+        if (!statsContainer) return;
+        
+        const total = this.currentOrders.length;
+        const pending = this.currentOrders.filter(o => o.status === 'pending').length;
+        const processing = this.currentOrders.filter(o => o.status === 'processing').length;
+        const shipped = this.currentOrders.filter(o => o.status === 'shipped').length;
+        const delivered = this.currentOrders.filter(o => o.status === 'delivered').length;
+        
+        const totalRevenue = this.currentOrders
+            .filter(o => o.payment_status === 'paid')
+            .reduce((sum, o) => sum + parseFloat(o.total || 0), 0);
+        
+        statsContainer.innerHTML = `
+            <div class="row g-3">
+                <div class="col-md-2">
+                    <div class="card border-0 bg-primary bg-opacity-10">
+                        <div class="card-body text-center">
+                            <i class="fas fa-shopping-cart fa-2x text-primary mb-2"></i>
+                            <h3 class="mb-0">${total}</h3>
+                            <small class="text-muted">Total Órdenes</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card border-0 bg-warning bg-opacity-10">
+                        <div class="card-body text-center">
+                            <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                            <h3 class="mb-0">${pending}</h3>
+                            <small class="text-muted">Pendientes</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card border-0 bg-info bg-opacity-10">
+                        <div class="card-body text-center">
+                            <i class="fas fa-cog fa-2x text-info mb-2"></i>
+                            <h3 class="mb-0">${processing}</h3>
+                            <small class="text-muted">Procesando</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card border-0 bg-primary bg-opacity-10">
+                        <div class="card-body text-center">
+                            <i class="fas fa-truck fa-2x text-primary mb-2"></i>
+                            <h3 class="mb-0">${shipped}</h3>
+                            <small class="text-muted">Enviados</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card border-0 bg-success bg-opacity-10">
+                        <div class="card-body text-center">
+                            <i class="fas fa-check-double fa-2x text-success mb-2"></i>
+                            <h3 class="mb-0">${delivered}</h3>
+                            <small class="text-muted">Entregados</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card border-0 bg-success bg-opacity-10">
+                        <div class="card-body text-center">
+                            <i class="fas fa-dollar-sign fa-2x text-success mb-2"></i>
+                            <h3 class="mb-0">$${this.formatMoney(totalRevenue)}</h3>
+                            <small class="text-muted">Ingresos</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+    
+    /**
+     * Ver detalles de una orden
+     */
+    async viewOrder(orderId) {
+        const order = this.currentOrders.find(o => o.id === orderId);
+        if (!order) {
+            alert('Orden no encontrada');
+            return;
+        }
+        
+        const modalHtml = `
+            <div class="modal fade" id="orderDetailModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="fas fa-file-invoice"></i> Detalles de Orden ${this.escapeHtml(order.order_number)}
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <h6 class="border-bottom pb-2 mb-3">Información del Cliente</h6>
+                                    <p><strong>Nombre:</strong> ${this.escapeHtml(order.customer_name)}</p>
+                                    <p><strong>Email:</strong> ${this.escapeHtml(order.customer_email)}</p>
+                                    <p><strong>Teléfono:</strong> ${this.escapeHtml(order.customer_phone)}</p>
+                                    ${order.customer_cedula ? `<p><strong>Cédula:</strong> ${this.escapeHtml(order.customer_cedula)}</p>` : ''}
+                                    <p><strong>Dirección:</strong><br>${this.escapeHtml(order.customer_address)}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="border-bottom pb-2 mb-3">Información de Envío y Pago</h6>
+                                    <p><strong>Método de envío:</strong> ${this.escapeHtml(order.shipping_method)}</p>
+                                    <p><strong>Costo de envío:</strong> $${this.formatMoney(order.shipping_cost)}</p>
+                                    <p><strong>Método de pago:</strong> ${this.escapeHtml(order.payment_method)}</p>
+                                    <p><strong>Estado:</strong> ${this.renderStatusBadge(order.status)}</p>
+                                    <p><strong>Pago:</strong> ${this.renderPaymentStatusBadge(order.payment_status)}</p>
+                                    ${order.tracking_number ? `<p><strong>Tracking:</strong> ${this.escapeHtml(order.tracking_number)}</p>` : ''}
+                                </div>
+                            </div>
+                            
+                            <h6 class="border-bottom pb-2 mb-3">Productos</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Producto</th>
+                                            <th class="text-center">Cantidad</th>
+                                            <th class="text-end">Precio Unit.</th>
+                                            <th class="text-end">Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${this.renderOrderItems(order.items)}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                            <td class="text-end">$${this.formatMoney(order.subtotal)}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3" class="text-end"><strong>Envío:</strong></td>
+                                            <td class="text-end">$${this.formatMoney(order.shipping_cost)}</td>
+                                        </tr>
+                                        ${order.tax > 0 ? `
+                                        <tr>
+                                            <td colspan="3" class="text-end"><strong>IVA:</strong></td>
+                                            <td class="text-end">$${this.formatMoney(order.tax)}</td>
+                                        </tr>
+                                        ` : ''}
+                                        <tr class="fw-bold">
+                                            <td colspan="3" class="text-end"><strong>TOTAL:</strong></td>
+                                            <td class="text-end text-primary">$${this.formatMoney(order.total)}</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                            
+                            ${order.notes ? `
+                            <div class="mt-3">
+                                <h6>Notas:</h6>
+                                <p class="text-muted">${this.escapeHtml(order.notes)}</p>
+                            </div>
+                            ` : ''}
+                            
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    <strong>Creado:</strong> ${this.formatDate(order.created_at)} | 
+                                    <strong>Actualizado:</strong> ${this.formatDate(order.updated_at)}
+                                </small>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            <button type="button" class="btn btn-primary" onclick="OrdersModule.updateOrderStatus(${order.id})">
+                                <i class="fas fa-edit"></i> Actualizar Estado
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Eliminar modal previo si existe
+        const existingModal = document.getElementById('orderDetailModal');
+        if (existingModal) existingModal.remove();
+        
+        // Insertar y mostrar modal
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = new bootstrap.Modal(document.getElementById('orderDetailModal'));
+        modal.show();
+    },
+    
+    /**
+     * Actualizar estado de orden
+     */
+    async updateOrderStatus(orderId) {
+        const order = this.currentOrders.find(o => o.id === orderId);
+        if (!order) {
+            alert('Orden no encontrada');
+            return;
+        }
+        
+        const modalHtml = `
+            <div class="modal fade" id="updateStatusModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Actualizar Estado - ${this.escapeHtml(order.order_number)}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="updateStatusForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Estado de la Orden</label>
+                                    <select class="form-select" id="orderStatus" required>
+                                        ${Object.entries(this.statuses).map(([value, config]) => `
+                                            <option value="${value}" ${order.status === value ? 'selected' : ''}>
+                                                ${config.label}
+                                            </option>
+                                        `).join('')}
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Estado de Pago</label>
+                                    <select class="form-select" id="paymentStatus" required>
+                                        ${Object.entries(this.paymentStatuses).map(([value, config]) => `
+                                            <option value="${value}" ${order.payment_status === value ? 'selected' : ''}>
+                                                ${config.label}
+                                            </option>
+                                        `).join('')}
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Número de Seguimiento (Opcional)</label>
+                                    <input type="text" class="form-control" id="trackingNumber" 
+                                           value="${order.tracking_number || ''}" 
+                                           placeholder="Ej: ABC123456789">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Notas (Opcional)</label>
+                                    <textarea class="form-control" id="orderNotes" rows="3">${order.notes || ''}</textarea>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-primary" onclick="OrdersModule.saveStatusUpdate(${orderId})">
+                                <i class="fas fa-save"></i> Guardar Cambios
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Eliminar modal previo si existe
+        const existingModal = document.getElementById('updateStatusModal');
+        if (existingModal) existingModal.remove();
+        
+        // Insertar y mostrar modal
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = new bootstrap.Modal(document.getElementById('updateStatusModal'));
+        modal.show();
+    },
+    
+    /**
+     * Guardar actualización de estado
+     */
+    async saveStatusUpdate(orderId) {
+        const statusInput = document.getElementById('orderStatus');
+        const paymentInput = document.getElementById('paymentStatus');
+        const trackingInput = document.getElementById('trackingNumber');
+        const notesInput = document.getElementById('orderNotes');
+        
+        if (!statusInput || !paymentInput) {
+            alert('Error: campos no encontrados');
+            return;
+        }
+        
+        try {
+            const data = {
+                id: orderId,
+                status: statusInput.value,
+                payment_status: paymentInput.value,
+                tracking_number: trackingInput ? trackingInput.value.trim() : null,
+                notes: notesInput ? notesInput.value.trim() : null
+            };
+            
+            const response = await fetch(this.API_URL, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(result.message || 'Error al actualizar');
+            }
+            
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('updateStatusModal'));
+            if (modal) modal.hide();
+            
+            // Recargar órdenes
+            await this.loadOrders();
+            
+            // Mostrar mensaje
+            alert('✅ Estado actualizado correctamente');
+            
+        } catch (error) {
+            console.error('Error:', error);
+            alert('❌ Error al actualizar: ' + error.message);
+        }
+    },
+    
+    /**
+     * Renderizar items de orden
+     */
+    renderOrderItems(items) {
+        if (!Array.isArray(items) || items.length === 0) {
+            return '<tr><td colspan="4" class="text-center text-muted">Sin productos</td></tr>';
+        }
+        
+        return items.map(item => `
+            <tr>
+                <td>${this.escapeHtml(item.name || 'Producto')}</td>
+                <td class="text-center">${item.quantity || 1}</td>
+                <td class="text-end">$${this.formatMoney(item.price || 0)}</td>
+                <td class="text-end">$${this.formatMoney((item.price || 0) * (item.quantity || 1))}</td>
+            </tr>
+        `).join('');
+    },
+    
+    /**
+     * Renderizar badge de estado
+     */
+    renderStatusBadge(status) {
+        const config = this.statuses[status] || { label: status, color: 'secondary', icon: 'question' };
+        return `<span class="badge bg-${config.color}">
+            <i class="fas fa-${config.icon}"></i> ${config.label}
+        </span>`;
+    },
+    
+    /**
+     * Renderizar badge de estado de pago
+     */
+    renderPaymentStatusBadge(status) {
+        const config = this.paymentStatuses[status] || { label: status, color: 'secondary' };
+        return `<span class="badge bg-${config.color}">${config.label}</span>`;
+    },
+    
+    /**
+     * Formatear dinero
+     */
+    formatMoney(amount) {
+        return parseFloat(amount || 0).toFixed(2);
+    },
+    
+    /**
+     * Formatear fecha
+     */
+    formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleString('es-EC', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    },
+    
+    /**
+     * Escapar HTML
+     */
+    escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 };
 
-console.log('✅ Módulo Orders CRUD completo cargado');
+// Inicializar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('ordersTableBody')) {
+        OrdersModule.init();
+    }
+});
