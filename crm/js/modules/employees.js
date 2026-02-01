@@ -1,6 +1,6 @@
 /**
- * MÓDULO DE EMPLEADOS - CRUD COMPLETO PROFESIONAL
- * Sistema de gestión de empleados con todas las funcionalidades
+ * MÓDULO DE EMPLEADOS - VERSIÓN CORREGIDA
+ * Sistema de gestión de empleados con modales funcionales
  */
 
 Modules.Employees = {
@@ -267,74 +267,234 @@ Modules.Employees = {
     showEmployeeModal(employee = null) {
         const isEdit = !!employee;
         
+        // Remover modal existente si hay
+        const existingModal = document.getElementById('employeeModal');
+        if (existingModal) existingModal.remove();
+        
         const modalHTML = `
-            <div class="modal-overlay active" id="employeeModal">
-                <div class="modal-dialog">
-                    <div class="modal-header">
-                        <h3 class="modal-title">${isEdit ? '✏️ Editar Empleado' : '➕ Nuevo Empleado'}</h3>
-                        <button class="modal-close" onclick="Modules.Employees.closeModal()">✕</button>
+            <div class="modal-overlay" id="employeeModal" style="
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                animation: fadeIn 0.2s ease;
+            ">
+                <div class="modal-dialog" style="
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+                    max-width: 600px;
+                    width: 90%;
+                    max-height: 90vh;
+                    overflow: auto;
+                    animation: slideUp 0.3s ease;
+                ">
+                    <div class="modal-header" style="
+                        padding: 24px;
+                        border-bottom: 1px solid #E5E7EB;
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                    ">
+                        <h3 class="modal-title" style="
+                            font-size: 20px;
+                            font-weight: 700;
+                            color: #111827;
+                            margin: 0;
+                        ">${isEdit ? '✏️ Editar Empleado' : '➕ Nuevo Empleado'}</h3>
+                        <button class="modal-close" onclick="Modules.Employees.closeModal()" style="
+                            background: none;
+                            border: none;
+                            font-size: 24px;
+                            cursor: pointer;
+                            color: #6B7280;
+                            padding: 0;
+                            width: 32px;
+                            height: 32px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            border-radius: 6px;
+                            transition: all 0.2s;
+                        " onmouseover="this.style.background='#F3F4F6'" onmouseout="this.style.background='none'">✕</button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body" style="padding: 24px;">
                         <form id="employeeForm">
                             ${isEdit ? `<input type="hidden" name="id" value="${employee.id}">` : ''}
                             
-                            <div class="form-row">
-                                <div class="form-field">
-                                    <label class="required">Nombre Completo</label>
-                                    <input type="text" name="nombre" 
-                                           value="${employee?.nombre || ''}" 
-                                           required 
-                                           placeholder="Ej: Juan Pérez">
+                            <div style="display: grid; gap: 20px;">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                    <div class="form-field">
+                                        <label style="
+                                            display: block;
+                                            font-size: 14px;
+                                            font-weight: 600;
+                                            color: #374151;
+                                            margin-bottom: 8px;
+                                        ">Nombre Completo <span style="color: #EF4444;">*</span></label>
+                                        <input type="text" name="nombre" 
+                                               value="${employee?.nombre || ''}" 
+                                               required 
+                                               placeholder="Ej: Juan Pérez"
+                                               style="
+                                                   width: 100%;
+                                                   padding: 10px 12px;
+                                                   border: 1px solid #D1D5DB;
+                                                   border-radius: 6px;
+                                                   font-size: 14px;
+                                                   transition: all 0.2s;
+                                                   box-sizing: border-box;
+                                               "
+                                               onfocus="this.style.borderColor='#3B82F6'; this.style.outline='none'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)'"
+                                               onblur="this.style.borderColor='#D1D5DB'; this.style.boxShadow='none'">
+                                    </div>
+                                    
+                                    <div class="form-field">
+                                        <label style="
+                                            display: block;
+                                            font-size: 14px;
+                                            font-weight: 600;
+                                            color: #374151;
+                                            margin-bottom: 8px;
+                                        ">Cédula <span style="color: #EF4444;">*</span></label>
+                                        <input type="text" name="cedula" 
+                                               value="${employee?.cedula || ''}" 
+                                               required 
+                                               maxlength="10"
+                                               placeholder="1234567890"
+                                               style="
+                                                   width: 100%;
+                                                   padding: 10px 12px;
+                                                   border: 1px solid #D1D5DB;
+                                                   border-radius: 6px;
+                                                   font-size: 14px;
+                                                   transition: all 0.2s;
+                                                   box-sizing: border-box;
+                                               "
+                                               onfocus="this.style.borderColor='#3B82F6'; this.style.outline='none'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)'"
+                                               onblur="this.style.borderColor='#D1D5DB'; this.style.boxShadow='none'">
+                                    </div>
+                                </div>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                    <div class="form-field">
+                                        <label style="
+                                            display: block;
+                                            font-size: 14px;
+                                            font-weight: 600;
+                                            color: #374151;
+                                            margin-bottom: 8px;
+                                        ">Cargo <span style="color: #EF4444;">*</span></label>
+                                        <input type="text" name="cargo" 
+                                               value="${employee?.cargo || 'Vendedor'}" 
+                                               required
+                                               style="
+                                                   width: 100%;
+                                                   padding: 10px 12px;
+                                                   border: 1px solid #D1D5DB;
+                                                   border-radius: 6px;
+                                                   font-size: 14px;
+                                                   transition: all 0.2s;
+                                                   box-sizing: border-box;
+                                               "
+                                               onfocus="this.style.borderColor='#3B82F6'; this.style.outline='none'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)'"
+                                               onblur="this.style.borderColor='#D1D5DB'; this.style.boxShadow='none'">
+                                    </div>
+                                    
+                                    <div class="form-field">
+                                        <label style="
+                                            display: block;
+                                            font-size: 14px;
+                                            font-weight: 600;
+                                            color: #374151;
+                                            margin-bottom: 8px;
+                                        ">Sucursal <span style="color: #EF4444;">*</span></label>
+                                        <select name="sucursal" required
+                                                style="
+                                                    width: 100%;
+                                                    padding: 10px 12px;
+                                                    border: 1px solid #D1D5DB;
+                                                    border-radius: 6px;
+                                                    font-size: 14px;
+                                                    transition: all 0.2s;
+                                                    background: white;
+                                                    box-sizing: border-box;
+                                                "
+                                                onfocus="this.style.borderColor='#3B82F6'; this.style.outline='none'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)'"
+                                                onblur="this.style.borderColor='#D1D5DB'; this.style.boxShadow='none'">
+                                            <option value="PALACIO/MAWEWE" ${employee?.sucursal === 'PALACIO/MAWEWE' ? 'selected' : ''}>PALACIO/MAWEWE</option>
+                                            <option value="JOYERÍA MATRIZ" ${employee?.sucursal === 'JOYERÍA MATRIZ' ? 'selected' : ''}>JOYERÍA MATRIZ</option>
+                                            <option value="JOYERÍA SUCURSAL 1" ${employee?.sucursal === 'JOYERÍA SUCURSAL 1' ? 'selected' : ''}>JOYERÍA SUCURSAL 1</option>
+                                            <option value="EL PALACIO MATRIZ" ${employee?.sucursal === 'EL PALACIO MATRIZ' ? 'selected' : ''}>EL PALACIO MATRIZ</option>
+                                            <option value="EL PALACIO SUCURSAL 1" ${employee?.sucursal === 'EL PALACIO SUCURSAL 1' ? 'selected' : ''}>EL PALACIO SUCURSAL 1</option>
+                                        </select>
+                                    </div>
                                 </div>
                                 
                                 <div class="form-field">
-                                    <label class="required">Cédula</label>
-                                    <input type="text" name="cedula" 
-                                           value="${employee?.cedula || ''}" 
-                                           required 
-                                           maxlength="10"
-                                           placeholder="1234567890">
-                                </div>
-                            </div>
-                            
-                            <div class="form-row">
-                                <div class="form-field">
-                                    <label class="required">Cargo</label>
-                                    <input type="text" name="cargo" 
-                                           value="${employee?.cargo || 'Vendedor'}" 
-                                           required>
-                                </div>
-                                
-                                <div class="form-field">
-                                    <label class="required">Sucursal</label>
-                                    <select name="sucursal" required>
-                                        <option value="JOYERIA MATRIZ" ${employee?.sucursal === 'JOYERIA MATRIZ' ? 'selected' : ''}>JOYERIA MATRIZ</option>
-                                        <option value="JOYERIA SUCURSAL 1" ${employee?.sucursal === 'JOYERIA SUCURSAL 1' ? 'selected' : ''}>JOYERIA SUCURSAL 1</option>
-                                        <option value="EL PALACIO MATRIZ" ${employee?.sucursal === 'EL PALACIO MATRIZ' ? 'selected' : ''}>EL PALACIO MATRIZ</option>
-                                        <option value="EL PALACIO SUCURSAL 1" ${employee?.sucursal === 'EL PALACIO SUCURSAL 1' ? 'selected' : ''}>EL PALACIO SUCURSAL 1</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <div class="form-row">
-                                <div class="form-field">
-                                    <label>
+                                    <label style="
+                                        display: flex;
+                                        align-items: center;
+                                        cursor: pointer;
+                                        user-select: none;
+                                    ">
                                         <input type="checkbox" name="is_admin" 
-                                               ${employee?.is_admin ? 'checked' : ''}>
-                                        <span style="margin-left: 8px;">Es Administrador</span>
+                                               ${employee?.is_admin ? 'checked' : ''}
+                                               style="
+                                                   width: 18px;
+                                                   height: 18px;
+                                                   cursor: pointer;
+                                               ">
+                                        <span style="
+                                            margin-left: 8px;
+                                            font-size: 14px;
+                                            font-weight: 600;
+                                            color: #374151;
+                                        ">Es Administrador</span>
                                     </label>
-                                    <div style="font-size: 12px; color: #6B7280; margin-top: 4px;">
+                                    <div style="font-size: 12px; color: #6B7280; margin-top: 4px; margin-left: 26px;">
                                         Los administradores tienen acceso completo al sistema
                                     </div>
                                 </div>
                             </div>
                         </form>
                     </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-secondary" onclick="Modules.Employees.closeModal()">
+                    <div class="modal-footer" style="
+                        padding: 16px 24px;
+                        border-top: 1px solid #E5E7EB;
+                        display: flex;
+                        gap: 12px;
+                        justify-content: flex-end;
+                        background: #F9FAFB;
+                    ">
+                        <button class="btn btn-secondary" onclick="Modules.Employees.closeModal()" style="
+                            padding: 10px 20px;
+                            border: 1px solid #D1D5DB;
+                            background: white;
+                            color: #374151;
+                            border-radius: 6px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            transition: all 0.2s;
+                        " onmouseover="this.style.background='#F3F4F6'" onmouseout="this.style.background='white'">
                             Cancelar
                         </button>
-                        <button class="btn btn-primary" onclick="Modules.Employees.saveEmployee()">
+                        <button class="btn btn-primary" onclick="Modules.Employees.saveEmployee()" style="
+                            padding: 10px 20px;
+                            border: none;
+                            background: #3B82F6;
+                            color: white;
+                            border-radius: 6px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            transition: all 0.2s;
+                        " onmouseover="this.style.background='#2563EB'" onmouseout="this.style.background='#3B82F6'">
                             💾 ${isEdit ? 'Guardar Cambios' : 'Crear Empleado'}
                         </button>
                     </div>
@@ -343,11 +503,43 @@ Modules.Employees = {
         `;
         
         document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+        // Agregar estilos de animación si no existen
+        if (!document.getElementById('modal-animations')) {
+            const style = document.createElement('style');
+            style.id = 'modal-animations';
+            style.textContent = `
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes slideUp {
+                    from { 
+                        opacity: 0;
+                        transform: translateY(20px);
+                    }
+                    to { 
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
     },
     
     closeModal() {
         const modal = document.getElementById('employeeModal');
-        if (modal) modal.remove();
+        if (modal) {
+            modal.style.animation = 'fadeOut 0.2s ease';
+            setTimeout(() => modal.remove(), 200);
+        }
+        
+        const viewModal = document.getElementById('employeeViewModal');
+        if (viewModal) {
+            viewModal.style.animation = 'fadeOut 0.2s ease';
+            setTimeout(() => viewModal.remove(), 200);
+        }
     },
     
     async saveEmployee() {
@@ -355,9 +547,9 @@ Modules.Employees = {
         const formData = new FormData(form);
         
         const data = {
-            nombre: formData.get('nombre'),
-            cedula: formData.get('cedula'),
-            cargo: formData.get('cargo'),
+            nombre: formData.get('nombre').trim(),
+            cedula: formData.get('cedula').trim(),
+            cargo: formData.get('cargo').trim(),
             sucursal: formData.get('sucursal'),
             is_admin: formData.get('is_admin') ? 1 : 0
         };
@@ -369,19 +561,18 @@ Modules.Employees = {
             data.id = parseInt(id);
         }
         
+        // Validaciones
         if (!data.nombre || !data.cedula || !data.cargo) {
-            showToast('Error', 'Todos los campos obligatorios deben estar llenos', 'error');
+            alert('❌ Todos los campos obligatorios deben estar llenos');
             return;
         }
         
-        if (data.cedula.length !== 10) {
-            showToast('Error', 'La cédula debe tener 10 dígitos', 'error');
+        if (data.cedula.length !== 10 || !/^\d+$/.test(data.cedula)) {
+            alert('❌ La cédula debe tener exactamente 10 dígitos numéricos');
             return;
         }
         
         try {
-            showLoading();
-            
             const url = isEdit 
                 ? `${CONFIG.API_URL}/employees.php?action=update`
                 : `${CONFIG.API_URL}/employees.php?action=create`;
@@ -398,7 +589,7 @@ Modules.Employees = {
             const result = await response.json();
             
             if (result.success) {
-                showToast('Éxito', `Empleado ${isEdit ? 'actualizado' : 'creado'} correctamente`, 'success');
+                alert(`✅ Empleado ${isEdit ? 'actualizado' : 'creado'} correctamente`);
                 this.closeModal();
                 await this.load();
             } else {
@@ -406,9 +597,7 @@ Modules.Employees = {
             }
         } catch (error) {
             console.error('Error saving employee:', error);
-            showToast('Error', error.message, 'error');
-        } finally {
-            hideLoading();
+            alert('❌ Error: ' + error.message);
         }
     },
     
@@ -418,8 +607,6 @@ Modules.Employees = {
         if (!confirm(`¿Está seguro de ${action} este empleado?`)) return;
         
         try {
-            showLoading();
-            
             const response = await fetch(`${CONFIG.API_URL}/employees.php?action=toggle-status`, {
                 method: 'PUT',
                 headers: {
@@ -432,16 +619,14 @@ Modules.Employees = {
             const result = await response.json();
             
             if (result.success) {
-                showToast('Éxito', `Empleado ${action}do correctamente`, 'success');
+                alert(`✅ Empleado ${action}do correctamente`);
                 await this.load();
             } else {
                 throw new Error(result.message);
             }
         } catch (error) {
             console.error('Error toggling status:', error);
-            showToast('Error', error.message, 'error');
-        } finally {
-            hideLoading();
+            alert('❌ Error: ' + error.message);
         }
     },
     
@@ -449,57 +634,143 @@ Modules.Employees = {
         const employee = this.data.find(e => e.id === id);
         if (!employee) return;
         
+        // Remover modal existente
+        const existing = document.getElementById('employeeViewModal');
+        if (existing) existing.remove();
+        
         const modalHTML = `
-            <div class="modal-overlay active" id="employeeViewModal">
-                <div class="modal-dialog">
-                    <div class="modal-header">
-                        <h3 class="modal-title">👤 Detalles del Empleado</h3>
-                        <button class="modal-close" onclick="document.getElementById('employeeViewModal').remove()">✕</button>
+            <div class="modal-overlay" id="employeeViewModal" style="
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                animation: fadeIn 0.2s ease;
+            ">
+                <div class="modal-dialog" style="
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+                    max-width: 500px;
+                    width: 90%;
+                    animation: slideUp 0.3s ease;
+                ">
+                    <div class="modal-header" style="
+                        padding: 24px;
+                        border-bottom: 1px solid #E5E7EB;
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                    ">
+                        <h3 class="modal-title" style="
+                            font-size: 20px;
+                            font-weight: 700;
+                            color: #111827;
+                            margin: 0;
+                        ">👤 Detalles del Empleado</h3>
+                        <button onclick="document.getElementById('employeeViewModal').remove()" style="
+                            background: none;
+                            border: none;
+                            font-size: 24px;
+                            cursor: pointer;
+                            color: #6B7280;
+                            padding: 0;
+                            width: 32px;
+                            height: 32px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            border-radius: 6px;
+                        ">✕</button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body" style="padding: 24px;">
                         <div style="display: grid; gap: 20px;">
                             <div>
-                                <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px;">NOMBRE</div>
-                                <div style="font-size: 18px; font-weight: 700;">${employee.nombre}</div>
+                                <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px; font-weight: 600;">NOMBRE</div>
+                                <div style="font-size: 18px; font-weight: 700; color: #111827;">${employee.nombre}</div>
                             </div>
                             
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                                 <div>
-                                    <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px;">CÉDULA</div>
-                                    <div style="font-weight: 600;">${employee.cedula}</div>
+                                    <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px; font-weight: 600;">CÉDULA</div>
+                                    <div style="font-weight: 600; color: #374151;">${employee.cedula}</div>
                                 </div>
                                 <div>
-                                    <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px;">CARGO</div>
-                                    <div style="font-weight: 600;">${employee.cargo}</div>
+                                    <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px; font-weight: 600;">CARGO</div>
+                                    <div style="font-weight: 600; color: #374151;">${employee.cargo}</div>
                                 </div>
                             </div>
                             
                             <div>
-                                <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px;">SUCURSAL</div>
-                                <div style="font-weight: 600;">${employee.sucursal}</div>
+                                <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px; font-weight: 600;">SUCURSAL</div>
+                                <div style="font-weight: 600; color: #374151;">${employee.sucursal}</div>
                             </div>
                             
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                                 <div>
-                                    <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px;">ROL</div>
-                                    <span class="chip ${employee.is_admin ? 'chip-primary' : 'chip-info'}">
+                                    <div style="font-size: 12px; color: #6B7280; margin-bottom: 8px; font-weight: 600;">ROL</div>
+                                    <span style="
+                                        display: inline-block;
+                                        padding: 6px 12px;
+                                        background: ${employee.is_admin ? '#DBEAFE' : '#E0E7FF'};
+                                        color: ${employee.is_admin ? '#1E40AF' : '#4338CA'};
+                                        border-radius: 6px;
+                                        font-size: 13px;
+                                        font-weight: 600;
+                                    ">
                                         ${employee.is_admin ? '👑 Administrador' : '👤 Empleado'}
                                     </span>
                                 </div>
                                 <div>
-                                    <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px;">ESTADO</div>
-                                    <span class="chip ${employee.active ? 'chip-success' : 'chip-danger'}">
+                                    <div style="font-size: 12px; color: #6B7280; margin-bottom: 8px; font-weight: 600;">ESTADO</div>
+                                    <span style="
+                                        display: inline-block;
+                                        padding: 6px 12px;
+                                        background: ${employee.active ? '#D1FAE5' : '#FEE2E2'};
+                                        color: ${employee.active ? '#065F46' : '#991B1B'};
+                                        border-radius: 6px;
+                                        font-size: 13px;
+                                        font-weight: 600;
+                                    ">
                                         ${employee.active ? '✓ Activo' : '✕ Inactivo'}
                                     </span>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-secondary" onclick="document.getElementById('employeeViewModal').remove()">
+                    <div class="modal-footer" style="
+                        padding: 16px 24px;
+                        border-top: 1px solid #E5E7EB;
+                        display: flex;
+                        gap: 12px;
+                        justify-content: flex-end;
+                        background: #F9FAFB;
+                    ">
+                        <button onclick="document.getElementById('employeeViewModal').remove()" style="
+                            padding: 10px 20px;
+                            border: 1px solid #D1D5DB;
+                            background: white;
+                            color: #374151;
+                            border-radius: 6px;
+                            font-weight: 600;
+                            cursor: pointer;
+                        ">
                             Cerrar
                         </button>
-                        <button class="btn btn-primary" onclick="document.getElementById('employeeViewModal').remove(); Modules.Employees.openEditModal(${employee.id})">
+                        <button onclick="document.getElementById('employeeViewModal').remove(); Modules.Employees.openEditModal(${employee.id})" style="
+                            padding: 10px 20px;
+                            border: none;
+                            background: #3B82F6;
+                            color: white;
+                            border-radius: 6px;
+                            font-weight: 600;
+                            cursor: pointer;
+                        ">
                             ✏️ Editar
                         </button>
                     </div>
@@ -511,4 +782,4 @@ Modules.Employees = {
     }
 };
 
-console.log('✅ Módulo Employees CRUD completo cargado');
+console.log('✅ Módulo Employees CORREGIDO cargado');
