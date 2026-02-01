@@ -27,6 +27,112 @@ const CRMState = {
 };
 
 // ========================================
+// CONTENEDOR DE MÓDULOS - IMPORTANTE!
+// ========================================
+const Modules = {
+    Employees: {},
+    Products: {},
+    Orders: {},
+    Dashboard: {},
+    Attendance: {},
+    Audit: {}
+};
+
+// ========================================
+// FUNCIONES GLOBALES REQUERIDAS
+// ========================================
+function showToast(title, message, type = 'info') {
+    console.log(`[${type}] ${title}: ${message}`);
+    
+    // Crear toast visual
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    
+    const icons = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
+    
+    const colors = {
+        success: '#10B981',
+        error: '#EF4444',
+        warning: '#F59E0B',
+        info: '#3B82F6'
+    };
+    
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        background: white;
+        border-left: 4px solid ${colors[type]};
+        padding: 16px 20px;
+        margin-bottom: 12px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        animation: slideIn 0.3s ease;
+        min-width: 300px;
+    `;
+    
+    toast.innerHTML = `
+        <span style="font-size: 24px;">${icons[type]}</span>
+        <div style="flex: 1;">
+            <div style="font-weight: 600; margin-bottom: 4px;">${title}</div>
+            <div style="font-size: 14px; color: #666;">${message}</div>
+        </div>
+    `;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+}
+
+function showLoading() {
+    let overlay = document.getElementById('loadingOverlay');
+    
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'loadingOverlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+        `;
+        
+        overlay.innerHTML = `
+            <div style="background: white; padding: 2rem; border-radius: 12px; text-align: center;">
+                <div style="width: 50px; height: 50px; border: 4px solid #E5E7EB; border-top-color: #3B82F6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
+                <div style="color: #374151; font-weight: 600;">Cargando...</div>
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+    }
+    
+    overlay.style.display = 'flex';
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+}
+
+// ========================================
 // INICIALIZACIÓN
 // ========================================
 document.addEventListener('DOMContentLoaded', async () => {
@@ -56,18 +162,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ========================================
 // AUTENTICACIÓN
 // ========================================
-function showToast(title, message, type = 'info') {
-    console.log(`[${type}] ${title}: ${message}`);
-    alert(`${title}\n\n${message}`);
-}
-
-function showLoading() {
-    console.log('Loading...');
-}
-
-function hideLoading() {
-    console.log('Loading complete');
-}
 function checkAuth() {
     const userData = localStorage.getItem('mawewe_user_v3');
     const token = localStorage.getItem('mawewe_token_v3');
@@ -141,7 +235,12 @@ function showModule(moduleName) {
     document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('active');
     });
-    event.target.closest('.nav-item')?.classList.add('active');
+    
+    // Encontrar y activar el nav-item correspondiente
+    const activeNavItem = document.querySelector(`[href="#${moduleName}"]`);
+    if (activeNavItem) {
+        activeNavItem.classList.add('active');
+    }
     
     // Actualizar título y breadcrumb
     updatePageTitle(moduleName);
@@ -186,7 +285,11 @@ async function loadModuleData(moduleName) {
                 await loadDashboardData();
                 break;
             case 'employees':
-                await loadEmployeesData();
+                if (Modules.Employees && Modules.Employees.load) {
+                    await Modules.Employees.load();
+                } else {
+                    await loadEmployeesData();
+                }
                 break;
             case 'attendance':
                 await loadAttendanceData();
@@ -377,7 +480,7 @@ function exportDashboard() {
 }
 
 // ========================================
-// EMPLEADOS
+// EMPLEADOS (Fallback si no hay módulo)
 // ========================================
 async function loadEmployeesData() {
     try {
@@ -410,9 +513,6 @@ function displayEmployees(employees) {
                 <div style="font-size: 4rem; margin-bottom: 1rem;">👥</div>
                 <h3 style="margin-bottom: 0.5rem;">No hay empleados registrados</h3>
                 <p style="color: #666; margin-bottom: 2rem;">Comienza agregando tu primer empleado</p>
-                <button class="btn btn-primary" onclick="openEmployeeModal()">
-                    ➕ Agregar Empleado
-                </button>
             </div>
         `;
         return;
@@ -430,7 +530,6 @@ function displayEmployees(employees) {
                             <th>Sucursal</th>
                             <th>Rol</th>
                             <th>Estado</th>
-                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -450,15 +549,6 @@ function displayEmployees(employees) {
                                         ${emp.active ? '✓ Activo' : '✕ Inactivo'}
                                     </span>
                                 </td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline" onclick="editEmployee(${emp.id})">
-                                        ✏️
-                                    </button>
-                                    <button class="btn btn-sm ${emp.active ? 'btn-danger' : 'btn-success'}" 
-                                            onclick="toggleEmployeeStatus(${emp.id}, ${emp.active})">
-                                        ${emp.active ? '🔒' : '🔓'}
-                                    </button>
-                                </td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -466,41 +556,6 @@ function displayEmployees(employees) {
             </div>
         </div>
     `;
-}
-
-function openEmployeeModal() {
-    showToast('Desarrollo', 'Modal de empleado en desarrollo', 'info');
-}
-
-function editEmployee(id) {
-    showToast('Desarrollo', `Editando empleado ID: ${id}`, 'info');
-}
-
-async function toggleEmployeeStatus(id, currentStatus) {
-    const action = currentStatus ? 'desactivar' : 'activar';
-    if (!confirm(`¿Está seguro de ${action} este empleado?`)) return;
-    
-    try {
-        const response = await fetch(`${CONFIG.API_URL}/employees.php?action=toggle-status`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('mawewe_token_v3')}`
-            },
-            body: JSON.stringify({ id })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showToast('Éxito', `Empleado ${action}do correctamente`, 'success');
-            await loadEmployeesData();
-        } else {
-            throw new Error(data.message);
-        }
-    } catch (error) {
-        showToast('Error', error.message, 'error');
-    }
 }
 
 // ========================================
@@ -657,8 +712,6 @@ async function loadOrdersData() {
     try {
         showLoading();
         
-        // Aquí cargarías las órdenes desde tu API
-        // Por ahora mostramos un placeholder
         const container = document.getElementById('ordersContent');
         container.innerHTML = `
             <div class="card-body">
@@ -766,12 +819,14 @@ function setupGlobalSearch() {
     const searchInput = document.getElementById('globalSearch');
     let searchTimeout;
     
-    searchInput.addEventListener('input', (e) => {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            performGlobalSearch(e.target.value);
-        }, 500);
-    });
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                performGlobalSearch(e.target.value);
+            }, 500);
+        });
+    }
 }
 
 function performGlobalSearch(query) {
@@ -779,7 +834,6 @@ function performGlobalSearch(query) {
     
     console.log('Buscando:', query);
     showToast('Búsqueda', `Buscando: ${query}`, 'info');
-    // Implementar búsqueda global
 }
 
 // ========================================
@@ -794,47 +848,8 @@ function showProfile() {
 }
 
 // ========================================
-// TOAST NOTIFICATIONS
-// ========================================
-function showToast(title, message, type = 'info') {
-    const container = document.getElementById('toastContainer');
-    
-    const icons = {
-        success: '✓',
-        error: '✕',
-        warning: '⚠',
-        info: 'ℹ'
-    };
-    
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `
-        <div class="toast-icon">${icons[type]}</div>
-        <div class="toast-content">
-            <div class="toast-title">${title}</div>
-            <div class="toast-message">${message}</div>
-        </div>
-    `;
-    
-    container.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.style.animation = 'toastSlide 0.3s ease-out reverse';
-        setTimeout(() => toast.remove(), 300);
-    }, 5000);
-}
-
-// ========================================
 // UTILIDADES
 // ========================================
-function showLoading() {
-    document.body.classList.add('loading');
-}
-
-function hideLoading() {
-    document.body.classList.remove('loading');
-}
-
 function formatCurrency(amount) {
     return new Intl.NumberFormat('es-EC', {
         style: 'currency',
@@ -865,7 +880,6 @@ function formatTime(dateString) {
 // AUTO-REFRESH
 // ========================================
 function startAutoRefresh() {
-    // Refrescar dashboard cada 5 minutos
     setInterval(() => {
         if (CRMState.currentModule === 'dashboard') {
             console.log('🔄 Auto-refresh dashboard');
@@ -879,8 +893,50 @@ function startAutoRefresh() {
 // ========================================
 window.addEventListener('resize', () => {
     if (window.innerWidth < 1024) {
-        document.getElementById('sidebar').classList.add('collapsed');
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar && !sidebar.classList.contains('collapsed')) {
+            sidebar.classList.add('collapsed');
+        }
     }
 });
 
-console.log('✅ CRM JavaScript cargado correctamente');
+// Agregar estilos para animaciones
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    #toastContainer {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 100000;
+        pointer-events: none;
+    }
+`;
+document.head.appendChild(style);
+
+console.log('✅ CRM JavaScript con Módulos cargado correctamente');
