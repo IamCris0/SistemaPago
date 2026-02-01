@@ -56,6 +56,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ========================================
 // AUTENTICACIÓN
 // ========================================
+function showToast(title, message, type = 'info') {
+    console.log(`[${type}] ${title}: ${message}`);
+    alert(`${title}\n\n${message}`);
+}
+
+function showLoading() {
+    console.log('Loading...');
+}
+
+function hideLoading() {
+    console.log('Loading complete');
+}
 function checkAuth() {
     const userData = localStorage.getItem('mawewe_user_v3');
     const token = localStorage.getItem('mawewe_token_v3');
