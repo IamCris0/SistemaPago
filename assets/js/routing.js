@@ -1,15 +1,13 @@
 /**
- * MAWEWE E-COMMERCE - URL ROUTING SYSTEM (VERSIÓN LOCALHOST)
+ * MAWEWE E-COMMERCE - URL ROUTING SYSTEM
  * Sistema de URLs compartibles para categorías y productos
  * 
- * 🔧 CONFIGURADO PARA: http://localhost:3000/
- * 
  * URLs soportadas:
- * - http://localhost:3000/ (todas las categorías)
- * - http://localhost:3000/?category=san-valentin
- * - http://localhost:3000/?category=perfumes&subcategory=dior
- * - http://localhost:3000/?product=123
- * - http://localhost:3000/?search=regalo
+ * - https://mawewe.com.ec/ (todas las categorías)
+ * - https://mawewe.com.ec/?category=san-valentin
+ * - https://mawewe.com.ec/?category=perfumes&subcategory=dior
+ * - https://mawewe.com.ec/?product=123
+ * - https://mawewe.com.ec/?search=regalo
  */
 
 // =============================================================================
@@ -19,29 +17,16 @@
 const routing = {
   
   // ========================================
-  // 🔍 MODO DEBUG ACTIVADO
-  // ========================================
-  debug: true, // ✅ Activar logs en consola
-  
-  log(...args) {
-    if (this.debug) {
-      console.log('🔗 [ROUTING]', ...args);
-    }
-  },
-  
-  // ========================================
   // Obtener parámetros de la URL
   // ========================================
   getURLParams() {
     const params = new URLSearchParams(window.location.search);
-    const result = {
+    return {
       category: params.get('category'),
       subcategory: params.get('subcategory'),
       product: params.get('product'),
       search: params.get('search')
     };
-    this.log('Parámetros URL:', result);
-    return result;
   },
   
   // ========================================
@@ -76,10 +61,10 @@ const routing = {
     // Actualizar URL sin recargar
     window.history.pushState({}, '', url.toString());
     
-    this.log('✅ URL actualizada:', url.toString());
-    
-    // Actualizar meta tags
+    // Actualizar meta tags para compartir
     this.updateMetaTags(params);
+    
+    console.log('🔗 URL actualizada:', url.toString());
   },
   
   // ========================================
@@ -95,23 +80,21 @@ const routing = {
     let image = baseImage;
     
     // Si es un producto específico
-    if (params.product && window.state && window.state.products) {
-      const product = window.state.products.find(p => p.id === parseInt(params.product));
+    if (params.product && state.products) {
+      const product = state.products.find(p => p.id === parseInt(params.product));
       if (product) {
         title = `${product.name} - ${baseTitle}`;
         description = product.description || baseDescription;
         image = product.image || baseImage;
-        this.log('Meta tags de producto:', title);
       }
     }
     
     // Si es una categoría
-    else if (params.category && window.state && window.state.categories) {
-      const category = window.state.categories.find(c => c.id === params.category);
+    else if (params.category && state.categories) {
+      const category = state.categories.find(c => c.id === params.category);
       if (category) {
         title = `${category.name} - ${baseTitle}`;
         description = `Descubre nuestra colección de ${category.name.toLowerCase()}`;
-        this.log('Meta tags de categoría:', title);
       }
     }
     
@@ -151,7 +134,7 @@ const routing = {
   // Obtener URL compartible de categoría
   // ========================================
   getCategoryURL(categoryId, subcategoryId = null) {
-    const url = new URL(window.location.origin + window.location.pathname);
+    const url = new URL(window.location.origin);
     
     if (categoryId !== 'all') {
       url.searchParams.set('category', categoryId);
@@ -161,7 +144,6 @@ const routing = {
       url.searchParams.set('subcategory', subcategoryId);
     }
     
-    this.log('URL de categoría generada:', url.toString());
     return url.toString();
   },
   
@@ -169,10 +151,8 @@ const routing = {
   // Obtener URL compartible de producto
   // ========================================
   getProductURL(productId) {
-    const url = new URL(window.location.origin + window.location.pathname);
+    const url = new URL(window.location.origin);
     url.searchParams.set('product', productId);
-    
-    this.log('URL de producto generada:', url.toString());
     return url.toString();
   },
   
@@ -180,29 +160,14 @@ const routing = {
   // Copiar URL al portapapeles
   // ========================================
   async copyToClipboard(url) {
-    this.log('📋 Intentando copiar:', url);
-    
     try {
       await navigator.clipboard.writeText(url);
-      
       if (window.mawewe && window.mawewe.ui) {
         window.mawewe.ui.showNotification('✓ Enlace copiado al portapapeles');
-      } else {
-        alert('✓ Enlace copiado: ' + url);
       }
-      
-      this.log('✅ Copiado exitosamente');
-      
-      // Mostrar en consola para pruebas
-      console.log('═══════════════════════════════════════');
-      console.log('📋 ENLACE COPIADO:');
-      console.log(url);
-      console.log('═══════════════════════════════════════');
-      
       return true;
     } catch (err) {
-      this.log('⚠️ Error al copiar:', err);
-      
+      console.error('Error al copiar:', err);
       // Fallback para navegadores antiguos
       const input = document.createElement('input');
       input.value = url;
@@ -213,15 +178,7 @@ const routing = {
       
       if (window.mawewe && window.mawewe.ui) {
         window.mawewe.ui.showNotification('✓ Enlace copiado');
-      } else {
-        alert('✓ Enlace copiado: ' + url);
       }
-      
-      console.log('═══════════════════════════════════════');
-      console.log('📋 ENLACE COPIADO (fallback):');
-      console.log(url);
-      console.log('═══════════════════════════════════════');
-      
       return true;
     }
   },
@@ -230,8 +187,6 @@ const routing = {
   // Compartir en redes sociales
   // ========================================
   shareOn(platform, url, title = '', description = '') {
-    this.log(`📤 Compartiendo en ${platform}:`, url);
-    
     const encodedURL = encodeURIComponent(url);
     const encodedTitle = encodeURIComponent(title);
     const encodedDescription = encodeURIComponent(description);
@@ -246,12 +201,6 @@ const routing = {
     };
     
     if (shareURLs[platform]) {
-      console.log('═══════════════════════════════════════');
-      console.log(`📤 COMPARTIENDO EN ${platform.toUpperCase()}:`);
-      console.log('URL:', url);
-      console.log('Título:', title);
-      console.log('═══════════════════════════════════════');
-      
       window.open(shareURLs[platform], '_blank', 'width=600,height=400');
     }
   },
@@ -260,8 +209,6 @@ const routing = {
   // Compartir nativamente (móvil)
   // ========================================
   async shareNative(url, title, text) {
-    this.log('📱 Compartir nativo:', { url, title, text });
-    
     if (navigator.share) {
       try {
         await navigator.share({
@@ -269,55 +216,14 @@ const routing = {
           text: text,
           url: url
         });
-        this.log('✅ Compartido exitosamente');
+        console.log('✓ Compartido exitosamente');
       } catch (err) {
-        this.log('⚠️ Error o cancelado:', err);
+        console.log('Error o cancelado:', err);
       }
     } else {
-      this.log('ℹ️ Share API no disponible, usando clipboard');
       // Fallback: copiar al portapapeles
       this.copyToClipboard(url);
     }
-  },
-  
-  // ========================================
-  // 🧪 MODO TEST: Mostrar todas las URLs posibles
-  // ========================================
-  showAllURLs() {
-    console.log('\n═══════════════════════════════════════════════════════════');
-    console.log('🔗 URLS DISPONIBLES EN TU TIENDA');
-    console.log('═══════════════════════════════════════════════════════════\n');
-    
-    const baseURL = window.location.origin + window.location.pathname;
-    
-    console.log('📍 PÁGINA PRINCIPAL:');
-    console.log('   ', baseURL);
-    console.log('');
-    
-    if (window.state && window.state.categories) {
-      console.log('📂 CATEGORÍAS:');
-      window.state.categories.forEach(cat => {
-        if (cat.id !== 'all') {
-          console.log(`   ${cat.name}:`, this.getCategoryURL(cat.id));
-        }
-      });
-      console.log('');
-    }
-    
-    if (window.state && window.state.products && window.state.products.length > 0) {
-      console.log('🛍️ PRODUCTOS (primeros 5):');
-      window.state.products.slice(0, 5).forEach(product => {
-        console.log(`   ${product.name}:`, this.getProductURL(product.id));
-      });
-      console.log('');
-    }
-    
-    console.log('🔍 BÚSQUEDA (ejemplo):');
-    console.log('   ', baseURL + '?search=regalo');
-    console.log('');
-    
-    console.log('═══════════════════════════════════════════════════════════\n');
-    console.log('💡 TIP: Copia cualquier URL y ábrela en una nueva pestaña para probar\n');
   },
   
   // ========================================
@@ -326,36 +232,28 @@ const routing = {
   handleInitialURL() {
     const params = this.getURLParams();
     
-    this.log('═══════════════════════════════════════');
-    this.log('🚀 Procesando URL inicial');
-    this.log('Parámetros encontrados:', params);
-    this.log('═══════════════════════════════════════');
+    console.log('📍 Parámetros URL iniciales:', params);
     
     // Si hay un producto específico
     if (params.product) {
       const productId = parseInt(params.product);
-      this.log('🔍 Abriendo producto desde URL:', productId);
+      console.log('🔍 Abriendo producto desde URL:', productId);
       
       // Esperar a que los productos se carguen
       const checkProducts = setInterval(() => {
-        if (window.state && window.state.products && window.state.products.length > 0) {
+        if (state.products && state.products.length > 0) {
           clearInterval(checkProducts);
           
-          const product = window.state.products.find(p => p.id === productId);
+          const product = state.products.find(p => p.id === productId);
           if (product) {
-            this.log('✅ Producto encontrado:', product.name);
-            
             // Abrir modal del producto
             setTimeout(() => {
               if (window.productModal) {
                 window.productModal.show(productId);
-                this.log('✅ Modal de producto abierto');
-              } else {
-                this.log('⚠️ productModal no disponible');
               }
             }, 500);
           } else {
-            this.log('❌ Producto no encontrado:', productId);
+            console.log('⚠️ Producto no encontrado:', productId);
             if (window.mawewe && window.mawewe.ui) {
               window.mawewe.ui.showNotification('Producto no encontrado', 'error');
             }
@@ -364,45 +262,35 @@ const routing = {
       }, 100);
       
       // Timeout de seguridad
-      setTimeout(() => {
-        clearInterval(checkProducts);
-        this.log('⏱️ Timeout alcanzado esperando productos');
-      }, 5000);
+      setTimeout(() => clearInterval(checkProducts), 5000);
     }
     
     // Si hay una categoría específica
     else if (params.category) {
-      this.log('📂 Filtrando por categoría:', params.category);
+      console.log('📂 Filtrando por categoría:', params.category);
       
       // Esperar a que se carguen las categorías
       const checkCategories = setInterval(() => {
-        if (window.state && window.state.categories && window.state.categories.length > 0) {
+        if (state.categories && state.categories.length > 0) {
           clearInterval(checkCategories);
           
-          window.state.currentFilter = params.category;
+          state.currentFilter = params.category;
           
           if (params.subcategory) {
-            window.state.currentSubcategory = params.subcategory;
-            this.log('📑 Subcategoría:', params.subcategory);
+            state.currentSubcategory = params.subcategory;
           }
           
           // Aplicar filtros
           if (window.mawewe && window.mawewe.filters) {
             window.mawewe.filters.apply();
-            this.log('✅ Filtros aplicados');
-          } else if (window.filters) {
-            window.filters.apply();
-            this.log('✅ Filtros aplicados');
           }
           
           // Actualizar UI de filtros
           setTimeout(() => {
             document.querySelectorAll('.filter-button').forEach(btn => {
               btn.classList.remove('active');
-              const btnText = btn.textContent.toLowerCase().trim();
-              if (btnText.includes(params.category.replace('-', ' '))) {
+              if (btn.textContent.toLowerCase().includes(params.category)) {
                 btn.classList.add('active');
-                this.log('✅ Botón de filtro activado:', btnText);
               }
             });
             
@@ -413,34 +301,22 @@ const routing = {
         }
       }, 100);
       
-      setTimeout(() => {
-        clearInterval(checkCategories);
-        this.log('⏱️ Timeout alcanzado esperando categorías');
-      }, 5000);
+      setTimeout(() => clearInterval(checkCategories), 5000);
     }
     
     // Si hay una búsqueda
     else if (params.search) {
-      this.log('🔍 Búsqueda desde URL:', params.search);
+      console.log('🔍 Búsqueda desde URL:', params.search);
       
       const searchInput = document.getElementById('search-input');
       if (searchInput) {
         searchInput.value = params.search;
-        window.state.searchQuery = params.search;
+        state.searchQuery = params.search;
         
         if (window.mawewe && window.mawewe.filters) {
           window.mawewe.filters.setSearch(params.search);
-        } else if (window.filters) {
-          window.filters.setSearch(params.search);
         }
-        
-        this.log('✅ Búsqueda aplicada');
       }
-    }
-    
-    // Si no hay parámetros
-    else {
-      this.log('ℹ️ No hay parámetros en la URL - mostrando todos los productos');
     }
   }
 };
@@ -449,81 +325,135 @@ const routing = {
 // INTEGRACIÓN CON EL SISTEMA EXISTENTE
 // =============================================================================
 
-// Esperar a que el sistema principal esté listo
-function integrateRouting() {
-  routing.log('🔧 Integrando routing con sistema existente...');
+// Modificar filters.setCategory para actualizar URL
+if (window.filters) {
+  const originalSetCategory = window.filters.setCategory;
+  window.filters.setCategory = function(category) {
+    originalSetCategory.call(this, category);
+    routing.updateURL({
+      category: category,
+      subcategory: state.currentSubcategory
+    });
+  };
   
-  // Modificar filters.setCategory
-  const filters = window.mawewe?.filters || window.filters;
+  const originalSetSubcategory = window.filters.setSubcategory;
+  window.filters.setSubcategory = function(subcategory) {
+    originalSetSubcategory.call(this, subcategory);
+    routing.updateURL({
+      category: state.currentFilter,
+      subcategory: state.currentSubcategory
+    });
+  };
   
-  if (filters && typeof filters.setCategory === 'function') {
-    const originalSetCategory = filters.setCategory.bind(filters);
-    filters.setCategory = function(category) {
-      originalSetCategory(category);
-      routing.updateURL({
-        category: category,
-        subcategory: window.state?.currentSubcategory
-      });
-    };
-    routing.log('✅ filters.setCategory integrado');
-  }
-  
-  if (filters && typeof filters.setSubcategory === 'function') {
-    const originalSetSubcategory = filters.setSubcategory.bind(filters);
-    filters.setSubcategory = function(subcategory) {
-      originalSetSubcategory(subcategory);
-      routing.updateURL({
-        category: window.state?.currentFilter,
-        subcategory: window.state?.currentSubcategory
-      });
-    };
-    routing.log('✅ filters.setSubcategory integrado');
-  }
-  
-  if (filters && typeof filters.setSearch === 'function') {
-    const originalSetSearch = filters.setSearch.bind(filters);
-    filters.setSearch = function(query) {
-      originalSetSearch(query);
-      if (query && query.trim()) {
-        routing.updateURL({ search: query });
-      } else {
-        routing.updateURL({});
-      }
-    };
-    routing.log('✅ filters.setSearch integrado');
-  }
-  
-  // Modificar productModal
-  if (window.productModal && typeof window.productModal.show === 'function') {
-    const originalShow = window.productModal.show.bind(window.productModal);
-    window.productModal.show = function(productId) {
-      originalShow(productId);
-      routing.updateURL({ product: productId });
-    };
-    routing.log('✅ productModal.show integrado');
-    
-    const originalClose = window.productModal.close.bind(window.productModal);
-    window.productModal.close = function() {
-      originalClose();
-      const currentFilter = window.state?.currentFilter;
-      const currentSubcategory = window.state?.currentSubcategory;
-      routing.updateURL({
-        category: currentFilter !== 'all' ? currentFilter : null,
-        subcategory: currentSubcategory
-      });
-    };
-    routing.log('✅ productModal.close integrado');
-  }
-  
-  routing.log('✅ Integración completada');
+  const originalSetSearch = window.filters.setSearch;
+  window.filters.setSearch = function(query) {
+    originalSetSearch.call(this, query);
+    if (query.trim()) {
+      routing.updateURL({ search: query });
+    } else {
+      routing.updateURL({});
+    }
+  };
 }
+
+// Modificar productModal.show para actualizar URL
+if (window.productModal) {
+  const originalShow = window.productModal.show;
+  window.productModal.show = function(productId) {
+    originalShow.call(this, productId);
+    routing.updateURL({ product: productId });
+  };
+  
+  const originalClose = window.productModal.close;
+  window.productModal.close = function() {
+    originalClose.call(this);
+    // Limpiar parámetro de producto
+    routing.updateURL({
+      category: state.currentFilter !== 'all' ? state.currentFilter : null,
+      subcategory: state.currentSubcategory
+    });
+  };
+}
+
+// =============================================================================
+// BOTONES DE COMPARTIR
+// =============================================================================
+
+const shareButtons = {
+  
+  // ========================================
+  // Renderizar botones de compartir para producto
+  // ========================================
+  renderProductShare(productId) {
+    const product = state.products.find(p => p.id === productId);
+    if (!product) return '';
+    
+    const url = routing.getProductURL(productId);
+    const title = `${product.name} - Mawewe`;
+    const text = `Mira este producto: ${product.name} - $${product.price.toFixed(2)}`;
+    
+    return `
+      <div class="share-buttons" style="margin-top: var(--spacing-lg); padding: var(--spacing-md); background: var(--gray-50); border-radius: var(--radius-lg);">
+        <p style="font-size: var(--font-size-sm); font-weight: 600; margin-bottom: var(--spacing-sm); color: var(--gray-700);">
+          Compartir este producto:
+        </p>
+        <div style="display: flex; gap: var(--spacing-sm); flex-wrap: wrap;">
+          <button 
+            onclick="routing.copyToClipboard('${url}')"
+            class="btn-share"
+            style="flex: 1; min-width: 100px; padding: var(--spacing-sm); background: var(--gray-200); border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-sm); font-weight: 600; transition: all 0.2s;"
+          >
+            🔗 Copiar Enlace
+          </button>
+          <button 
+            onclick="routing.shareOn('whatsapp', '${url}', '${encodeURIComponent(title)}', '${encodeURIComponent(text)}')"
+            class="btn-share"
+            style="flex: 1; min-width: 100px; padding: var(--spacing-sm); background: #25D366; color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-sm); font-weight: 600; transition: all 0.2s;"
+          >
+            📱 WhatsApp
+          </button>
+          <button 
+            onclick="routing.shareOn('facebook', '${url}', '${encodeURIComponent(title)}')"
+            class="btn-share"
+            style="flex: 1; min-width: 100px; padding: var(--spacing-sm); background: #1877F2; color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-sm); font-weight: 600; transition: all 0.2s;"
+          >
+            📘 Facebook
+          </button>
+        </div>
+      </div>
+    `;
+  },
+  
+  // ========================================
+  // Renderizar botones de compartir para categoría
+  // ========================================
+  renderCategoryShare(categoryId) {
+    const category = state.categories.find(c => c.id === categoryId);
+    if (!category) return '';
+    
+    const url = routing.getCategoryURL(categoryId);
+    const title = `${category.name} - Mawewe`;
+    const text = `Mira nuestra colección de ${category.name.toLowerCase()}`;
+    
+    return `
+      <div class="share-category" style="margin-bottom: var(--spacing-lg);">
+        <button 
+          onclick="routing.copyToClipboard('${url}')"
+          style="padding: var(--spacing-sm) var(--spacing-lg); background: var(--gray-100); border: 1px solid var(--gray-300); border-radius: var(--radius-full); cursor: pointer; font-size: var(--font-size-sm); font-weight: 600; transition: all 0.2s;"
+        >
+          🔗 Compartir ${category.name}
+        </button>
+      </div>
+    `;
+  }
+};
 
 // =============================================================================
 // MANEJO DEL BOTÓN ATRÁS/ADELANTE DEL NAVEGADOR
 // =============================================================================
 
 window.addEventListener('popstate', () => {
-  routing.log('⬅️ Navegación con botón atrás/adelante');
+  console.log('⬅️ Navegación con botón atrás/adelante');
   routing.handleInitialURL();
 });
 
@@ -531,47 +461,23 @@ window.addEventListener('popstate', () => {
 // INICIALIZACIÓN
 // =============================================================================
 
+// Procesar URL al cargar la página
 document.addEventListener('DOMContentLoaded', () => {
-  routing.log('═══════════════════════════════════════');
-  routing.log('🚀 Sistema de routing inicializado (LOCALHOST)');
-  routing.log('═══════════════════════════════════════');
+  console.log('🚀 Sistema de routing inicializado');
   
-  // Intentar integrar inmediatamente
+  // Pequeño delay para asegurar que todo esté cargado
   setTimeout(() => {
-    integrateRouting();
     routing.handleInitialURL();
   }, 100);
-  
-  // Re-intentar después de 1 segundo (por si app.js tarda en cargar)
-  setTimeout(() => {
-    integrateRouting();
-  }, 1000);
-  
-  // Mostrar todas las URLs disponibles después de 2 segundos
-  setTimeout(() => {
-    routing.showAllURLs();
-  }, 2000);
 });
-
-// =============================================================================
-// COMANDOS DE CONSOLA PARA PRUEBAS
-// =============================================================================
-
-console.log('\n╔═══════════════════════════════════════════════════════════╗');
-console.log('║  🔗 SISTEMA DE ROUTING CARGADO (MODO DESARROLLO)         ║');
-console.log('╚═══════════════════════════════════════════════════════════╝\n');
-console.log('📝 COMANDOS DISPONIBLES EN CONSOLA:\n');
-console.log('  routing.showAllURLs()              - Ver todas las URLs');
-console.log('  routing.getCategoryURL("joyas")    - URL de categoría');
-console.log('  routing.getProductURL(123)         - URL de producto');
-console.log('  routing.copyToClipboard(url)       - Copiar URL');
-console.log('  routing.debug = false              - Desactivar logs\n');
 
 // Exportar para uso global
 window.routing = routing;
+window.shareButtons = shareButtons;
 
 if (window.mawewe) {
   window.mawewe.routing = routing;
+  window.mawewe.shareButtons = shareButtons;
 }
 
-console.log('✅ Sistema listo. Escribe routing.showAllURLs() para ver enlaces\n');
+console.log('✅ URL Routing System cargado');
