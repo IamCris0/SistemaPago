@@ -4,8 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-
-    <!-- Primary Meta Tags -->
     <title>
       Mawewe | Tienda Online Premium en Ecuador - Envío Gratis sobre $50
     </title>
@@ -24,8 +22,6 @@
     <meta name="robots" content="index, follow" />
     <meta name="language" content="Spanish" />
     <meta name="author" content="Mawewe" />
-
-    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://mawewe.com.ec/" />
     <meta
@@ -42,8 +38,6 @@
     />
     <meta property="og:locale" content="es_EC" />
     <meta property="og:site_name" content="Mawewe" />
-
-    <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://mawewe.com.ec/" />
     <meta
@@ -58,56 +52,27 @@
       property="twitter:image"
       content="https://mawewe.com.ec/assets/images/twitter-card.jpg"
     />
-
-    <!-- Favicon -->
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="./favicon-32x32.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href="./favicon-16x16.png"
-    />
-    <link
-      rel="apple-touch-icon"
-      sizes="180x180"
-      href="./apple-touch-icon.png"
-    />
+    <!-- Favicon: emoji 🛒 via inline SVG (no archivo externo necesario) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🛒</text></svg>" />
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🛒</text></svg>" />
     <link rel="manifest" href="./site.webmanifest" />
-
-    <!-- Canonical URL -->
     <link rel="canonical" href="https://mawewe.com.ec/" />
-
-    <!-- Preconnect for Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://www.paypal.com" />
     <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
-
-    <!-- Fonts - Optimized Loading -->
     <link
       href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
-
-    <!-- CSS -->
     <link rel="stylesheet" href="./assets/css/styles.css" />
     <link rel="stylesheet" href="./assets/css/features-advanced.css" />
     <link rel="stylesheet" href="./assets/css/modal-styles.css" />
     <link rel="stylesheet" href="./assets/css/checkout-styles.css" />
     <link rel="stylesheet" href="./assets/css/fix-modal-images.css" />
     <link rel="stylesheet" href="./assets/css/fix-spacing-hero-products.css">
-
-
-    <!-- Theme Color -->
     <meta name="theme-color" content="#d51f88" />
     <meta name="msapplication-TileColor" content="#d51f88" />
-
-    <!-- Schema.org Structured Data -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -137,8 +102,6 @@
         "currenciesAccepted": "USD"
       }
     </script>
-
-    <!-- Google Analytics - Enhanced -->
     <script
       async
       src="https://www.googletagmanager.com/gtag/js?id=G-FHRFVTPYFQ"
@@ -153,8 +116,6 @@
         send_page_view: true,
         anonymize_ip: true,
       });
-
-      // Enhanced E-commerce Events
       function trackAddToCart(productName, price, category) {
         gtag("event", "add_to_cart", {
           currency: "USD",
@@ -169,7 +130,6 @@
           ],
         });
       }
-
       function trackPurchase(orderId, total, items) {
         gtag("event", "purchase", {
           transaction_id: orderId,
@@ -181,9 +141,7 @@
     </script>
   </head>
   <body>
-    <!-- Skip to main content for accessibility -->
     <a href="#main-content" class="skip-to-main">Ir al contenido principal</a>
-
     <!-- HEADER -->
     <header class="site-header" role="banner">
       <div class="header-container">
@@ -196,12 +154,9 @@
             />
           </a>
         </div>
-
-        <!-- Eslogan Central -->
         <div class="site-slogan">
           <p>Hace que cada ocasión sea inolvidable</p>
         </div>
-
         <nav
           class="header-actions"
           role="navigation"
@@ -214,21 +169,7 @@
             aria-expanded="false"
             aria-controls="cart-modal"
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              aria-hidden="true"
-            >
-              <circle cx="9" cy="21" r="1"></circle>
-              <circle cx="20" cy="21" r="1"></circle>
-              <path
-                d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"
-              ></path>
-            </svg>
+            <span aria-hidden="true" style="font-size: 1.25rem; line-height: 1;">🛒</span>
             <span>Carrito</span>
             <span
               class="cart-badge"
@@ -241,15 +182,11 @@
         </nav>
       </div>
     </header>
-
     <!-- MAIN CONTENT -->
     <main class="site-main" id="main-content" role="main">
-      <!-- Hero Section -->
-      <!-- Hero Section - ACTUALIZADO -->
       <section class="hero-section" aria-labelledby="hero-title">
         <div class="container">
           <div class="hero-content">
-            <!-- IZQUIERDA: Título y Subtítulo (antes era derecha) -->
             <div class="hero-right">
               <div class="hero-title-wrapper">
                 <h2 class="hero-title" id="hero-title">
@@ -262,13 +199,8 @@
                 100% seguro con PayPal y entrega en todo Ecuador.
               </p>
             </div>
-
-            <!-- DERECHA: WhatsApp con texto (antes era izquierda) -->
             <div class="hero-left">
-              <!-- ✅ NUEVO: Texto de ayuda -->
               <p class="hero-question">¿Necesitas ayuda con tu compra?</p>
-
-              <!-- ✅ NUEVO: Texto del botón cambiado -->
               <a
                 href="https://wa.me/593981832313?text=Hola,%20necesito%20ayuda%20con%20mi%20compra"
                 class="hero-whatsapp-btn"
@@ -292,8 +224,6 @@
           </div>
         </div>
       </section>
-
-      <!-- Products Section -->
       <section
         class="section products-section"
         aria-labelledby="products-heading"
@@ -302,8 +232,6 @@
           <h2 id="products-heading" class="visually-hidden">
             Nuestros Productos
           </h2>
-
-          <!-- Filters -->
           <div
             class="filters-container"
             role="search"
@@ -320,32 +248,23 @@
               aria-label="Buscar productos por nombre o descripción"
               autocomplete="off"
             />
-
             <div
               id="category-filters"
               class="category-filters"
               role="group"
               aria-label="Filtrar por categoría"
-            >
-              <!-- Categories rendered by JS -->
-            </div>
-
+            ></div>
             <div id="subcategory-container" class="subcategory-container">
               <span class="subcategory-label">Marcas de Ropa:</span>
-              <div id="subcategory-filters" class="subcategory-filters">
-                <!-- Subcategories rendered by JS -->
-              </div>
+              <div id="subcategory-filters" class="subcategory-filters"></div>
             </div>
           </div>
-
-          <!-- Products Grid -->
           <div
             id="products-grid"
             class="products-grid"
             role="list"
             aria-label="Lista de productos"
           >
-            <!-- Products rendered by JS -->
             <noscript>
               <div style="grid-column: 1/-1; text-align: center; padding: 4rem">
                 <p>
@@ -356,8 +275,6 @@
           </div>
         </div>
       </section>
-
-      <!-- Features Section -->
       <section
         class="section features-section"
         style="background-color: var(--gray-100)"
@@ -376,7 +293,6 @@
               Tu tienda de confianza en Ecuador
             </p>
           </div>
-
           <div class="footer-grid">
             <article class="feature-item" style="text-align: center">
               <div
@@ -403,7 +319,6 @@
                 Transacciones 100% protegidas con PayPal y encriptación SSL
               </p>
             </article>
-
             <article class="feature-item" style="text-align: center">
               <div
                 style="
@@ -432,7 +347,6 @@
                 Entrega rápida en todo Ecuador. Rastreo en tiempo real
               </p>
             </article>
-
             <article class="feature-item" style="text-align: center">
               <div
                 style="
@@ -463,8 +377,6 @@
           </div>
         </div>
       </section>
-
-      <!-- Trust Badges Section -->
       <section class="section trust-section" aria-labelledby="trust-heading">
         <div class="container">
           <h2 id="trust-heading" class="visually-hidden">
@@ -527,8 +439,6 @@
         </div>
       </section>
     </main>
-
-    <!-- Botón Flotante de WhatsApp -->
     <a
       href="https://wa.me/593981832313?text=Hola,%20estoy%20interesado%20en%20sus%20productos"
       class="whatsapp-float"
@@ -550,7 +460,6 @@
         />
       </svg>
     </a>
-
     <!-- FOOTER -->
     <footer class="site-footer" role="contentinfo">
       <div class="container">
@@ -602,7 +511,6 @@
               </a>
             </div>
           </div>
-
           <nav aria-labelledby="footer-nav-categories">
             <h3 class="footer-section-inferior" id="footer-nav-categories">
               Categorías
@@ -617,7 +525,6 @@
               <li><a href="#accesorios">Accesorios</a></li>
             </ul>
           </nav>
-
           <nav aria-labelledby="footer-nav-support">
             <h3 class="footer-section-inferior" id="footer-nav-support">
               Servicio al Cliente
@@ -631,7 +538,6 @@
               <li><a href="#contacto">Contáctanos</a></li>
             </ul>
           </nav>
-
           <div>
             <h3 class="footer-section-inferior">Contacto</h3>
             <address
@@ -646,7 +552,6 @@
                 Jorge Añazco y 12 de Febrero<br />
                 Lago Agrio, Sucumbíos, Ecuador
               </p>
-
               <p>
                 <strong>Teléfono:</strong><br />
                 <a
@@ -655,20 +560,11 @@
                   >+593 98 183 2313</a
                 >
               </p>
-
               <p>
                 <strong>Email:</strong><br />
-                <a
-                  href="/cdn-cgi/l/email-protection#c6afa8a0a986aba7b1a3b1a3e8a5a9abe8a3a5"
-                  style="color: var(--gray-400); text-decoration: none"
-                  ><span
-                    class="__cf_email__"
-                    data-cfemail="d7beb9b1b897bab6a0b2a0b2f9b4b8baf9b2b4"
-                    >[email&#160;protected]</span
-                  ></a
+                <a href="/cdn-cgi/l/email-protection#c7aea9a1a887aaa6b0a2b0a2e9a4a8aae9a2a4" style="color: var(--gray-400); text-decoration: none"><span class="__cf_email__" data-cfemail="462f282029062b27312331236825292b682325">[email&#160;protected]</span></a
                 >
               </p>
-
               <p>
                 <strong>Horario:</strong><br />
                 Lun - Dom: 24/7 (Online)
@@ -676,7 +572,6 @@
             </address>
           </div>
         </div>
-
         <div class="footer-bottom">
           <p>
             © 2024-2026 Mawewe. Todos los derechos reservados. | Desarrollado
@@ -693,10 +588,8 @@
         </div>
       </div>
     </footer>
-
     <!-- CART MODAL -->
     <div class="cart-overlay" id="cart-overlay" role="presentation"></div>
-
     <aside
       class="cart-modal"
       id="cart-modal"
@@ -714,31 +607,18 @@
           &times;
         </button>
       </header>
-
-      <!-- Cart Items Container -->
       <div
         class="cart-items"
         id="cart-items"
         role="list"
         aria-label="Productos en el carrito"
-      >
-        <!-- Cart items rendered by JS -->
-      </div>
-
-      <!-- Checkout Form Container -->
+      ></div>
       <div
         id="checkout-form-container"
         style="display: none; flex: 1; overflow-y: auto"
-      >
-        <!-- Checkout form rendered by JS -->
-      </div>
-
-      <!-- Cart Footer -->
+      ></div>
       <footer class="cart-footer" id="cart-footer">
-        <div class="cart-summary" id="cart-summary">
-          <!-- Summary rendered by JS -->
-        </div>
-
+        <div class="cart-summary" id="cart-summary"></div>
         <button
           class="checkout-btn"
           onclick="mawewe.checkout.openCheckout()"
@@ -746,7 +626,6 @@
         >
           Proceder al Pago
         </button>
-
         <p
           style="
             text-align: center;
@@ -770,8 +649,6 @@
         </p>
       </footer>
     </aside>
-
-    <!-- Loading Spinner (hidden by default) -->
     <div
       id="loading-spinner"
       class="loading-spinner"
@@ -782,21 +659,17 @@
       <div class="spinner"></div>
       <p>Cargando productos...</p>
     </div>
-
-    <script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
       const observer = new MutationObserver(() => {
         const checkoutContainer = document.getElementById(
           "checkout-form-container",
         );
         const cartFooter = document.getElementById("cart-footer");
         const cartItems = document.getElementById("cart-items");
-
         if (checkoutContainer && cartFooter && cartItems) {
           const isCheckoutVisible = checkoutContainer.style.display !== "none";
           cartFooter.style.display = isCheckoutVisible ? "none" : "block";
           cartItems.style.display = isCheckoutVisible ? "none" : "block";
-
-          // Update ARIA attributes
           const cartBtn = document.querySelector(".btn-cart");
           if (cartBtn) {
             cartBtn.setAttribute(
@@ -806,7 +679,6 @@
           }
         }
       });
-
       const checkoutContainer = document.getElementById(
         "checkout-form-container",
       );
@@ -817,8 +689,6 @@
         });
       }
     </script>
-
-    <!-- Service Worker Registration (PWA) -->
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
