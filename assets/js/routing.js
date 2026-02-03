@@ -1,19 +1,3 @@
-/**
- * MAWEWE E-COMMERCE - URL ROUTING SYSTEM
- * Sistema de URLs compartibles para categorías y productos
- * 
- * URLs soportadas:
- * - https://mawewe.com.ec/ (todas las categorías)
- * - https://mawewe.com.ec/?category=san-valentin
- * - https://mawewe.com.ec/?category=perfumes&subcategory=dior
- * - https://mawewe.com.ec/?product=123
- * - https://mawewe.com.ec/?search=regalo
- */
-
-// =============================================================================
-// URL ROUTING SYSTEM
-// =============================================================================
-
 const routing = {
   
   // ========================================
@@ -29,9 +13,6 @@ const routing = {
     };
   },
   
-  // ========================================
-  // Actualizar URL sin recargar la página
-  // ========================================
   updateURL(params = {}) {
     const url = new URL(window.location.href);
     
