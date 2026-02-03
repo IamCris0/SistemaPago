@@ -359,6 +359,11 @@ const productModal = {
       ? product.images.slice(0, 3)
       : [product.image, product.image, product.image];
     
+    // ✅ GENERAR URL COMPARTIBLE
+    const productURL = window.location.origin + '/?product=' + productId;
+    const shareTitle = `${product.name} - Mawewe`;
+    const shareText = `Mira este producto: ${product.name} - $${Number(product.price).toFixed(2)}`;
+    
     const modal = document.createElement('div');
     modal.className = 'product-modal-overlay';
     modal.id = 'product-detail-modal';
@@ -404,6 +409,56 @@ const productModal = {
             
             <p class="modal-description">${product.description}</p>
             
+            <!-- ✅ BOTONES DE COMPARTIR -->
+            <div class="share-section" style="margin: var(--spacing-lg) 0; padding: var(--spacing-md); background: var(--gray-50); border-radius: var(--radius-lg); border: 1px solid var(--gray-200);">
+              <p style="font-size: var(--font-size-sm); font-weight: 600; margin-bottom: var(--spacing-sm); color: var(--gray-700);">
+                📤 Compartir este producto:
+              </p>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--spacing-sm);">
+                
+                <!-- Copiar Enlace -->
+                <button 
+                  onclick="routing.copyToClipboard('${productURL}')"
+                  style="padding: var(--spacing-sm); background: var(--gray-200); border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-xs); font-weight: 600; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px;"
+                  onmouseover="this.style.background='var(--gray-300)'"
+                  onmouseout="this.style.background='var(--gray-200)'"
+                >
+                  🔗 Copiar
+                </button>
+                
+                <!-- WhatsApp -->
+                <button 
+                  onclick="routing.shareOn('whatsapp', '${productURL}', '${encodeURIComponent(shareTitle)}', '${encodeURIComponent(shareText)}')"
+                  style="padding: var(--spacing-sm); background: #25D366; color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-xs); font-weight: 600; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px;"
+                  onmouseover="this.style.background='#128C7E'"
+                  onmouseout="this.style.background='#25D366'"
+                >
+                  📱 WhatsApp
+                </button>
+                
+                <!-- Facebook -->
+                <button 
+                  onclick="routing.shareOn('facebook', '${productURL}', '${encodeURIComponent(shareTitle)}')"
+                  style="padding: var(--spacing-sm); background: #1877F2; color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-xs); font-weight: 600; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px;"
+                  onmouseover="this.style.background='#0C63D4'"
+                  onmouseout="this.style.background='#1877F2'"
+                >
+                  📘 Facebook
+                </button>
+                
+                <!-- Twitter -->
+                <button 
+                  onclick="routing.shareOn('twitter', '${productURL}', '${encodeURIComponent(shareTitle)}')"
+                  style="padding: var(--spacing-sm); background: #1DA1F2; color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-xs); font-weight: 600; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px;"
+                  onmouseover="this.style.background='#0C8BD9'"
+                  onmouseout="this.style.background='#1DA1F2'"
+                >
+                  🐦 Twitter
+                </button>
+                
+              </div>
+            </div>
+            
             <div class="product-details-list">
               <h3>Detalles del Producto</h3>
               <ul>
@@ -411,6 +466,7 @@ const productModal = {
                 <li><strong>Stock disponible:</strong> ${product.stock} unidades</li>
                 <li><strong>Categoría:</strong> ${product.category ? product.category.toUpperCase() : ''}</li>
                 ${product.subcategory ? `<li><strong>Subcategoría:</strong> ${product.subcategory.toUpperCase()}</li>` : ''}
+                <li><strong>URL:</strong> <a href="${productURL}" style="color: var(--primary-800); text-decoration: none; word-break: break-all;">${productURL}</a></li>
               </ul>
             </div>
             
@@ -436,6 +492,9 @@ const productModal = {
         this.close();
       }
     });
+    
+    // ✅ ACTUALIZAR URL (esto lo hace routing.js automáticamente)
+    console.log('🔗 Producto abierto:', productURL);
   },
   
   close() {
