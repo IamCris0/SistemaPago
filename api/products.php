@@ -1,30 +1,49 @@
 <?php
 // ============================================================
-// HEADERS CORS FORZADOS (antes de cualquier output)
+// MAWEWE API - PRODUCTS.PHP - SOLUCIÓN DEFINITIVA
+// Headers CORS ultra agresivos + Limpieza completa
 // ============================================================
-if (isset($_SERVER['HTTP_ORIGIN'])) {
-    header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
-} else {
-    header("Access-Control-Allow-Origin: *");
-}
-header("Access-Control-Allow-Credentials: true");
-header("Access-Control-Max-Age: 3600");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, cache-control");
-header("Content-Type: application/json; charset=UTF-8");
 
-// Manejar preflight
+// 1. LIMPIAR TODO BUFFER DE SALIDA
+while (ob_get_level()) {
+    ob_end_clean();
+}
+
+// 2. REMOVER CUALQUIER HEADER PREVIO
+if (function_exists('header_remove')) {
+    header_remove();
+}
+
+// 3. FORZAR HEADERS CORS (MÚLTIPLES MÉTODOS)
+header('Access-Control-Allow-Origin: *', true);
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS', true);
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, cache-control', true);
+header('Access-Control-Allow-Credentials: true', true);
+header('Access-Control-Max-Age: 3600', true);
+header('Content-Type: application/json; charset=UTF-8', true);
+
+// 4. APACHE_SETENV (por si acaso)
+if (function_exists('apache_setenv')) {
+    apache_setenv('no-gzip', '1');
+    apache_setenv('CORS-enabled', '1');
+}
+
+// 5. MANEJAR PREFLIGHT
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
 }
 
-// Solo GET
+// 6. SOLO GET
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     http_response_code(405);
     echo json_encode(['success' => false, 'message' => 'Método no permitido']);
     exit;
 }
+
+// ============================================================
+// LÓGICA PRINCIPAL
+// ============================================================
 
 try {
     require_once __DIR__ . '/config/database.php';
@@ -36,11 +55,11 @@ try {
         throw new Exception('No se pudo conectar a la base de datos');
     }
     
-    // Obtener columnas
+    // Obtener columnas disponibles
     $stmt = $db->query("DESCRIBE products");
     $columns = $stmt->fetchAll(PDO::FETCH_COLUMN);
     
-    // Columnas requeridas
+    // Verificar columnas requeridas
     $required = ['id', 'name', 'price', 'active'];
     foreach ($required as $col) {
         if (!in_array($col, $columns)) {
@@ -48,7 +67,7 @@ try {
         }
     }
     
-    // SELECT dinámico
+    // Construir SELECT dinámico
     $select = ['id', 'name', 'price', 'active'];
     $optional = ['sku', 'category', 'subcategory', 'description', 'image', 'images', 'stock', 'created_at', 'updated_at'];
     
@@ -162,15 +181,30 @@ try {
             'expressCost' => 0.0
         ],
         'total' => count($products),
-        'timestamp' => date('c')
+        'timestamp' => date('c'),
+        'debug' => [
+            'cors_enabled' => true,
+            'php_version' => PHP_VERSION,
+            'method' => $_SERVER['REQUEST_METHOD']
+        ]
     ];
     
+    // ENVIAR RESPUESTA
     echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'message' => 'Error: ' . $e->getMessage()
+        'message' => 'Error: ' . $e->getMessage(),
+        'debug' => [
+            'cors_enabled' => true,
+            'php_version' => PHP_VERSION
+        ]
     ]);
+}
+
+// 7. FLUSH FINAL
+if (function_exists('fastcgi_finish_request')) {
+    fastcgi_finish_request();
 }
