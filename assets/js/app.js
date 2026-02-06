@@ -10,7 +10,20 @@
 
 const CONFIG = {
   api: {
-    baseUrl: 'https://mawewe.com.ec/api',
+    // Auto-detectar la URL base de la API
+    baseUrl: (() => {
+      // Si estamos en localhost o desarrollo
+      if (window.location.hostname === 'localhost' || 
+          window.location.hostname === '127.0.0.1') {
+        return 'http://localhost/api';
+      }
+      
+      // Si estamos en producción, usar el dominio actual
+      const protocol = window.location.protocol;
+      const host = window.location.hostname;
+      return `${protocol}//${host}/api`;
+    })(),
+    
     endpoints: {
       products: '/products.php',
       saveOrder: '/save-order.php'
@@ -23,9 +36,9 @@ const CONFIG = {
   },
   
   shipping: {
-    cost: 0.00,              // ✅ SIEMPRE GRATIS
-    freeThreshold: 0.00,     // ✅ SIN UMBRAL
-    expressCost: 0.00        // ✅ NO HAY EXPRESS
+    cost: 0.00,
+    freeThreshold: 0.00,
+    expressCost: 0.00
   },
   
   search: {
@@ -34,7 +47,8 @@ const CONFIG = {
   }
 };
 
-console.log('🚀 Mawewe iniciando (envío gratis siempre)...');
+console.log('🚀 Mawewe iniciando...');
+console.log('📡 API URL:', CONFIG.api.baseUrl);
 
 // =============================================================================
 // STATE MANAGEMENT
@@ -49,7 +63,7 @@ const state = {
   currentFilter: 'all',
   currentSubcategory: null,
   searchQuery: '',
-  shippingMethod: 'standard', // ✅ SIEMPRE ESTÁNDAR
+  shippingMethod: 'standard',
   checkoutData: {},
   isSearching: false
 };
@@ -61,6 +75,7 @@ const state = {
 const api = {
   async fetchProducts(filters = {}) {
     try {
+      // Construir URL
       let url = `${CONFIG.api.baseUrl}${CONFIG.api.endpoints.products}`;
       
       const params = new URLSearchParams();
@@ -83,10 +98,33 @@ const api = {
       
       console.log('📡 Fetching:', url);
       
-      const response = await fetch(url);
+      // Hacer la petición con headers explícitos
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        mode: 'cors',
+        cache: 'no-cache'
+      });
+      
+      console.log('📥 Response status:', response.status);
+      console.log('📥 Response headers:', {
+        'content-type': response.headers.get('content-type'),
+        'access-control-allow-origin': response.headers.get('access-control-allow-origin')
+      });
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      // Verificar que la respuesta sea JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('❌ Respuesta no es JSON:', text.substring(0, 500));
+        throw new Error('La API no está respondiendo con JSON. Verifica products.php');
       }
       
       const data = await response.json();
@@ -106,22 +144,38 @@ const api = {
       
     } catch (error) {
       console.error('❌ API Error:', error);
+      
+      // Mostrar error detallado al usuario
+      if (error.message.includes('Failed to fetch')) {
+        throw new Error('No se puede conectar con el servidor. Verifica:\n1. Que la API esté funcionando\n2. Configuración CORS\n3. URL de la API: ' + CONFIG.api.baseUrl);
+      }
+      
       throw error;
     }
   },
 
   async saveOrder(orderData) {
     try {
-      const response = await fetch(
-        CONFIG.api.baseUrl + CONFIG.api.endpoints.saveOrder,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(orderData),
-        }
-      );
+      const url = CONFIG.api.baseUrl + CONFIG.api.endpoints.saveOrder;
+      
+      console.log('💾 Guardando orden en:', url);
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(orderData),
+        mode: 'cors'
+      });
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('❌ save-order.php no respondió JSON:', text.substring(0, 500));
+        throw new Error('Error en save-order.php');
+      }
 
       const result = await response.json();
 
@@ -131,11 +185,47 @@ const api = {
 
       return result;
     } catch (error) {
-      console.error('Error saving order:', error);
+      console.error('❌ Error saving order:', error);
       throw error;
     }
   }
 };
+async function testAPIConnection() {
+  console.log('🔍 Probando conexión con la API...');
+  
+  try {
+    const testUrl = `${CONFIG.api.baseUrl}${CONFIG.api.endpoints.products}`;
+    console.log('🔗 URL de prueba:', testUrl);
+    
+    const response = await fetch(testUrl, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      },
+      mode: 'cors'
+    });
+    
+    console.log('✅ Respuesta del servidor:', response.status, response.statusText);
+    
+    const contentType = response.headers.get('content-type');
+    console.log('📄 Content-Type:', contentType);
+    
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      console.error('❌ La API no está respondiendo JSON:', text.substring(0, 500));
+      return false;
+    }
+    
+    const data = await response.json();
+    console.log('✅ Datos recibidos:', data);
+    
+    return data.success === true;
+    
+  } catch (error) {
+    console.error('❌ Error en test de conexión:', error);
+    return false;
+  }
+}
 
 // =============================================================================
 // CART FUNCTIONS

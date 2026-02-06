@@ -1,24 +1,29 @@
-# .htaccess para API de Mawewe
-# CORS para desarrollo (localhost) Y producción (tienda.mawewe.com.ec)
+# .htaccess para API de Mawewe - VERSIÓN CORREGIDA
+# Compatible con cualquier frontend/host
 
 # ========================================
 # HABILITAR CORS PARA TODOS LOS ORÍGENES
 # ========================================
 <IfModule mod_headers.c>
-    # Permitir CUALQUIER origen (para desarrollo)
+    # Permitir CUALQUIER origen
     Header always set Access-Control-Allow-Origin "*"
     
     # Métodos HTTP permitidos
     Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
     
     # Headers permitidos
-    Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, cache-control"
+    Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, Accept, Origin"
     
-    # Permitir credenciales
+    # Permitir credenciales (opcional)
     Header always set Access-Control-Allow-Credentials "true"
     
     # Cache de preflight por 1 hora
     Header always set Access-Control-Max-Age "3600"
+    
+    # Forzar Content-Type JSON en archivos PHP
+    <FilesMatch "\.php$">
+        Header always set Content-Type "application/json; charset=UTF-8"
+    </FilesMatch>
 </IfModule>
 
 # ========================================
@@ -58,7 +63,7 @@ Options -Indexes
 </IfModule>
 
 # ========================================
-# CACHE CONTROL
+# CACHE CONTROL - NO CACHEAR RESPUESTAS PHP
 # ========================================
 <IfModule mod_headers.c>
     <FilesMatch "\.(php)$">
@@ -71,3 +76,12 @@ Options -Indexes
 # UTF-8 ENCODING
 # ========================================
 AddDefaultCharset UTF-8
+
+# ========================================
+# PHP SETTINGS (si aplica)
+# ========================================
+<IfModule mod_php7.c>
+    php_flag display_errors Off
+    php_value error_reporting 0
+    php_flag log_errors On
+</IfModule>

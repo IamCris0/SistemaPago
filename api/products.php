@@ -1,51 +1,53 @@
 <?php
-// ============================================================
-// MAWEWE API - PRODUCTS.PHP - SOLUCIÓN DEFINITIVA
-// Headers CORS ultra agresivos + Limpieza completa
-// ============================================================
+/**
+ * MAWEWE API - PRODUCTS.PHP - VERSIÓN CORREGIDA
+ * ✅ CORS configurado correctamente
+ * ✅ Headers limpios
+ * ✅ Compatible con cualquier frontend
+ */
 
-// 1. LIMPIAR TODO BUFFER DE SALIDA
+// ============================================================
+// 1. LIMPIAR BUFFER DE SALIDA
+// ============================================================
 while (ob_get_level()) {
     ob_end_clean();
 }
 
-// 2. REMOVER CUALQUIER HEADER PREVIO
-if (function_exists('header_remove')) {
-    header_remove();
-}
+// ============================================================
+// 2. HEADERS CORS - PERMITIR CUALQUIER ORIGEN
+// ============================================================
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+header('Access-Control-Allow-Credentials: true');
+header('Access-Control-Max-Age: 3600');
+header('Content-Type: application/json; charset=UTF-8');
 
-// 3. FORZAR HEADERS CORS (MÚLTIPLES MÉTODOS)
-header('Access-Control-Allow-Origin: *', true);
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS', true);
-header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, cache-control', true);
-header('Access-Control-Allow-Credentials: true', true);
-header('Access-Control-Max-Age: 3600', true);
-header('Content-Type: application/json; charset=UTF-8', true);
-
-// 4. APACHE_SETENV (por si acaso)
-if (function_exists('apache_setenv')) {
-    apache_setenv('no-gzip', '1');
-    apache_setenv('CORS-enabled', '1');
-}
-
-// 5. MANEJAR PREFLIGHT
+// ============================================================
+// 3. MANEJAR PREFLIGHT (OPTIONS)
+// ============================================================
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
 }
 
-// 6. SOLO GET
+// ============================================================
+// 4. SOLO PERMITIR GET
+// ============================================================
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     http_response_code(405);
-    echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Método no permitido. Solo GET.'
+    ]);
     exit;
 }
 
 // ============================================================
-// LÓGICA PRINCIPAL
+// 5. LÓGICA PRINCIPAL
 // ============================================================
-
 try {
+    // Conectar a la base de datos
     require_once __DIR__ . '/config/database.php';
     
     $database = new Database();
@@ -79,35 +81,38 @@ try {
     
     $selectStr = implode(', ', $select);
     
-    // Query base
+    // ============================================================
+    // CONSTRUIR QUERY CON FILTROS
+    // ============================================================
     $sql = "SELECT $selectStr FROM products WHERE active = 1";
     $params = [];
     
-    // Filtros
+    // Filtro por categoría
     $category = isset($_GET['category']) && $_GET['category'] !== 'all' && $_GET['category'] !== '' 
         ? trim($_GET['category']) : null;
-    
-    $subcategory = isset($_GET['subcategory']) && $_GET['subcategory'] !== '' 
-        ? trim($_GET['subcategory']) : null;
-    
-    $search = isset($_GET['search']) && $_GET['search'] !== '' 
-        ? trim($_GET['search']) : null;
     
     if ($category && in_array('category', $columns)) {
         $sql .= " AND LOWER(category) = LOWER(:category)";
         $params[':category'] = $category;
     }
     
+    // Filtro por subcategoría
+    $subcategory = isset($_GET['subcategory']) && $_GET['subcategory'] !== '' 
+        ? trim($_GET['subcategory']) : null;
+    
     if ($subcategory && in_array('subcategory', $columns)) {
         $sql .= " AND LOWER(subcategory) = LOWER(:subcategory)";
         $params[':subcategory'] = $subcategory;
     }
     
+    // Filtro por búsqueda
+    $search = isset($_GET['search']) && $_GET['search'] !== '' 
+        ? trim($_GET['search']) : null;
+    
     if ($search && strlen($search) >= 2) {
         $searchTerm = '%' . $search . '%';
-        $conditions = ["LOWER(name) LIKE LOWER(:search)"];
+        $sql .= " AND LOWER(name) LIKE LOWER(:search)";
         $params[':search'] = $searchTerm;
-        $sql .= " AND (" . implode(' OR ', $conditions) . ")";
     }
     
     // Ordenar
@@ -117,13 +122,18 @@ try {
         $sql .= " ORDER BY id DESC";
     }
     
-    // Ejecutar
+    // ============================================================
+    // EJECUTAR QUERY
+    // ============================================================
     $stmt = $db->prepare($sql);
     $stmt->execute($params);
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // Procesar productos
+    // ============================================================
+    // PROCESAR PRODUCTOS
+    // ============================================================
     foreach ($products as &$product) {
+        // Asegurar campos básicos
         if (!isset($product['sku'])) $product['sku'] = 'SKU-' . $product['id'];
         if (!isset($product['category'])) $product['category'] = '';
         if (!isset($product['subcategory'])) $product['subcategory'] = '';
@@ -131,10 +141,12 @@ try {
         if (!isset($product['image'])) $product['image'] = '';
         if (!isset($product['stock'])) $product['stock'] = 0;
         
+        // Convertir tipos
         $product['id'] = (int)$product['id'];
         $product['price'] = (float)$product['price'];
         $product['stock'] = (int)$product['stock'];
         
+        // Procesar imágenes
         if (isset($product['images']) && is_string($product['images'])) {
             $decoded = json_decode($product['images'], true);
             $product['images'] = is_array($decoded) ? $decoded : [$product['image']];
@@ -143,7 +155,9 @@ try {
         }
     }
     
-    // Categorías
+    // ============================================================
+    // OBTENER CATEGORÍAS
+    // ============================================================
     $categories = [];
     $subcategoriesByCategory = [];
     
@@ -158,7 +172,11 @@ try {
         
         $total = array_sum(array_column($catsData, 'count'));
         
-        $categories[] = ['id' => 'all', 'name' => 'Todos', 'count' => $total];
+        $categories[] = [
+            'id' => 'all',
+            'name' => 'Todos',
+            'count' => $total
+        ];
         
         foreach ($catsData as $cat) {
             $categories[] = [
@@ -169,7 +187,9 @@ try {
         }
     }
     
-    // Respuesta
+    // ============================================================
+    // RESPUESTA FINAL
+    // ============================================================
     $response = [
         'success' => true,
         'products' => $products,
@@ -181,30 +201,28 @@ try {
             'expressCost' => 0.0
         ],
         'total' => count($products),
-        'timestamp' => date('c'),
-        'debug' => [
-            'cors_enabled' => true,
-            'php_version' => PHP_VERSION,
-            'method' => $_SERVER['REQUEST_METHOD']
-        ]
+        'timestamp' => date('c')
     ];
     
+    // ============================================================
     // ENVIAR RESPUESTA
+    // ============================================================
     echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'message' => 'Error: ' . $e->getMessage(),
-        'debug' => [
-            'cors_enabled' => true,
-            'php_version' => PHP_VERSION
-        ]
-    ]);
+        'message' => 'Error del servidor',
+        'error' => $e->getMessage(),
+        'file' => basename($e->getFile()),
+        'line' => $e->getLine()
+    ], JSON_UNESCAPED_UNICODE);
 }
 
-// 7. FLUSH FINAL
+// ============================================================
+// 6. FLUSH FINAL
+// ============================================================
 if (function_exists('fastcgi_finish_request')) {
     fastcgi_finish_request();
 }
