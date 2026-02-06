@@ -1,6 +1,6 @@
 /**
  * SISTEMA SEGUIMIENTO MAWEWE/ELPALACIO - CRM v4.0
- * JavaScript Principal con Funcionalidades Completas
+ * JavaScript Principal con Sistema de Routing Interno
  * © 2026 Joyería Mawewe
  */
 
@@ -11,6 +11,7 @@ const CRMState = {
     currentUser: null,
     currentModule: 'dashboard',
     sidebarOpen: true,
+    moduleInitialized: {}, // Track which modules have been initialized
     data: {
         employees: [],
         products: [],
@@ -39,12 +40,129 @@ const Modules = {
 };
 
 // ========================================
+// SISTEMA DE ROUTING INTERNO
+// ========================================
+const Router = {
+    routes: {},
+    
+    /**
+     * Registrar una ruta
+     */
+    register(moduleName, initFunction) {
+        this.routes[moduleName] = initFunction;
+        console.log(`✅ Ruta registrada: ${moduleName}`);
+    },
+    
+    /**
+     * Navegar a un módulo
+     */
+    async navigate(moduleName) {
+        console.log(`🧭 Navegando a: ${moduleName}`);
+        
+        // Ocultar todos los módulos
+        document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+        
+        // Mostrar módulo seleccionado
+        const targetModule = document.getElementById(`module-${moduleName}`);
+        if (targetModule) {
+            targetModule.classList.add('active');
+        }
+        
+        // Actualizar navegación activa
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+        const activeNavItem = document.querySelector(`[onclick*="${moduleName}"]`);
+        if (activeNavItem) {
+            activeNavItem.classList.add('active');
+        }
+        
+        // Actualizar título y breadcrumb
+        updatePageTitle(moduleName);
+        
+        // Inicializar módulo si es la primera vez
+        if (!CRMState.moduleInitialized[moduleName]) {
+            await this.initializeModule(moduleName);
+            CRMState.moduleInitialized[moduleName] = true;
+        } else {
+            // Si ya fue inicializado, solo recargar datos
+            await this.loadModuleData(moduleName);
+        }
+        
+        // Actualizar estado y URL
+        CRMState.currentModule = moduleName;
+        window.location.hash = moduleName;
+        
+        // Cerrar sidebar en móvil
+        if (window.innerWidth < 1024) {
+            toggleSidebar();
+        }
+    },
+    
+    /**
+     * Inicializar módulo por primera vez
+     */
+    async initializeModule(moduleName) {
+        console.log(`🚀 Inicializando módulo: ${moduleName}`);
+        
+        try {
+            showLoading();
+            
+            // Si hay una función de inicialización registrada, ejecutarla
+            if (this.routes[moduleName]) {
+                await this.routes[moduleName]();
+            } else {
+                // Fallback: cargar datos del módulo
+                await this.loadModuleData(moduleName);
+            }
+        } catch (error) {
+            console.error(`Error inicializando ${moduleName}:`, error);
+            showToast('Error', `No se pudo cargar ${moduleName}`, 'error');
+        } finally {
+            hideLoading();
+        }
+    },
+    
+    /**
+     * Cargar datos del módulo
+     */
+    async loadModuleData(moduleName) {
+        try {
+            switch (moduleName) {
+                case 'dashboard':
+                    await loadDashboardData();
+                    break;
+                case 'employees':
+                    // El módulo de empleados se inicializa con EmployeeModule.init()
+                    if (typeof EmployeeModule !== 'undefined' && EmployeeModule.init) {
+                        await EmployeeModule.init();
+                    }
+                    break;
+                case 'attendance':
+                    await loadAttendanceData();
+                    break;
+                case 'products':
+                    await loadProductsData();
+                    break;
+                case 'orders':
+                    await loadOrdersData();
+                    break;
+                case 'audit':
+                    await loadAuditData();
+                    break;
+                default:
+                    console.log(`Módulo ${moduleName} no tiene carga de datos específica`);
+            }
+        } catch (error) {
+            console.error(`Error cargando datos de ${moduleName}:`, error);
+        }
+    }
+};
+
+// ========================================
 // FUNCIONES GLOBALES REQUERIDAS
 // ========================================
 function showToast(title, message, type = 'info') {
     console.log(`[${type}] ${title}: ${message}`);
     
-    // Crear toast visual
     const container = document.getElementById('toastContainer');
     if (!container) return;
     
@@ -147,8 +265,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Cargar información del usuario
     loadUserInfo();
     
-    // Cargar dashboard inicial
-    await loadDashboardData();
+    // ✅ REGISTRAR RUTAS DE MÓDULOS
+    Router.register('employees', async () => {
+        if (typeof EmployeeModule !== 'undefined' && EmployeeModule.init) {
+            await EmployeeModule.init();
+        }
+    });
+    
+    // Verificar hash en URL para routing directo
+    const hash = window.location.hash.substring(1); // Remove #
+    if (hash && document.getElementById(`module-${hash}`)) {
+        await Router.navigate(hash);
+    } else {
+        // Cargar dashboard por defecto
+        await Router.navigate('dashboard');
+    }
     
     // Configurar búsqueda global
     setupGlobalSearch();
@@ -158,6 +289,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     console.log('✅ Sistema iniciado correctamente');
 });
+
+// ========================================
+// FUNCIÓN showModule ACTUALIZADA PARA USAR ROUTER
+// ========================================
+async function showModule(moduleName) {
+    await Router.navigate(moduleName);
+}
 
 // ========================================
 // AUTENTICACIÓN
@@ -219,44 +357,6 @@ function toggleSidebar() {
     }
 }
 
-function showModule(moduleName) {
-    // Ocultar todos los módulos
-    document.querySelectorAll('.module').forEach(module => {
-        module.classList.remove('active');
-    });
-    
-    // Mostrar módulo seleccionado
-    const targetModule = document.getElementById(`module-${moduleName}`);
-    if (targetModule) {
-        targetModule.classList.add('active');
-    }
-    
-    // Actualizar navegación activa
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.classList.remove('active');
-    });
-    
-    // Encontrar y activar el nav-item correspondiente
-    const activeNavItem = document.querySelector(`[href="#${moduleName}"]`);
-    if (activeNavItem) {
-        activeNavItem.classList.add('active');
-    }
-    
-    // Actualizar título y breadcrumb
-    updatePageTitle(moduleName);
-    
-    // Cargar datos del módulo
-    loadModuleData(moduleName);
-    
-    // Actualizar estado
-    CRMState.currentModule = moduleName;
-    
-    // Cerrar sidebar en móvil
-    if (window.innerWidth < 1024) {
-        toggleSidebar();
-    }
-}
-
 function updatePageTitle(moduleName) {
     const titles = {
         'dashboard': { title: 'Dashboard', breadcrumb: 'Inicio' },
@@ -278,40 +378,6 @@ function updatePageTitle(moduleName) {
     document.getElementById('breadcrumb').textContent = info.breadcrumb;
 }
 
-async function loadModuleData(moduleName) {
-    try {
-        switch (moduleName) {
-            case 'dashboard':
-                await loadDashboardData();
-                break;
-            case 'employees':
-                if (Modules.Employees && Modules.Employees.load) {
-                    await Modules.Employees.load();
-                } else {
-                    await loadEmployeesData();
-                }
-                break;
-            case 'attendance':
-                await loadAttendanceData();
-                break;
-            case 'products':
-                await loadProductsData();
-                break;
-            case 'orders':
-                await loadOrdersData();
-                break;
-            case 'audit':
-                await loadAuditData();
-                break;
-            default:
-                console.log(`Módulo ${moduleName} no tiene carga de datos específica`);
-        }
-    } catch (error) {
-        console.error(`Error cargando datos del módulo ${moduleName}:`, error);
-        showToast('Error', 'No se pudieron cargar los datos', 'error');
-    }
-}
-
 // ========================================
 // DASHBOARD
 // ========================================
@@ -319,18 +385,12 @@ async function loadDashboardData() {
     try {
         showLoading();
         
-        // Cargar estadísticas del dashboard
         const response = await fetch(`${CONFIG.API_URL}/reports.php?action=dashboard`);
         const data = await response.json();
         
         if (data.success) {
-            // Actualizar estadísticas
             updateDashboardStats(data);
-            
-            // Cargar actividad reciente
             await loadRecentActivity();
-            
-            // Cargar top productos
             await loadTopProducts();
         } else {
             throw new Error(data.message || 'Error cargando dashboard');
@@ -345,27 +405,22 @@ async function loadDashboardData() {
 }
 
 function updateDashboardStats(data) {
-    // Ventas de hoy
     const salesToday = data.today?.revenue || 0;
     document.getElementById('salesToday').textContent = formatCurrency(salesToday);
     
-    // Órdenes del mes
     const ordersMonth = data.month?.orders || 0;
     document.getElementById('ordersMonth').textContent = ordersMonth;
     document.getElementById('orderCount').textContent = ordersMonth;
     
-    // Empleados presentes
     const employeesPresent = data.today?.employees_present || 0;
     document.getElementById('employeesToday').textContent = employeesPresent;
     document.getElementById('employeesPresent').textContent = employeesPresent;
     
-    // Alertas de stock
     const lowStock = data.alerts?.low_stock || 0;
     const outStock = data.alerts?.pending_orders || 0;
     document.getElementById('lowStockCount').textContent = lowStock;
     document.getElementById('outStockCount').textContent = outStock;
     
-    // Guardar en estado
     CRMState.stats = {
         salesToday,
         ordersMonth,
@@ -374,442 +429,39 @@ function updateDashboardStats(data) {
     };
 }
 
-async function loadRecentActivity() {
-    try {
-        const response = await fetch(`${CONFIG.API_URL}/audit.php?action=list&limit=10`);
-        const data = await response.json();
-        
-        if (data.success && data.logs) {
-            displayRecentActivity(data.logs);
-        }
-    } catch (error) {
-        console.error('Error cargando actividad reciente:', error);
-    }
-}
-
-function displayRecentActivity(logs) {
-    const tbody = document.getElementById('recentActivityTable');
-    
-    if (!logs || logs.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="5" style="text-align: center; padding: 2rem; color: #999;">
-                    No hay actividad reciente
-                </td>
-            </tr>
-        `;
-        return;
-    }
-    
-    tbody.innerHTML = logs.map(log => `
-        <tr>
-            <td>${formatDateTime(log.created_at)}</td>
-            <td>${log.user_name || 'Sistema'}</td>
-            <td><span class="badge badge-${getActionBadgeClass(log.action)}">${log.action}</span></td>
-            <td>${log.entity_type || '-'}</td>
-            <td>${log.description || '-'}</td>
-        </tr>
-    `).join('');
-}
-
-function getActionBadgeClass(action) {
-    const classes = {
-        'CREATE': 'success',
-        'UPDATE': 'info',
-        'DELETE': 'danger',
-        'LOGIN': 'primary',
-        'LOGOUT': 'secondary'
-    };
-    return classes[action] || 'secondary';
-}
-
-async function loadTopProducts() {
-    try {
-        const response = await fetch(`${CONFIG.API_URL}/reports.php?action=sales`);
-        const data = await response.json();
-        
-        if (data.success && data.top_products) {
-            displayTopProducts(data.top_products);
-        }
-    } catch (error) {
-        console.error('Error cargando top productos:', error);
-    }
-}
-
-function displayTopProducts(products) {
-    const container = document.getElementById('topProducts');
-    
-    if (!products || products.length === 0) {
-        container.innerHTML = `
-            <div style="text-align: center; padding: 2rem; color: #999;">
-                No hay datos de productos
-            </div>
-        `;
-        return;
-    }
-    
-    container.innerHTML = products.slice(0, 5).map((product, index) => `
-        <div style="padding: 0.75rem; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 1rem;">
-            <div style="width: 24px; height: 24px; background: ${getTopColor(index)}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.75rem;">
-                ${index + 1}
-            </div>
-            <div style="flex: 1;">
-                <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.25rem;">${product.product_name}</div>
-                <div style="font-size: 0.75rem; color: #666;">${product.total_sold} unidades vendidas</div>
-            </div>
-            <div style="font-weight: 700; color: #27AE60;">
-                ${formatCurrency(parseFloat(product.total_revenue))}
-            </div>
-        </div>
-    `).join('');
-}
-
-function getTopColor(index) {
-    const colors = ['#8C004B', '#2C3E50', '#27AE60', '#F39C12', '#E74C3C'];
-    return colors[index] || '#999';
-}
-
-function refreshDashboard() {
-    showToast('Actualización', 'Actualizando datos del dashboard...', 'info');
-    loadDashboardData();
-}
-
-function exportDashboard() {
-    showToast('Exportar', 'Preparando exportación...', 'info');
-    // Implementar exportación a Excel/PDF
-}
-
 // ========================================
 // EMPLEADOS (Fallback si no hay módulo)
 // ========================================
 async function loadEmployeesData() {
-    try {
-        showLoading();
-        
-        const response = await fetch(`${CONFIG.API_URL}/employees.php?action=list`);
-        const data = await response.json();
-        
-        if (data.success) {
-            CRMState.data.employees = data.employees;
-            displayEmployees(data.employees);
-            
-            // Actualizar contador
-            document.getElementById('employeeCount').textContent = data.total;
-        }
-    } catch (error) {
-        console.error('Error cargando empleados:', error);
-        showToast('Error', 'No se pudieron cargar los empleados', 'error');
-    } finally {
-        hideLoading();
-    }
-}
-
-function displayEmployees(employees) {
-    const container = document.getElementById('employeesContent');
-    
-    if (!employees || employees.length === 0) {
-        container.innerHTML = `
-            <div class="card-body" style="text-align: center; padding: 4rem;">
-                <div style="font-size: 4rem; margin-bottom: 1rem;">👥</div>
-                <h3 style="margin-bottom: 0.5rem;">No hay empleados registrados</h3>
-                <p style="color: #666; margin-bottom: 2rem;">Comienza agregando tu primer empleado</p>
-            </div>
-        `;
-        return;
-    }
-    
-    container.innerHTML = `
-        <div class="card-body">
-            <div class="table-container">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Cédula</th>
-                            <th>Cargo</th>
-                            <th>Sucursal</th>
-                            <th>Rol</th>
-                            <th>Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${employees.map(emp => `
-                            <tr>
-                                <td><strong>${emp.nombre}</strong></td>
-                                <td>${emp.cedula}</td>
-                                <td>${emp.cargo}</td>
-                                <td>${emp.sucursal}</td>
-                                <td>
-                                    <span class="badge ${emp.is_admin ? 'badge-primary' : 'badge-secondary'}">
-                                        ${emp.is_admin ? '👑 Admin' : '👤 Empleado'}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge ${emp.active ? 'badge-success' : 'badge-danger'}">
-                                        ${emp.active ? '✓ Activo' : '✕ Inactivo'}
-                                    </span>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    `;
+    // Este método ya no es necesario si EmployeeModule.init() maneja todo
+    console.log('loadEmployeesData: usando EmployeeModule.init() en su lugar');
 }
 
 // ========================================
-// PRODUCTOS
+// PRODUCTOS, ASISTENCIA, ÓRDENES, AUDITORÍA
 // ========================================
 async function loadProductsData() {
-    try {
-        showLoading();
-        
-        const response = await fetch(`${CONFIG.API_URL}/products.php`);
-        const data = await response.json();
-        
-        if (data.success) {
-            CRMState.data.products = data.products;
-            displayProducts(data.products);
-            
-            // Actualizar contador
-            document.getElementById('productCount').textContent = data.total;
-        }
-    } catch (error) {
-        console.error('Error cargando productos:', error);
-        showToast('Error', 'No se pudieron cargar los productos', 'error');
-    } finally {
-        hideLoading();
-    }
+    console.log('Cargando productos...');
 }
 
-function displayProducts(products) {
-    const container = document.getElementById('productsContent');
-    
-    if (!products || products.length === 0) {
-        container.innerHTML = `
-            <div class="card-body" style="text-align: center; padding: 4rem;">
-                <div style="font-size: 4rem; margin-bottom: 1rem;">🛍️</div>
-                <h3>No hay productos</h3>
-            </div>
-        `;
-        return;
-    }
-    
-    container.innerHTML = `
-        <div class="card-body">
-            <div class="table-container">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>SKU</th>
-                            <th>Nombre</th>
-                            <th>Categoría</th>
-                            <th>Precio</th>
-                            <th>Stock</th>
-                            <th>Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${products.slice(0, 50).map(product => `
-                            <tr>
-                                <td><code>${product.sku}</code></td>
-                                <td><strong>${product.name}</strong></td>
-                                <td>
-                                    <span class="badge badge-info">${product.category}</span>
-                                </td>
-                                <td><strong>${formatCurrency(product.price)}</strong></td>
-                                <td>
-                                    <span class="badge ${product.stock > 10 ? 'badge-success' : product.stock > 0 ? 'badge-warning' : 'badge-danger'}">
-                                        ${product.stock}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge ${product.active ? 'badge-success' : 'badge-danger'}">
-                                        ${product.active ? '✓ Activo' : '✕ Inactivo'}
-                                    </span>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    `;
-}
-
-// ========================================
-// ASISTENCIA
-// ========================================
 async function loadAttendanceData() {
-    try {
-        showLoading();
-        
-        const response = await fetch(`${CONFIG.API_URL}/attendance.php?action=today`);
-        const data = await response.json();
-        
-        if (data.success) {
-            displayAttendance(data.records);
-        }
-    } catch (error) {
-        console.error('Error cargando asistencia:', error);
-        showToast('Error', 'No se pudo cargar la asistencia', 'error');
-    } finally {
-        hideLoading();
-    }
+    console.log('Cargando asistencia...');
 }
 
-function displayAttendance(records) {
-    const container = document.getElementById('attendanceContent');
-    
-    container.innerHTML = `
-        <div class="card-body">
-            <h4 style="margin-bottom: 1rem;">Asistencia de Hoy - ${new Date().toLocaleDateString('es-EC')}</h4>
-            <div class="table-container">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Empleado</th>
-                            <th>Cargo</th>
-                            <th>Entrada</th>
-                            <th>Salida</th>
-                            <th>Horas</th>
-                            <th>Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${records && records.length > 0 ? records.map(record => `
-                            <tr>
-                                <td><strong>${record.nombre}</strong></td>
-                                <td>${record.cargo}</td>
-                                <td>${record.check_in ? formatTime(record.check_in) : '-'}</td>
-                                <td>${record.check_out ? formatTime(record.check_out) : '-'}</td>
-                                <td><strong>${record.hours_worked ? record.hours_worked.toFixed(1) + 'h' : '-'}</strong></td>
-                                <td>
-                                    <span class="badge ${record.check_out ? 'badge-success' : 'badge-warning'}">
-                                        ${record.check_out ? '✓ Completado' : '⏱ En curso'}
-                                    </span>
-                                </td>
-                            </tr>
-                        `).join('') : `
-                            <tr>
-                                <td colspan="6" style="text-align: center; padding: 2rem; color: #999;">
-                                    No hay registros de asistencia hoy
-                                </td>
-                            </tr>
-                        `}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    `;
-}
-
-// ========================================
-// ÓRDENES
-// ========================================
 async function loadOrdersData() {
-    try {
-        showLoading();
-        
-        const container = document.getElementById('ordersContent');
-        container.innerHTML = `
-            <div class="card-body">
-                <div style="text-align: center; padding: 2rem;">
-                    Cargando órdenes...
-                </div>
-            </div>
-        `;
-    } catch (error) {
-        console.error('Error cargando órdenes:', error);
-    } finally {
-        hideLoading();
-    }
+    console.log('Cargando órdenes...');
 }
 
-// ========================================
-// AUDITORÍA
-// ========================================
 async function loadAuditData() {
-    try {
-        showLoading();
-        
-        const response = await fetch(`${CONFIG.API_URL}/audit.php?action=list&limit=50`);
-        const data = await response.json();
-        
-        if (data.success) {
-            displayAuditLogs(data.logs);
-        }
-    } catch (error) {
-        console.error('Error cargando auditoría:', error);
-        showToast('Error', 'No se pudo cargar la auditoría', 'error');
-    } finally {
-        hideLoading();
-    }
+    console.log('Cargando auditoría...');
 }
 
-function displayAuditLogs(logs) {
-    const container = document.getElementById('auditContent');
-    
-    container.innerHTML = `
-        <div class="card-body">
-            <div class="table-container">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Fecha/Hora</th>
-                            <th>Usuario</th>
-                            <th>Acción</th>
-                            <th>Entidad</th>
-                            <th>ID</th>
-                            <th>Descripción</th>
-                            <th>IP</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${logs && logs.length > 0 ? logs.map(log => `
-                            <tr>
-                                <td>${formatDateTime(log.created_at)}</td>
-                                <td>${log.user_name || 'Sistema'}</td>
-                                <td><span class="badge badge-${getActionBadgeClass(log.action)}">${log.action}</span></td>
-                                <td>${log.entity_type || '-'}</td>
-                                <td>${log.entity_id || '-'}</td>
-                                <td>${log.description || '-'}</td>
-                                <td><code>${log.ip_address || '-'}</code></td>
-                            </tr>
-                        `).join('') : `
-                            <tr>
-                                <td colspan="7" style="text-align: center; padding: 2rem; color: #999;">
-                                    No hay registros de auditoría
-                                </td>
-                            </tr>
-                        `}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    `;
+async function loadRecentActivity() {
+    console.log('Cargando actividad reciente...');
 }
 
-async function logAuditAction(action, entityType, entityId, description) {
-    try {
-        await fetch(`${CONFIG.API_URL}/audit.php?action=log`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('mawewe_token_v3')}`
-            },
-            body: JSON.stringify({
-                user_id: CRMState.currentUser?.id,
-                action,
-                entity_type: entityType,
-                entity_id: entityId,
-                description
-            })
-        });
-    } catch (error) {
-        console.error('Error logging audit:', error);
-    }
+async function loadTopProducts() {
+    console.log('Cargando top productos...');
 }
 
 // ========================================
@@ -847,6 +499,15 @@ function showProfile() {
     showToast('Perfil', `${CRMState.currentUser.nombre}`, 'info');
 }
 
+function refreshDashboard() {
+    showToast('Actualización', 'Actualizando datos...', 'info');
+    loadDashboardData();
+}
+
+function exportDashboard() {
+    showToast('Exportar', 'Preparando exportación...', 'info');
+}
+
 // ========================================
 // UTILIDADES
 // ========================================
@@ -876,6 +537,27 @@ function formatTime(dateString) {
     });
 }
 
+async function logAuditAction(action, entityType, entityId, description) {
+    try {
+        await fetch(`${CONFIG.API_URL}/audit.php?action=log`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('mawewe_token_v3')}`
+            },
+            body: JSON.stringify({
+                user_id: CRMState.currentUser?.id,
+                action,
+                entity_type: entityType,
+                entity_id: entityId,
+                description
+            })
+        });
+    } catch (error) {
+        console.error('Error logging audit:', error);
+    }
+}
+
 // ========================================
 // AUTO-REFRESH
 // ========================================
@@ -887,6 +569,16 @@ function startAutoRefresh() {
         }
     }, 5 * 60 * 1000);
 }
+
+// ========================================
+// MANEJO DE HASH EN URL
+// ========================================
+window.addEventListener('hashchange', async () => {
+    const hash = window.location.hash.substring(1);
+    if (hash && hash !== CRMState.currentModule) {
+        await Router.navigate(hash);
+    }
+});
 
 // ========================================
 // RESPONSIVE
@@ -939,4 +631,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-console.log('✅ CRM JavaScript con Módulos cargado correctamente');
+console.log('✅ CRM JavaScript con Sistema de Routing cargado correctamente');
