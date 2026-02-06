@@ -1,87 +1,49 @@
-# .htaccess para API de Mawewe - VERSIÓN CORREGIDA
-# Compatible con cualquier frontend/host
+# .htaccess para LiteSpeed - Mawewe API
+# ✅ Configuración específica para LiteSpeed
 
 # ========================================
-# HABILITAR CORS PARA TODOS LOS ORÍGENES
+# CORS - VERSIÓN LITESPEED
 # ========================================
 <IfModule mod_headers.c>
-    # Permitir CUALQUIER origen
+    # Forzar CORS para todos los archivos
     Header always set Access-Control-Allow-Origin "*"
-    
-    # Métodos HTTP permitidos
     Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
-    
-    # Headers permitidos
     Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, Accept, Origin"
-    
-    # Permitir credenciales (opcional)
     Header always set Access-Control-Allow-Credentials "true"
-    
-    # Cache de preflight por 1 hora
     Header always set Access-Control-Max-Age "3600"
-    
-    # Forzar Content-Type JSON en archivos PHP
-    <FilesMatch "\.php$">
-        Header always set Content-Type "application/json; charset=UTF-8"
-    </FilesMatch>
 </IfModule>
 
 # ========================================
-# RESPONDER A OPTIONS (PREFLIGHT)
+# REWRITE PARA OPTIONS (PREFLIGHT)
 # ========================================
 <IfModule mod_rewrite.c>
     RewriteEngine On
     
     # Responder OPTIONS con 200
     RewriteCond %{REQUEST_METHOD} OPTIONS
-    RewriteRule ^(.*)$ $1 [R=200,L]
+    RewriteRule ^(.*)$ $1 [R=200,L,E=HTTP_ACCESS_CONTROL_ALLOW_ORIGIN:*]
 </IfModule>
 
 # ========================================
-# HABILITAR PHP
+# FORZAR UTF-8
 # ========================================
-<Files "*.php">
-    SetHandler application/x-httpd-php
-</Files>
+AddDefaultCharset UTF-8
+
+# ========================================
+# NO CACHEAR PHP
+# ========================================
+<FilesMatch "\.(php)$">
+    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+</FilesMatch>
 
 # ========================================
 # SEGURIDAD
 # ========================================
 Options -Indexes
 
-<FilesMatch "\.(htaccess|htpasswd|ini|log|sh|sql)$">
-    Order Allow,Deny
-    Deny from all
-</FilesMatch>
-
 # ========================================
-# COMPRESIÓN
+# MIME TYPES
 # ========================================
-<IfModule mod_deflate.c>
-    AddOutputFilterByType DEFLATE application/json
-    AddOutputFilterByType DEFLATE text/plain
-</IfModule>
-
-# ========================================
-# CACHE CONTROL - NO CACHEAR RESPUESTAS PHP
-# ========================================
-<IfModule mod_headers.c>
-    <FilesMatch "\.(php)$">
-        Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
-        Header set Pragma "no-cache"
-    </FilesMatch>
-</IfModule>
-
-# ========================================
-# UTF-8 ENCODING
-# ========================================
-AddDefaultCharset UTF-8
-
-# ========================================
-# PHP SETTINGS (si aplica)
-# ========================================
-<IfModule mod_php7.c>
-    php_flag display_errors Off
-    php_value error_reporting 0
-    php_flag log_errors On
-</IfModule>
+AddType application/json .json
