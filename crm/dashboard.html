@@ -1,448 +1,558 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sistema Seguimiento - MAWEWE/ELPALACIO</title>
-    
+
     <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
     <!-- Estilos Actualizados -->
-    <link rel="stylesheet" href="css/crm-main.css">
-    <link rel="stylesheet" href="css/modules.css">
-    
+    <link rel="stylesheet" href="css/crm-main.css" />
+    <link rel="stylesheet" href="css/modules.css" />
+
     <!-- Favicon -->
-    <link rel="icon" type="image/jpeg" href="img/logos.jpeg">
-</head>
-<body>
+    <link rel="icon" type="image/jpeg" href="img/logos.jpeg" />
+  </head>
+  <body>
     <div class="crm-container">
-        <!-- ========================================
+      <!-- ========================================
              SIDEBAR CON LOGO
              ======================================== -->
-        <aside class="sidebar" id="sidebar">
-            <!-- Header del Sidebar con Logo Real -->
-            <div class="sidebar-header">
-                <div class="sidebar-logo">
-                    <div class="sidebar-logo-icon">
-                        <img src="img/logos.jpeg" alt="MAWEWE Logo" onerror="this.style.display='none'">
-                    </div>
-                    <div class="sidebar-logo-text">
-                        <h1>MAWEWE</h1>
-                        <div class="subtitle">Sistema Seguimiento</div>
-                    </div>
-                </div>
-                
-                <div class="sidebar-user">
-                    <div class="sidebar-user-name" id="userName">Administrador</div>
-                    <div class="sidebar-user-role" id="userRole">Gerente General</div>
-                </div>
+      <aside class="sidebar" id="sidebar">
+        <!-- Header del Sidebar con Logo Real -->
+        <div class="sidebar-header">
+          <div class="sidebar-logo">
+            <div class="sidebar-logo-icon">
+              <img
+                src="img/logos.jpeg"
+                alt="MAWEWE Logo"
+                onerror="this.style.display = 'none'"
+              />
             </div>
-            
-            <!-- Navegación del Sidebar -->
-            <nav class="sidebar-nav">
-                <div class="nav-section">
-                    <div class="nav-section-title">Principal</div>
-                    <a href="#dashboard" class="nav-item active" onclick="showModule('dashboard')">
-                        <span class="nav-icon">📊</span>
-                        <span class="nav-text">Dashboard</span>
-                    </a>
-                    <a href="#analytics" class="nav-item" onclick="showModule('analytics')">
-                        <span class="nav-icon">📈</span>
-                        <span class="nav-text">Análisis</span>
-                    </a>
-                </div>
-                
-                <div class="nav-section">
-                    <div class="nav-section-title">Gestión</div>
-                    <a href="#employees" class="nav-item" onclick="showModule('employees')">
-                        <span class="nav-icon">👥</span>
-                        <span class="nav-text">Empleados</span>
-                        <span class="nav-badge" id="employeeCount">0</span>
-                    </a>
-                    <a href="#attendance" class="nav-item" onclick="showModule('attendance')">
-                        <span class="nav-icon">📅</span>
-                        <span class="nav-text">Asistencia</span>
-                    </a>
-                    <a href="#products" class="nav-item" onclick="showModule('products')">
-                        <span class="nav-icon">🛍️</span>
-                        <span class="nav-text">Productos</span>
-                        <span class="nav-badge" id="productCount">0</span>
-                    </a>
-                    <a href="#orders" class="nav-item" onclick="showModule('orders')">
-                        <span class="nav-icon">📦</span>
-                        <span class="nav-text">Órdenes</span>
-                        <span class="nav-badge" id="orderCount">0</span>
-                    </a>
-                </div>
-                
-                <div class="nav-section">
-                    <div class="nav-section-title">Reportes</div>
-                    <a href="#reports-sales" class="nav-item" onclick="showModule('reports-sales')">
-                        <span class="nav-icon">💰</span>
-                        <span class="nav-text">Ventas</span>
-                    </a>
-                    <a href="#reports-inventory" class="nav-item" onclick="showModule('reports-inventory')">
-                        <span class="nav-icon">📊</span>
-                        <span class="nav-text">Inventario</span>
-                    </a>
-                    <a href="#reports-employees" class="nav-item" onclick="showModule('reports-employees')">
-                        <span class="nav-icon">👔</span>
-                        <span class="nav-text">RRHH</span>
-                    </a>
-                </div>
-                
-                <div class="nav-section">
-                    <div class="nav-section-title">Sistema</div>
-                    <a href="#audit" class="nav-item" onclick="showModule('audit')">
-                        <span class="nav-icon">📝</span>
-                        <span class="nav-text">Auditoría</span>
-                    </a>
-                    <a href="#settings" class="nav-item" onclick="showModule('settings')">
-                        <span class="nav-icon">⚙️</span>
-                        <span class="nav-text">Configuración</span>
-                    </a>
-                </div>
-            </nav>
-            
-            <!-- Footer del Sidebar -->
-            <div class="sidebar-footer">
-                <button class="sidebar-footer-btn" onclick="logout()">
-                    <span>🚪</span>
-                    <span>Cerrar Sesión</span>
-                </button>
+            <div class="sidebar-logo-text">
+              <h1>MAWEWE</h1>
+              <div class="subtitle">Sistema Seguimiento</div>
             </div>
-        </aside>
-        
-        <!-- ========================================
+          </div>
+
+          <div class="sidebar-user">
+            <div class="sidebar-user-name" id="userName">Administrador</div>
+            <div class="sidebar-user-role" id="userRole">Gerente General</div>
+          </div>
+        </div>
+
+        <!-- Navegación del Sidebar -->
+        <nav class="sidebar-nav">
+          <div class="nav-section">
+            <div class="nav-section-title">Principal</div>
+            <a
+              href="#dashboard"
+              class="nav-item active"
+              onclick="showModule('dashboard')"
+            >
+              <span class="nav-icon">📊</span>
+              <span class="nav-text">Dashboard</span>
+            </a>
+            <a
+              href="#analytics"
+              class="nav-item"
+              onclick="showModule('analytics')"
+            >
+              <span class="nav-icon">📈</span>
+              <span class="nav-text">Análisis</span>
+            </a>
+          </div>
+
+          <div class="nav-section">
+            <div class="nav-section-title">Gestión</div>
+            <a href="employees.html" class="nav-item">
+              <span class="nav-icon">👥</span>
+              <span class="nav-text">Empleados</span>
+            </a>
+            <a
+              href="#attendance"
+              class="nav-item"
+              onclick="showModule('attendance')"
+            >
+              <span class="nav-icon">📅</span>
+              <span class="nav-text">Asistencia</span>
+            </a>
+            <a
+              href="#products"
+              class="nav-item"
+              onclick="showModule('products')"
+            >
+              <span class="nav-icon">🛍️</span>
+              <span class="nav-text">Productos</span>
+              <span class="nav-badge" id="productCount">0</span>
+            </a>
+            <a href="#orders" class="nav-item" onclick="showModule('orders')">
+              <span class="nav-icon">📦</span>
+              <span class="nav-text">Órdenes</span>
+              <span class="nav-badge" id="orderCount">0</span>
+            </a>
+          </div>
+
+          <div class="nav-section">
+            <div class="nav-section-title">Reportes</div>
+            <a
+              href="#reports-sales"
+              class="nav-item"
+              onclick="showModule('reports-sales')"
+            >
+              <span class="nav-icon">💰</span>
+              <span class="nav-text">Ventas</span>
+            </a>
+            <a
+              href="#reports-inventory"
+              class="nav-item"
+              onclick="showModule('reports-inventory')"
+            >
+              <span class="nav-icon">📊</span>
+              <span class="nav-text">Inventario</span>
+            </a>
+            <a
+              href="#reports-employees"
+              class="nav-item"
+              onclick="showModule('reports-employees')"
+            >
+              <span class="nav-icon">👔</span>
+              <span class="nav-text">RRHH</span>
+            </a>
+          </div>
+
+          <div class="nav-section">
+            <div class="nav-section-title">Sistema</div>
+            <a href="#audit" class="nav-item" onclick="showModule('audit')">
+              <span class="nav-icon">📝</span>
+              <span class="nav-text">Auditoría</span>
+            </a>
+            <a
+              href="#settings"
+              class="nav-item"
+              onclick="showModule('settings')"
+            >
+              <span class="nav-icon">⚙️</span>
+              <span class="nav-text">Configuración</span>
+            </a>
+          </div>
+        </nav>
+
+        <!-- Footer del Sidebar -->
+        <div class="sidebar-footer">
+          <button class="sidebar-footer-btn" onclick="logout()">
+            <span>🚪</span>
+            <span>Cerrar Sesión</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- ========================================
              CONTENIDO PRINCIPAL
              ======================================== -->
-        <main class="main-content" id="mainContent">
-            <!-- Topbar con Logo -->
-            <div class="topbar">
-                <div class="topbar-content">
-                    <div class="topbar-left">
-                        <button class="menu-toggle" onclick="toggleSidebar()">
-                            <span id="menuIcon">☰</span>
-                        </button>
-                        <div class="topbar-title">
-                            <h2 id="pageTitle">Dashboard</h2>
-                            <div class="topbar-breadcrumb">
-                                <span id="breadcrumb">Inicio</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="topbar-right">
-                        <div class="topbar-search">
-                            <span class="topbar-search-icon">🔍</span>
-                            <input 
-                                type="text" 
-                                class="topbar-search-input" 
-                                placeholder="Buscar..." 
-                                id="globalSearch"
-                            >
-                        </div>
-                        
-                        <div class="topbar-actions">
-                            <button class="topbar-btn" onclick="showNotifications()" title="Notificaciones">
-                                <span>🔔</span>
-                                <span class="topbar-btn-badge" id="notificationCount">3</span>
-                            </button>
-                            <button class="topbar-btn" onclick="showProfile()" title="Perfil">
-                                <span>👤</span>
-                            </button>
-                            <!-- Logo pequeño en topbar -->
-                            <div style="width: 42px; height: 42px; border-radius: 10px; overflow: hidden; border: 1px solid #e2e8f0;">
-                                <img src="img/logos.jpeg" alt="MAWEWE" style="width: 100%; height: 100%; object-fit: cover;">
-                            </div>
-                        </div>
-                    </div>
+      <main class="main-content" id="mainContent">
+        <!-- Topbar con Logo -->
+        <div class="topbar">
+          <div class="topbar-content">
+            <div class="topbar-left">
+              <button class="menu-toggle" onclick="toggleSidebar()">
+                <span id="menuIcon">☰</span>
+              </button>
+              <div class="topbar-title">
+                <h2 id="pageTitle">Dashboard</h2>
+                <div class="topbar-breadcrumb">
+                  <span id="breadcrumb">Inicio</span>
                 </div>
+              </div>
             </div>
-            
-            <!-- Contenido de Página -->
-            <div class="page-content">
-                <!-- ========================================
+
+            <div class="topbar-right">
+              <div class="topbar-search">
+                <span class="topbar-search-icon">🔍</span>
+                <input
+                  type="text"
+                  class="topbar-search-input"
+                  placeholder="Buscar..."
+                  id="globalSearch"
+                />
+              </div>
+
+              <div class="topbar-actions">
+                <button
+                  class="topbar-btn"
+                  onclick="showNotifications()"
+                  title="Notificaciones"
+                >
+                  <span>🔔</span>
+                  <span class="topbar-btn-badge" id="notificationCount">3</span>
+                </button>
+                <button
+                  class="topbar-btn"
+                  onclick="showProfile()"
+                  title="Perfil"
+                >
+                  <span>👤</span>
+                </button>
+                <!-- Logo pequeño en topbar -->
+                <div
+                  style="
+                    width: 42px;
+                    height: 42px;
+                    border-radius: 10px;
+                    overflow: hidden;
+                    border: 1px solid #e2e8f0;
+                  "
+                >
+                  <img
+                    src="img/logos.jpeg"
+                    alt="MAWEWE"
+                    style="width: 100%; height: 100%; object-fit: cover"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contenido de Página -->
+        <div class="page-content">
+          <!-- ========================================
                      MÓDULO: DASHBOARD
                      ======================================== -->
-                <div id="module-dashboard" class="module active">
-                    <!-- Header de Página con Marca de Agua del Logo -->
-                    <div class="page-header" style="position: relative;">
-                        <div style="position: absolute; top: 0; right: 0; opacity: 0.03; width: 200px; height: 200px; pointer-events: none;">
-                            <img src="img/logos.jpeg" alt="" style="width: 100%; height: 100%; object-fit: contain;">
-                        </div>
-                        <div class="page-header-top">
-                            <div>
-                                <h1 class="page-title">Panel de Control</h1>
-                                <p class="page-description">Resumen general del sistema - Actualizado en tiempo real</p>
-                            </div>
-                            <div class="page-actions">
-                                <button class="btn btn-outline" onclick="exportDashboard()">
-                                    <span>📥</span> Exportar
-                                </button>
-                                <button class="btn btn-primary" onclick="refreshDashboard()">
-                                    <span>🔄</span> Actualizar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Grid de Estadísticas -->
-                    <div class="stats-grid">
-                        <!-- Ventas del Día -->
-                        <div class="stat-card primary">
-                            <div class="stat-card-header">
-                                <div class="stat-card-icon">💰</div>
-                            </div>
-                            <div class="stat-card-title">Ventas Hoy</div>
-                            <div class="stat-card-value" id="salesToday">$0.00</div>
-                            <div class="stat-card-change positive">
-                                <span>↗</span>
-                                <span id="salesChange">+0%</span> vs ayer
-                            </div>
-                        </div>
-                        
-                        <!-- Órdenes del Mes -->
-                        <div class="stat-card info">
-                            <div class="stat-card-header">
-                                <div class="stat-card-icon">📦</div>
-                            </div>
-                            <div class="stat-card-title">Órdenes Mes</div>
-                            <div class="stat-card-value" id="ordersMonth">0</div>
-                            <div class="stat-card-change positive">
-                                <span>↗</span>
-                                <span id="ordersChange">+0%</span> vs mes anterior
-                            </div>
-                        </div>
-                        
-                        <!-- Empleados Activos -->
-                        <div class="stat-card success">
-                            <div class="stat-card-header">
-                                <div class="stat-card-icon">👥</div>
-                            </div>
-                            <div class="stat-card-title">Empleados Hoy</div>
-                            <div class="stat-card-value" id="employeesToday">0</div>
-                            <div class="stat-card-change">
-                                <span id="employeesPresent">0</span> presentes
-                            </div>
-                        </div>
-                        
-                        <!-- Alertas de Stock -->
-                        <div class="stat-card warning">
-                            <div class="stat-card-header">
-                                <div class="stat-card-icon">⚠️</div>
-                            </div>
-                            <div class="stat-card-title">Alertas Stock</div>
-                            <div class="stat-card-value" id="lowStockCount">0</div>
-                            <div class="stat-card-change">
-                                <span id="outStockCount">0</span> sin stock
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Grid de Contenido -->
-                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
-                        <!-- Gráfica de Ventas -->
-                        <div class="card">
-                            <div class="card-header">
-                                <div>
-                                    <h3 class="card-title">Ventas de la Semana</h3>
-                                    <p class="card-subtitle">Evolución diaria de ingresos</p>
-                                </div>
-                                <select class="form-control" style="width: auto; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;" onchange="updateSalesChart(this.value)">
-                                    <option value="week">Esta Semana</option>
-                                    <option value="month">Este Mes</option>
-                                    <option value="year">Este Año</option>
-                                </select>
-                            </div>
-                            <div class="card-body">
-                                <div id="salesChart" style="height: 300px; display: flex; align-items: center; justify-content: center; color: #999;">
-                                    📊 Gráfico de ventas cargando...
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Productos Más Vendidos -->
-                        <div class="card">
-                            <div class="card-header">
-                                <h3 class="card-title">Top Productos</h3>
-                            </div>
-                            <div class="card-body">
-                                <div id="topProducts">
-                                    <div style="text-align: center; padding: 2rem; color: #999;">
-                                        Cargando datos...
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Tabla de Actividad Reciente -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">Actividad Reciente</h3>
-                            <button class="btn btn-sm btn-outline" onclick="showModule('audit')">
-                                Ver Todo
-                            </button>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-container">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Fecha/Hora</th>
-                                            <th>Usuario</th>
-                                            <th>Acción</th>
-                                            <th>Entidad</th>
-                                            <th>Descripción</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="recentActivityTable">
-                                        <tr>
-                                            <td colspan="5" style="text-align: center; padding: 2rem; color: #999;">
-                                                Cargando actividad reciente...
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+          <div id="module-dashboard" class="module active">
+            <!-- Header de Página con Marca de Agua del Logo -->
+            <div class="page-header" style="position: relative">
+              <div
+                style="
+                  position: absolute;
+                  top: 0;
+                  right: 0;
+                  opacity: 0.03;
+                  width: 200px;
+                  height: 200px;
+                  pointer-events: none;
+                "
+              >
+                <img
+                  src="img/logos.jpeg"
+                  alt=""
+                  style="width: 100%; height: 100%; object-fit: contain"
+                />
+              </div>
+              <div class="page-header-top">
+                <div>
+                  <h1 class="page-title">Panel de Control</h1>
+                  <p class="page-description">
+                    Resumen general del sistema - Actualizado en tiempo real
+                  </p>
                 </div>
-                
-                <!-- ========================================
+                <div class="page-actions">
+                  <button class="btn btn-outline" onclick="exportDashboard()">
+                    <span>📥</span> Exportar
+                  </button>
+                  <button class="btn btn-primary" onclick="refreshDashboard()">
+                    <span>🔄</span> Actualizar
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Grid de Estadísticas -->
+            <div class="stats-grid">
+              <!-- Ventas del Día -->
+              <div class="stat-card primary">
+                <div class="stat-card-header">
+                  <div class="stat-card-icon">💰</div>
+                </div>
+                <div class="stat-card-title">Ventas Hoy</div>
+                <div class="stat-card-value" id="salesToday">$0.00</div>
+                <div class="stat-card-change positive">
+                  <span>↗</span>
+                  <span id="salesChange">+0%</span> vs ayer
+                </div>
+              </div>
+
+              <!-- Órdenes del Mes -->
+              <div class="stat-card info">
+                <div class="stat-card-header">
+                  <div class="stat-card-icon">📦</div>
+                </div>
+                <div class="stat-card-title">Órdenes Mes</div>
+                <div class="stat-card-value" id="ordersMonth">0</div>
+                <div class="stat-card-change positive">
+                  <span>↗</span>
+                  <span id="ordersChange">+0%</span> vs mes anterior
+                </div>
+              </div>
+
+              <!-- Empleados Activos -->
+              <div class="stat-card success">
+                <div class="stat-card-header">
+                  <div class="stat-card-icon">👥</div>
+                </div>
+                <div class="stat-card-title">Empleados Hoy</div>
+                <div class="stat-card-value" id="employeesToday">0</div>
+                <div class="stat-card-change">
+                  <span id="employeesPresent">0</span> presentes
+                </div>
+              </div>
+
+              <!-- Alertas de Stock -->
+              <div class="stat-card warning">
+                <div class="stat-card-header">
+                  <div class="stat-card-icon">⚠️</div>
+                </div>
+                <div class="stat-card-title">Alertas Stock</div>
+                <div class="stat-card-value" id="lowStockCount">0</div>
+                <div class="stat-card-change">
+                  <span id="outStockCount">0</span> sin stock
+                </div>
+              </div>
+            </div>
+
+            <!-- Grid de Contenido -->
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 2fr 1fr;
+                gap: 1.5rem;
+                margin-bottom: 1.5rem;
+              "
+            >
+              <!-- Gráfica de Ventas -->
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <h3 class="card-title">Ventas de la Semana</h3>
+                    <p class="card-subtitle">Evolución diaria de ingresos</p>
+                  </div>
+                  <select
+                    class="form-control"
+                    style="
+                      width: auto;
+                      padding: 8px 12px;
+                      border-radius: 8px;
+                      border: 1px solid #cbd5e1;
+                    "
+                    onchange="updateSalesChart(this.value)"
+                  >
+                    <option value="week">Esta Semana</option>
+                    <option value="month">Este Mes</option>
+                    <option value="year">Este Año</option>
+                  </select>
+                </div>
+                <div class="card-body">
+                  <div
+                    id="salesChart"
+                    style="
+                      height: 300px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      color: #999;
+                    "
+                  >
+                    📊 Gráfico de ventas cargando...
+                  </div>
+                </div>
+              </div>
+
+              <!-- Productos Más Vendidos -->
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">Top Productos</h3>
+                </div>
+                <div class="card-body">
+                  <div id="topProducts">
+                    <div style="text-align: center; padding: 2rem; color: #999">
+                      Cargando datos...
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tabla de Actividad Reciente -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Actividad Reciente</h3>
+                <button
+                  class="btn btn-sm btn-outline"
+                  onclick="showModule('audit')"
+                >
+                  Ver Todo
+                </button>
+              </div>
+              <div class="card-body">
+                <div class="table-container">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Fecha/Hora</th>
+                        <th>Usuario</th>
+                        <th>Acción</th>
+                        <th>Entidad</th>
+                        <th>Descripción</th>
+                      </tr>
+                    </thead>
+                    <tbody id="recentActivityTable">
+                      <tr>
+                        <td
+                          colspan="5"
+                          style="text-align: center; padding: 2rem; color: #999"
+                        >
+                          Cargando actividad reciente...
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========================================
                      OTROS MÓDULOS (Placeholders)
                      ======================================== -->
-                <div id="module-analytics" class="module">
-                    <div class="page-header">
-                        <h1 class="page-title">Análisis Avanzado</h1>
-                    </div>
-                    <div class="card">
-                        <div class="card-body" style="text-align: center; padding: 4rem;">
-                            <div style="font-size: 4rem; margin-bottom: 1rem;">📈</div>
-                            <h2 style="margin-bottom: 0.5rem;">Análisis en Desarrollo</h2>
-                            <p style="color: #666;">Este módulo estará disponible próximamente</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="module-employees" class="module">
-                    <div class="page-header">
-                        <div class="page-header-top">
-                            <h1 class="page-title">Gestión de Empleados</h1>
-                            <div class="page-actions">
-                                <button class="btn btn-primary" onclick="Modules.Employees.openCreateModal()">
-                                    <span>➕</span> Nuevo Empleado
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card" id="employeesContent">
-                        <div class="card-body" style="text-align: center; padding: 2rem;">
-                            Cargando empleados...
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="module-attendance" class="module">
-                    <div class="page-header">
-                        <h1 class="page-title">Control de Asistencia</h1>
-                    </div>
-                    <div class="card" id="attendanceContent">
-                        <div class="card-body" style="text-align: center; padding: 2rem;">
-                            Cargando asistencia...
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="module-products" class="module">
-                    <div class="page-header">
-                        <h1 class="page-title">Gestión de Productos</h1>
-                    </div>
-                    <div class="card" id="productsContent">
-                        <div class="card-body" style="text-align: center; padding: 2rem;">
-                            Cargando productos...
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="module-orders" class="module">
-                    <div class="page-header">
-                        <h1 class="page-title">Gestión de Órdenes</h1>
-                    </div>
-                    <div class="card" id="ordersContent">
-                        <div class="card-body" style="text-align: center; padding: 2rem;">
-                            Cargando órdenes...
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="module-reports-sales" class="module">
-                    <div class="page-header">
-                        <h1 class="page-title">Reportes de Ventas</h1>
-                    </div>
-                    <div class="card" id="reportsSalesContent">
-                        <div class="card-body" style="text-align: center; padding: 2rem;">
-                            Cargando reportes...
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="module-reports-inventory" class="module">
-                    <div class="page-header">
-                        <h1 class="page-title">Reportes de Inventario</h1>
-                    </div>
-                    <div class="card" id="reportsInventoryContent">
-                        <div class="card-body" style="text-align: center; padding: 2rem;">
-                            Cargando reportes...
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="module-reports-employees" class="module">
-                    <div class="page-header">
-                        <h1 class="page-title">Reportes de RRHH</h1>
-                    </div>
-                    <div class="card" id="reportsEmployeesContent">
-                        <div class="card-body" style="text-align: center; padding: 2rem;">
-                            Cargando reportes...
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="module-audit" class="module">
-                    <div class="page-header">
-                        <h1 class="page-title">Auditoría del Sistema</h1>
-                    </div>
-                    <div class="card" id="auditContent">
-                        <div class="card-body" style="text-align: center; padding: 2rem;">
-                            Cargando auditoría...
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="module-settings" class="module">
-                    <div class="page-header">
-                        <h1 class="page-title">Configuración</h1>
-                    </div>
-                    <div class="card">
-                        <div class="card-body" style="text-align: center; padding: 4rem;">
-                            <div style="font-size: 4rem; margin-bottom: 1rem;">⚙️</div>
-                            <h2 style="margin-bottom: 0.5rem;">Configuración del Sistema</h2>
-                            <p style="color: #666;">Panel de configuración en desarrollo</p>
-                        </div>
-                    </div>
-                </div>
+          <div id="module-analytics" class="module">
+            <div class="page-header">
+              <h1 class="page-title">Análisis Avanzado</h1>
             </div>
-        </main>
+            <div class="card">
+              <div class="card-body" style="text-align: center; padding: 4rem">
+                <div style="font-size: 4rem; margin-bottom: 1rem">📈</div>
+                <h2 style="margin-bottom: 0.5rem">Análisis en Desarrollo</h2>
+                <p style="color: #666">
+                  Este módulo estará disponible próximamente
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div id="module-employees" class="module">
+            <div class="page-header">
+              <div class="page-header-top">
+                <h1 class="page-title">Gestión de Empleados</h1>
+                <div class="page-actions">
+                  <button
+                    class="btn btn-primary"
+                    onclick="Modules.Employees.openCreateModal()"
+                  >
+                    <span>➕</span> Nuevo Empleado
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="card" id="employeesContent">
+              <div class="card-body" style="text-align: center; padding: 2rem">
+                Cargando empleados...
+              </div>
+            </div>
+          </div>
+
+          <div id="module-attendance" class="module">
+            <div class="page-header">
+              <h1 class="page-title">Control de Asistencia</h1>
+            </div>
+            <div class="card" id="attendanceContent">
+              <div class="card-body" style="text-align: center; padding: 2rem">
+                Cargando asistencia...
+              </div>
+            </div>
+          </div>
+
+          <div id="module-products" class="module">
+            <div class="page-header">
+              <h1 class="page-title">Gestión de Productos</h1>
+            </div>
+            <div class="card" id="productsContent">
+              <div class="card-body" style="text-align: center; padding: 2rem">
+                Cargando productos...
+              </div>
+            </div>
+          </div>
+
+          <div id="module-orders" class="module">
+            <div class="page-header">
+              <h1 class="page-title">Gestión de Órdenes</h1>
+            </div>
+            <div class="card" id="ordersContent">
+              <div class="card-body" style="text-align: center; padding: 2rem">
+                Cargando órdenes...
+              </div>
+            </div>
+          </div>
+
+          <div id="module-reports-sales" class="module">
+            <div class="page-header">
+              <h1 class="page-title">Reportes de Ventas</h1>
+            </div>
+            <div class="card" id="reportsSalesContent">
+              <div class="card-body" style="text-align: center; padding: 2rem">
+                Cargando reportes...
+              </div>
+            </div>
+          </div>
+
+          <div id="module-reports-inventory" class="module">
+            <div class="page-header">
+              <h1 class="page-title">Reportes de Inventario</h1>
+            </div>
+            <div class="card" id="reportsInventoryContent">
+              <div class="card-body" style="text-align: center; padding: 2rem">
+                Cargando reportes...
+              </div>
+            </div>
+          </div>
+
+          <div id="module-reports-employees" class="module">
+            <div class="page-header">
+              <h1 class="page-title">Reportes de RRHH</h1>
+            </div>
+            <div class="card" id="reportsEmployeesContent">
+              <div class="card-body" style="text-align: center; padding: 2rem">
+                Cargando reportes...
+              </div>
+            </div>
+          </div>
+
+          <div id="module-audit" class="module">
+            <div class="page-header">
+              <h1 class="page-title">Auditoría del Sistema</h1>
+            </div>
+            <div class="card" id="auditContent">
+              <div class="card-body" style="text-align: center; padding: 2rem">
+                Cargando auditoría...
+              </div>
+            </div>
+          </div>
+
+          <div id="module-settings" class="module">
+            <div class="page-header">
+              <h1 class="page-title">Configuración</h1>
+            </div>
+            <div class="card">
+              <div class="card-body" style="text-align: center; padding: 4rem">
+                <div style="font-size: 4rem; margin-bottom: 1rem">⚙️</div>
+                <h2 style="margin-bottom: 0.5rem">Configuración del Sistema</h2>
+                <p style="color: #666">Panel de configuración en desarrollo</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
-    
+
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
-    
+
     <!-- Scripts -->
     <script src="js/config.js"></script>
     <script src="js/crm-main.js"></script>
@@ -451,5 +561,5 @@
     <script src="js/modules/attendance.js"></script>
     <script src="js/modules/products.js"></script>
     <script src="js/modules/reports.js"></script>
-</body>
+  </body>
 </html>

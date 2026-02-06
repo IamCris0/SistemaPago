@@ -1,22 +1,32 @@
 /**
- * MÓDULO DE EMPLEADOS - VERSIÓN CORREGIDA
- * Sistema de gestión de empleados con modales funcionales
+ * MÓDULO DE EMPLEADOS - VERSIÓN PROFESIONAL
+ * CRUD Completo: Crear, Leer, Actualizar, Eliminar
+ * Sin emojis, diseño limpio y profesional
  */
 
-Modules.Employees = {
+const EmployeeModule = {
     data: [],
     currentPage: 1,
-    pageSize: 10,
+    pageSize: 15,
     searchTerm: '',
     filterStatus: 'all',
+    sortBy: 'nombre',
+    sortOrder: 'asc',
     
-    async load() {
-        console.log('👥 Cargando módulo Empleados');
-        await this.fetchEmployees();
+    /**
+     * Inicializar módulo
+     */
+    async init() {
+        console.log('Inicializando módulo de empleados');
+        await this.loadData();
         this.render();
+        this.attachEvents();
     },
     
-    async fetchEmployees() {
+    /**
+     * Cargar datos desde API
+     */
+    async loadData() {
         try {
             const response = await fetch(`${CONFIG.API_URL}/employees.php?action=list`, {
                 headers: {
@@ -24,91 +34,132 @@ Modules.Employees = {
                 }
             });
             
-            const data = await response.json();
+            const result = await response.json();
             
-            if (data.success) {
-                this.data = data.employees;
-                return data.employees;
+            if (result.success) {
+                this.data = result.employees;
+                return true;
             } else {
-                throw new Error(data.message || 'Error al cargar empleados');
+                throw new Error(result.message || 'Error al cargar empleados');
             }
         } catch (error) {
-            console.error('Error fetching employees:', error);
-            showToast('Error', 'No se pudieron cargar los empleados', 'error');
-            return [];
+            console.error('Error cargando empleados:', error);
+            this.showNotification('Error al cargar datos', 'error');
+            return false;
         }
     },
     
+    /**
+     * Renderizar interfaz completa
+     */
     render() {
-        const container = document.getElementById('module-employees');
+        const container = document.getElementById('employeesContainer');
         if (!container) return;
         
-        const filteredData = this.getFilteredData();
-        const paginatedData = this.getPaginatedData(filteredData);
-        
-        const activeCount = this.data.filter(e => e.active).length;
-        const inactiveCount = this.data.filter(e => !e.active).length;
-        const adminCount = this.data.filter(e => e.is_admin).length;
+        const filtered = this.getFilteredData();
+        const sorted = this.getSortedData(filtered);
+        const paginated = this.getPaginatedData(sorted);
         
         container.innerHTML = `
-            <div class="page-header">
-                <div class="page-header-top">
-                    <div>
-                        <h1 class="page-title">👥 Gestión de Empleados</h1>
-                        <p class="page-description">Administra el personal de la empresa</p>
-                    </div>
-                    <button class="btn btn-primary" onclick="Modules.Employees.openCreateModal()">
-                        ➕ Nuevo Empleado
+            ${this.renderHeader()}
+            ${this.renderStats()}
+            ${this.renderFilters()}
+            ${this.renderTable(paginated)}
+            ${this.renderPagination(sorted.length)}
+        `;
+    },
+    
+    /**
+     * Header con botón de nuevo empleado
+     */
+    renderHeader() {
+        return `
+            <div class="employee-header">
+                <div class="employee-header-left">
+                    <h2 class="employee-title">Gestión de Empleados</h2>
+                    <p class="employee-subtitle">Administración del personal</p>
+                </div>
+                <div class="employee-header-right">
+                    <button class="btn btn-primary" onclick="EmployeeModule.openCreateModal()">
+                        <span class="btn-icon">+</span>
+                        Nuevo Empleado
                     </button>
                 </div>
             </div>
-            
-            <div class="stats-row">
-                <div class="stat-box success">
-                    <div class="stat-box-icon">✓</div>
-                    <div class="stat-box-label">Activos</div>
-                    <div class="stat-box-value">${activeCount}</div>
+        `;
+    },
+    
+    /**
+     * Estadísticas resumidas
+     */
+    renderStats() {
+        const total = this.data.length;
+        const active = this.data.filter(e => e.active).length;
+        const inactive = total - active;
+        const admins = this.data.filter(e => e.is_admin).length;
+        
+        return `
+            <div class="employee-stats">
+                <div class="stat-card">
+                    <div class="stat-label">Total</div>
+                    <div class="stat-value">${total}</div>
                 </div>
-                
-                <div class="stat-box danger">
-                    <div class="stat-box-icon">✕</div>
-                    <div class="stat-box-label">Inactivos</div>
-                    <div class="stat-box-value">${inactiveCount}</div>
+                <div class="stat-card stat-success">
+                    <div class="stat-label">Activos</div>
+                    <div class="stat-value">${active}</div>
                 </div>
-                
-                <div class="stat-box primary">
-                    <div class="stat-box-icon">👑</div>
-                    <div class="stat-box-label">Administradores</div>
-                    <div class="stat-box-value">${adminCount}</div>
+                <div class="stat-card stat-danger">
+                    <div class="stat-label">Inactivos</div>
+                    <div class="stat-value">${inactive}</div>
                 </div>
-                
-                <div class="stat-box info">
-                    <div class="stat-box-icon">📊</div>
-                    <div class="stat-box-label">Total</div>
-                    <div class="stat-box-value">${this.data.length}</div>
+                <div class="stat-card stat-info">
+                    <div class="stat-label">Administradores</div>
+                    <div class="stat-value">${admins}</div>
                 </div>
             </div>
-            
-            <div class="data-table-wrapper">
-                <div class="table-header">
-                    <div class="table-title">Lista de Empleados</div>
-                    <div class="table-actions">
-                        <div class="search-box">
-                            <input type="text" 
-                                   placeholder="Buscar..." 
-                                   value="${this.searchTerm}"
-                                   onkeyup="Modules.Employees.handleSearch(this.value)">
-                        </div>
-                        <select class="filter-dropdown" onchange="Modules.Employees.handleFilter(this.value)">
-                            <option value="all" ${this.filterStatus === 'all' ? 'selected' : ''}>Todos</option>
-                            <option value="active" ${this.filterStatus === 'active' ? 'selected' : ''}>Activos</option>
-                            <option value="inactive" ${this.filterStatus === 'inactive' ? 'selected' : ''}>Inactivos</option>
-                            <option value="admin" ${this.filterStatus === 'admin' ? 'selected' : ''}>Administradores</option>
-                        </select>
-                    </div>
+        `;
+    },
+    
+    /**
+     * Filtros y búsqueda
+     */
+    renderFilters() {
+        return `
+            <div class="employee-filters">
+                <div class="filter-search">
+                    <input 
+                        type="text" 
+                        class="form-input" 
+                        placeholder="Buscar por nombre, cédula o cargo..."
+                        value="${this.searchTerm}"
+                        id="searchInput"
+                    >
                 </div>
-                
-                <table class="data-table">
+                <div class="filter-controls">
+                    <select class="form-select" id="filterStatus">
+                        <option value="all" ${this.filterStatus === 'all' ? 'selected' : ''}>Todos</option>
+                        <option value="active" ${this.filterStatus === 'active' ? 'selected' : ''}>Activos</option>
+                        <option value="inactive" ${this.filterStatus === 'inactive' ? 'selected' : ''}>Inactivos</option>
+                        <option value="admin" ${this.filterStatus === 'admin' ? 'selected' : ''}>Administradores</option>
+                    </select>
+                    <select class="form-select" id="sortBy">
+                        <option value="nombre" ${this.sortBy === 'nombre' ? 'selected' : ''}>Ordenar por Nombre</option>
+                        <option value="cedula" ${this.sortBy === 'cedula' ? 'selected' : ''}>Ordenar por Cédula</option>
+                        <option value="cargo" ${this.sortBy === 'cargo' ? 'selected' : ''}>Ordenar por Cargo</option>
+                        <option value="created_at" ${this.sortBy === 'created_at' ? 'selected' : ''}>Ordenar por Fecha</option>
+                    </select>
+                </div>
+            </div>
+        `;
+    },
+    
+    /**
+     * Tabla de empleados
+     */
+    renderTable(employees) {
+        return `
+            <div class="employee-table-wrapper">
+                <table class="employee-table">
                     <thead>
                         <tr>
                             <th>Nombre</th>
@@ -117,93 +168,79 @@ Modules.Employees = {
                             <th>Sucursal</th>
                             <th>Rol</th>
                             <th>Estado</th>
-                            <th>Acciones</th>
+                            <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${paginatedData.length > 0 ? paginatedData.map(emp => `
-                            <tr>
-                                <td><strong>${emp.nombre}</strong></td>
-                                <td>${emp.cedula}</td>
-                                <td>${emp.cargo}</td>
-                                <td>${emp.sucursal}</td>
-                                <td>
-                                    <span class="chip ${emp.is_admin ? 'chip-primary' : 'chip-info'}">
-                                        ${emp.is_admin ? '👑 Admin' : '👤 Empleado'}
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="col-status">
-                                        <span class="status-dot ${emp.active ? 'active' : 'inactive'}"></span>
-                                        <span>${emp.active ? 'Activo' : 'Inactivo'}</span>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="col-actions">
-                                        <button class="btn-icon btn-icon-view" 
-                                                onclick="Modules.Employees.viewEmployee(${emp.id})"
-                                                title="Ver">
-                                            👁
-                                        </button>
-                                        <button class="btn-icon btn-icon-edit" 
-                                                onclick="Modules.Employees.openEditModal(${emp.id})"
-                                                title="Editar">
-                                            ✏️
-                                        </button>
-                                        <button class="btn-icon ${emp.active ? 'btn-icon-delete' : 'btn-icon-view'}" 
-                                                onclick="Modules.Employees.toggleStatus(${emp.id}, ${emp.active})"
-                                                title="${emp.active ? 'Desactivar' : 'Activar'}">
-                                            ${emp.active ? '🔒' : '🔓'}
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `).join('') : `
-                            <tr>
-                                <td colspan="7" style="text-align: center; padding: 3rem; color: #6B7280;">
-                                    <div style="font-size: 3rem; margin-bottom: 1rem;">👥</div>
-                                    <div>No se encontraron empleados</div>
-                                </td>
-                            </tr>
-                        `}
+                        ${employees.length > 0 ? employees.map(emp => this.renderEmployeeRow(emp)).join('') : this.renderEmptyState()}
                     </tbody>
                 </table>
-                
-                ${this.renderPagination(filteredData.length)}
             </div>
         `;
     },
     
-    getFilteredData() {
-        let filtered = [...this.data];
-        
-        if (this.searchTerm) {
-            const term = this.searchTerm.toLowerCase();
-            filtered = filtered.filter(emp => 
-                emp.nombre.toLowerCase().includes(term) ||
-                emp.cedula.includes(term) ||
-                emp.cargo.toLowerCase().includes(term)
-            );
-        }
-        
-        if (this.filterStatus !== 'all') {
-            if (this.filterStatus === 'active') {
-                filtered = filtered.filter(e => e.active);
-            } else if (this.filterStatus === 'inactive') {
-                filtered = filtered.filter(e => !e.active);
-            } else if (this.filterStatus === 'admin') {
-                filtered = filtered.filter(e => e.is_admin);
-            }
-        }
-        
-        return filtered;
+    /**
+     * Fila individual de empleado
+     */
+    renderEmployeeRow(employee) {
+        return `
+            <tr>
+                <td>
+                    <div class="employee-name">${this.escapeHtml(employee.nombre)}</div>
+                </td>
+                <td>${this.escapeHtml(employee.cedula)}</td>
+                <td>${this.escapeHtml(employee.cargo)}</td>
+                <td>${this.escapeHtml(employee.sucursal)}</td>
+                <td>
+                    <span class="badge badge-${employee.is_admin ? 'primary' : 'secondary'}">
+                        ${employee.is_admin ? 'Administrador' : 'Empleado'}
+                    </span>
+                </td>
+                <td>
+                    <span class="status-badge status-${employee.active ? 'active' : 'inactive'}">
+                        ${employee.active ? 'Activo' : 'Inactivo'}
+                    </span>
+                </td>
+                <td class="text-center">
+                    <div class="action-buttons">
+                        <button class="btn-action btn-view" onclick="EmployeeModule.viewEmployee(${employee.id})" title="Ver detalles">
+                            Ver
+                        </button>
+                        <button class="btn-action btn-edit" onclick="EmployeeModule.openEditModal(${employee.id})" title="Editar">
+                            Editar
+                        </button>
+                        <button class="btn-action btn-${employee.active ? 'disable' : 'enable'}" 
+                                onclick="EmployeeModule.toggleStatus(${employee.id}, ${employee.active})" 
+                                title="${employee.active ? 'Desactivar' : 'Activar'}">
+                            ${employee.active ? 'Desactivar' : 'Activar'}
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
     },
     
-    getPaginatedData(data) {
-        const start = (this.currentPage - 1) * this.pageSize;
-        return data.slice(start, start + this.pageSize);
+    /**
+     * Estado vacío
+     */
+    renderEmptyState() {
+        return `
+            <tr>
+                <td colspan="7" class="text-center">
+                    <div class="empty-state">
+                        <p>No se encontraron empleados</p>
+                        <button class="btn btn-primary" onclick="EmployeeModule.openCreateModal()">
+                            Agregar Primer Empleado
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
     },
     
+    /**
+     * Paginación
+     */
     renderPagination(total) {
         const totalPages = Math.ceil(total / this.pageSize);
         if (totalPages <= 1) return '';
@@ -212,290 +249,140 @@ Modules.Employees = {
         const end = Math.min(this.currentPage * this.pageSize, total);
         
         return `
-            <div class="pagination">
-                <div class="pagination-info">Mostrando ${start} - ${end} de ${total}</div>
+            <div class="employee-pagination">
+                <div class="pagination-info">
+                    Mostrando ${start} - ${end} de ${total}
+                </div>
                 <div class="pagination-buttons">
-                    <button class="pagination-btn" 
-                            onclick="Modules.Employees.goToPage(${this.currentPage - 1})"
-                            ${this.currentPage === 1 ? 'disabled' : ''}>◀</button>
-                    ${Array.from({length: Math.min(5, totalPages)}, (_, i) => {
-                        let page = i + 1;
-                        if (totalPages > 5 && this.currentPage > 3) {
-                            page = this.currentPage - 2 + i;
-                        }
-                        if (page > totalPages) return '';
-                        return `<button class="pagination-btn ${page === this.currentPage ? 'active' : ''}" 
-                                onclick="Modules.Employees.goToPage(${page})">${page}</button>`;
-                    }).join('')}
-                    <button class="pagination-btn" 
-                            onclick="Modules.Employees.goToPage(${this.currentPage + 1})"
-                            ${this.currentPage === totalPages ? 'disabled' : ''}>▶</button>
+                    <button class="btn-pagination" 
+                            onclick="EmployeeModule.goToPage(${this.currentPage - 1})"
+                            ${this.currentPage === 1 ? 'disabled' : ''}>
+                        Anterior
+                    </button>
+                    ${this.renderPageNumbers(totalPages)}
+                    <button class="btn-pagination" 
+                            onclick="EmployeeModule.goToPage(${this.currentPage + 1})"
+                            ${this.currentPage === totalPages ? 'disabled' : ''}>
+                        Siguiente
+                    </button>
                 </div>
             </div>
         `;
     },
     
-    handleSearch(term) {
-        this.searchTerm = term;
-        this.currentPage = 1;
-        this.render();
+    /**
+     * Números de página
+     */
+    renderPageNumbers(totalPages) {
+        let pages = '';
+        const maxVisible = 5;
+        let startPage = Math.max(1, this.currentPage - 2);
+        let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+        
+        if (endPage - startPage < maxVisible - 1) {
+            startPage = Math.max(1, endPage - maxVisible + 1);
+        }
+        
+        for (let i = startPage; i <= endPage; i++) {
+            pages += `
+                <button class="btn-pagination ${i === this.currentPage ? 'active' : ''}" 
+                        onclick="EmployeeModule.goToPage(${i})">
+                    ${i}
+                </button>
+            `;
+        }
+        
+        return pages;
     },
     
-    handleFilter(status) {
-        this.filterStatus = status;
-        this.currentPage = 1;
-        this.render();
-    },
-    
-    goToPage(page) {
-        const totalPages = Math.ceil(this.getFilteredData().length / this.pageSize);
-        if (page < 1 || page > totalPages) return;
-        this.currentPage = page;
-        this.render();
-    },
-    
+    /**
+     * Modal de creación
+     */
     openCreateModal() {
-        this.showEmployeeModal();
+        this.showModal({
+            title: 'Nuevo Empleado',
+            employee: null
+        });
     },
     
-    async openEditModal(id) {
+    /**
+     * Modal de edición
+     */
+    openEditModal(id) {
+        const employee = this.data.find(e => e.id === id);
+        if (!employee) {
+            this.showNotification('Empleado no encontrado', 'error');
+            return;
+        }
+        
+        this.showModal({
+            title: 'Editar Empleado',
+            employee: employee
+        });
+    },
+    
+    /**
+     * Ver detalles del empleado
+     */
+    viewEmployee(id) {
         const employee = this.data.find(e => e.id === id);
         if (!employee) return;
-        this.showEmployeeModal(employee);
-    },
-    
-    showEmployeeModal(employee = null) {
-        const isEdit = !!employee;
-        
-        // Remover modal existente si hay
-        const existingModal = document.getElementById('employeeModal');
-        if (existingModal) existingModal.remove();
         
         const modalHTML = `
-            <div class="modal-overlay" id="employeeModal" style="
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0.5);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 10000;
-                animation: fadeIn 0.2s ease;
-            ">
-                <div class="modal-dialog" style="
-                    background: white;
-                    border-radius: 12px;
-                    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-                    max-width: 600px;
-                    width: 90%;
-                    max-height: 90vh;
-                    overflow: auto;
-                    animation: slideUp 0.3s ease;
-                ">
-                    <div class="modal-header" style="
-                        padding: 24px;
-                        border-bottom: 1px solid #E5E7EB;
-                        display: flex;
-                        align-items: center;
-                        justify-content: space-between;
-                    ">
-                        <h3 class="modal-title" style="
-                            font-size: 20px;
-                            font-weight: 700;
-                            color: #111827;
-                            margin: 0;
-                        ">${isEdit ? '✏️ Editar Empleado' : '➕ Nuevo Empleado'}</h3>
-                        <button class="modal-close" onclick="Modules.Employees.closeModal()" style="
-                            background: none;
-                            border: none;
-                            font-size: 24px;
-                            cursor: pointer;
-                            color: #6B7280;
-                            padding: 0;
-                            width: 32px;
-                            height: 32px;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            border-radius: 6px;
-                            transition: all 0.2s;
-                        " onmouseover="this.style.background='#F3F4F6'" onmouseout="this.style.background='none'">✕</button>
+            <div class="modal-overlay" id="viewModal">
+                <div class="modal-dialog modal-view">
+                    <div class="modal-header">
+                        <h3>Detalles del Empleado</h3>
+                        <button class="btn-close" onclick="EmployeeModule.closeViewModal()">×</button>
                     </div>
-                    <div class="modal-body" style="padding: 24px;">
-                        <form id="employeeForm">
-                            ${isEdit ? `<input type="hidden" name="id" value="${employee.id}">` : ''}
-                            
-                            <div style="display: grid; gap: 20px;">
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                                    <div class="form-field">
-                                        <label style="
-                                            display: block;
-                                            font-size: 14px;
-                                            font-weight: 600;
-                                            color: #374151;
-                                            margin-bottom: 8px;
-                                        ">Nombre Completo <span style="color: #EF4444;">*</span></label>
-                                        <input type="text" name="nombre" 
-                                               value="${employee?.nombre || ''}" 
-                                               required 
-                                               placeholder="Ej: Juan Pérez"
-                                               style="
-                                                   width: 100%;
-                                                   padding: 10px 12px;
-                                                   border: 1px solid #D1D5DB;
-                                                   border-radius: 6px;
-                                                   font-size: 14px;
-                                                   transition: all 0.2s;
-                                                   box-sizing: border-box;
-                                               "
-                                               onfocus="this.style.borderColor='#3B82F6'; this.style.outline='none'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)'"
-                                               onblur="this.style.borderColor='#D1D5DB'; this.style.boxShadow='none'">
-                                    </div>
-                                    
-                                    <div class="form-field">
-                                        <label style="
-                                            display: block;
-                                            font-size: 14px;
-                                            font-weight: 600;
-                                            color: #374151;
-                                            margin-bottom: 8px;
-                                        ">Cédula <span style="color: #EF4444;">*</span></label>
-                                        <input type="text" name="cedula" 
-                                               value="${employee?.cedula || ''}" 
-                                               required 
-                                               maxlength="10"
-                                               placeholder="1234567890"
-                                               style="
-                                                   width: 100%;
-                                                   padding: 10px 12px;
-                                                   border: 1px solid #D1D5DB;
-                                                   border-radius: 6px;
-                                                   font-size: 14px;
-                                                   transition: all 0.2s;
-                                                   box-sizing: border-box;
-                                               "
-                                               onfocus="this.style.borderColor='#3B82F6'; this.style.outline='none'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)'"
-                                               onblur="this.style.borderColor='#D1D5DB'; this.style.boxShadow='none'">
-                                    </div>
-                                </div>
-                                
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                                    <div class="form-field">
-                                        <label style="
-                                            display: block;
-                                            font-size: 14px;
-                                            font-weight: 600;
-                                            color: #374151;
-                                            margin-bottom: 8px;
-                                        ">Cargo <span style="color: #EF4444;">*</span></label>
-                                        <input type="text" name="cargo" 
-                                               value="${employee?.cargo || 'Vendedor'}" 
-                                               required
-                                               style="
-                                                   width: 100%;
-                                                   padding: 10px 12px;
-                                                   border: 1px solid #D1D5DB;
-                                                   border-radius: 6px;
-                                                   font-size: 14px;
-                                                   transition: all 0.2s;
-                                                   box-sizing: border-box;
-                                               "
-                                               onfocus="this.style.borderColor='#3B82F6'; this.style.outline='none'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)'"
-                                               onblur="this.style.borderColor='#D1D5DB'; this.style.boxShadow='none'">
-                                    </div>
-                                    
-                                    <div class="form-field">
-                                        <label style="
-                                            display: block;
-                                            font-size: 14px;
-                                            font-weight: 600;
-                                            color: #374151;
-                                            margin-bottom: 8px;
-                                        ">Sucursal <span style="color: #EF4444;">*</span></label>
-                                        <select name="sucursal" required
-                                                style="
-                                                    width: 100%;
-                                                    padding: 10px 12px;
-                                                    border: 1px solid #D1D5DB;
-                                                    border-radius: 6px;
-                                                    font-size: 14px;
-                                                    transition: all 0.2s;
-                                                    background: white;
-                                                    box-sizing: border-box;
-                                                "
-                                                onfocus="this.style.borderColor='#3B82F6'; this.style.outline='none'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)'"
-                                                onblur="this.style.borderColor='#D1D5DB'; this.style.boxShadow='none'">
-                                            <option value="PALACIO/MAWEWE" ${employee?.sucursal === 'PALACIO/MAWEWE' ? 'selected' : ''}>PALACIO/MAWEWE</option>
-                                            <option value="JOYERÍA MATRIZ" ${employee?.sucursal === 'JOYERÍA MATRIZ' ? 'selected' : ''}>JOYERÍA MATRIZ</option>
-                                            <option value="JOYERÍA SUCURSAL 1" ${employee?.sucursal === 'JOYERÍA SUCURSAL 1' ? 'selected' : ''}>JOYERÍA SUCURSAL 1</option>
-                                            <option value="EL PALACIO MATRIZ" ${employee?.sucursal === 'EL PALACIO MATRIZ' ? 'selected' : ''}>EL PALACIO MATRIZ</option>
-                                            <option value="EL PALACIO SUCURSAL 1" ${employee?.sucursal === 'EL PALACIO SUCURSAL 1' ? 'selected' : ''}>EL PALACIO SUCURSAL 1</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                
-                                <div class="form-field">
-                                    <label style="
-                                        display: flex;
-                                        align-items: center;
-                                        cursor: pointer;
-                                        user-select: none;
-                                    ">
-                                        <input type="checkbox" name="is_admin" 
-                                               ${employee?.is_admin ? 'checked' : ''}
-                                               style="
-                                                   width: 18px;
-                                                   height: 18px;
-                                                   cursor: pointer;
-                                               ">
-                                        <span style="
-                                            margin-left: 8px;
-                                            font-size: 14px;
-                                            font-weight: 600;
-                                            color: #374151;
-                                        ">Es Administrador</span>
-                                    </label>
-                                    <div style="font-size: 12px; color: #6B7280; margin-top: 4px; margin-left: 26px;">
-                                        Los administradores tienen acceso completo al sistema
-                                    </div>
-                                </div>
+                    <div class="modal-body">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <label>Nombre Completo</label>
+                                <p>${this.escapeHtml(employee.nombre)}</p>
                             </div>
-                        </form>
+                            <div class="detail-item">
+                                <label>Cédula</label>
+                                <p>${this.escapeHtml(employee.cedula)}</p>
+                            </div>
+                            <div class="detail-item">
+                                <label>Cargo</label>
+                                <p>${this.escapeHtml(employee.cargo)}</p>
+                            </div>
+                            <div class="detail-item">
+                                <label>Sucursal</label>
+                                <p>${this.escapeHtml(employee.sucursal)}</p>
+                            </div>
+                            <div class="detail-item">
+                                <label>Rol</label>
+                                <p>
+                                    <span class="badge badge-${employee.is_admin ? 'primary' : 'secondary'}">
+                                        ${employee.is_admin ? 'Administrador' : 'Empleado'}
+                                    </span>
+                                </p>
+                            </div>
+                            <div class="detail-item">
+                                <label>Estado</label>
+                                <p>
+                                    <span class="status-badge status-${employee.active ? 'active' : 'inactive'}">
+                                        ${employee.active ? 'Activo' : 'Inactivo'}
+                                    </span>
+                                </p>
+                            </div>
+                            <div class="detail-item">
+                                <label>Fecha de Registro</label>
+                                <p>${this.formatDate(employee.created_at)}</p>
+                            </div>
+                            <div class="detail-item">
+                                <label>Última Actualización</label>
+                                <p>${this.formatDate(employee.updated_at)}</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="modal-footer" style="
-                        padding: 16px 24px;
-                        border-top: 1px solid #E5E7EB;
-                        display: flex;
-                        gap: 12px;
-                        justify-content: flex-end;
-                        background: #F9FAFB;
-                    ">
-                        <button class="btn btn-secondary" onclick="Modules.Employees.closeModal()" style="
-                            padding: 10px 20px;
-                            border: 1px solid #D1D5DB;
-                            background: white;
-                            color: #374151;
-                            border-radius: 6px;
-                            font-weight: 600;
-                            cursor: pointer;
-                            transition: all 0.2s;
-                        " onmouseover="this.style.background='#F3F4F6'" onmouseout="this.style.background='white'">
-                            Cancelar
-                        </button>
-                        <button class="btn btn-primary" onclick="Modules.Employees.saveEmployee()" style="
-                            padding: 10px 20px;
-                            border: none;
-                            background: #3B82F6;
-                            color: white;
-                            border-radius: 6px;
-                            font-weight: 600;
-                            cursor: pointer;
-                            transition: all 0.2s;
-                        " onmouseover="this.style.background='#2563EB'" onmouseout="this.style.background='#3B82F6'">
-                            💾 ${isEdit ? 'Guardar Cambios' : 'Crear Empleado'}
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="EmployeeModule.closeViewModal()">Cerrar</button>
+                        <button class="btn btn-primary" onclick="EmployeeModule.closeViewModal(); EmployeeModule.openEditModal(${employee.id})">
+                            Editar
                         </button>
                     </div>
                 </div>
@@ -503,48 +390,109 @@ Modules.Employees = {
         `;
         
         document.body.insertAdjacentHTML('beforeend', modalHTML);
-        
-        // Agregar estilos de animación si no existen
-        if (!document.getElementById('modal-animations')) {
-            const style = document.createElement('style');
-            style.id = 'modal-animations';
-            style.textContent = `
-                @keyframes fadeIn {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-                @keyframes slideUp {
-                    from { 
-                        opacity: 0;
-                        transform: translateY(20px);
-                    }
-                    to { 
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-            `;
-            document.head.appendChild(style);
-        }
     },
     
-    closeModal() {
-        const modal = document.getElementById('employeeModal');
-        if (modal) {
-            modal.style.animation = 'fadeOut 0.2s ease';
-            setTimeout(() => modal.remove(), 200);
-        }
+    /**
+     * Mostrar modal de formulario
+     */
+    showModal(options) {
+        const { title, employee } = options;
+        const isEdit = !!employee;
         
-        const viewModal = document.getElementById('employeeViewModal');
-        if (viewModal) {
-            viewModal.style.animation = 'fadeOut 0.2s ease';
-            setTimeout(() => viewModal.remove(), 200);
-        }
+        const modalHTML = `
+            <div class="modal-overlay" id="employeeModal">
+                <div class="modal-dialog">
+                    <div class="modal-header">
+                        <h3>${title}</h3>
+                        <button class="btn-close" onclick="EmployeeModule.closeModal()">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="employeeForm" class="employee-form">
+                            ${isEdit ? `<input type="hidden" name="id" value="${employee.id}">` : ''}
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Nombre Completo *</label>
+                                    <input type="text" 
+                                           name="nombre" 
+                                           class="form-input" 
+                                           value="${employee ? this.escapeHtml(employee.nombre) : ''}"
+                                           required
+                                           placeholder="Ej: Juan Pérez">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Cédula *</label>
+                                    <input type="text" 
+                                           name="cedula" 
+                                           class="form-input" 
+                                           value="${employee ? employee.cedula : ''}"
+                                           required
+                                           maxlength="10"
+                                           pattern="[0-9]{10}"
+                                           placeholder="1234567890">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Cargo *</label>
+                                    <input type="text" 
+                                           name="cargo" 
+                                           class="form-input" 
+                                           value="${employee ? this.escapeHtml(employee.cargo) : ''}"
+                                           required
+                                           placeholder="Ej: Vendedor">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Sucursal *</label>
+                                    <select name="sucursal" class="form-select" required>
+                                        <option value="">Seleccionar...</option>
+                                        <option value="Matriz" ${employee?.sucursal === 'Matriz' ? 'selected' : ''}>Matriz</option>
+                                        <option value="Sucursal 1" ${employee?.sucursal === 'Sucursal 1' ? 'selected' : ''}>Sucursal 1</option>
+                                        <option value="Sucursal 2" ${employee?.sucursal === 'Sucursal 2' ? 'selected' : ''}>Sucursal 2</option>
+                                        <option value="Bodega" ${employee?.sucursal === 'Bodega' ? 'selected' : ''}>Bodega</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-checkbox">
+                                    <input type="checkbox" 
+                                           name="is_admin" 
+                                           ${employee?.is_admin ? 'checked' : ''}>
+                                    <span>Es Administrador</span>
+                                </label>
+                                <p class="form-help">Los administradores tienen acceso completo al sistema</p>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="EmployeeModule.closeModal()">Cancelar</button>
+                        <button class="btn btn-primary" onclick="EmployeeModule.saveEmployee()">
+                            ${isEdit ? 'Guardar Cambios' : 'Crear Empleado'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
     },
     
+    /**
+     * Guardar empleado (crear o editar)
+     */
     async saveEmployee() {
         const form = document.getElementById('employeeForm');
         const formData = new FormData(form);
+        
+        // Validar formulario
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
         
         const data = {
             nombre: formData.get('nombre').trim(),
@@ -559,17 +507,6 @@ Modules.Employees = {
         
         if (isEdit) {
             data.id = parseInt(id);
-        }
-        
-        // Validaciones
-        if (!data.nombre || !data.cedula || !data.cargo) {
-            alert('❌ Todos los campos obligatorios deben estar llenos');
-            return;
-        }
-        
-        if (data.cedula.length !== 10 || !/^\d+$/.test(data.cedula)) {
-            alert('❌ La cédula debe tener exactamente 10 dígitos numéricos');
-            return;
         }
         
         try {
@@ -589,18 +526,25 @@ Modules.Employees = {
             const result = await response.json();
             
             if (result.success) {
-                alert(`✅ Empleado ${isEdit ? 'actualizado' : 'creado'} correctamente`);
+                this.showNotification(
+                    isEdit ? 'Empleado actualizado correctamente' : 'Empleado creado correctamente',
+                    'success'
+                );
                 this.closeModal();
-                await this.load();
+                await this.loadData();
+                this.render();
             } else {
-                throw new Error(result.message || 'Error al guardar empleado');
+                throw new Error(result.message || 'Error al guardar');
             }
         } catch (error) {
             console.error('Error saving employee:', error);
-            alert('❌ Error: ' + error.message);
+            this.showNotification(error.message, 'error');
         }
     },
     
+    /**
+     * Cambiar estado (activar/desactivar)
+     */
     async toggleStatus(id, currentStatus) {
         const action = currentStatus ? 'desactivar' : 'activar';
         
@@ -619,167 +563,178 @@ Modules.Employees = {
             const result = await response.json();
             
             if (result.success) {
-                alert(`✅ Empleado ${action}do correctamente`);
-                await this.load();
+                this.showNotification(`Empleado ${action}do correctamente`, 'success');
+                await this.loadData();
+                this.render();
             } else {
                 throw new Error(result.message);
             }
         } catch (error) {
             console.error('Error toggling status:', error);
-            alert('❌ Error: ' + error.message);
+            this.showNotification(error.message, 'error');
         }
     },
     
-    viewEmployee(id) {
-        const employee = this.data.find(e => e.id === id);
-        if (!employee) return;
+    /**
+     * Filtrar datos
+     */
+    getFilteredData() {
+        let filtered = [...this.data];
         
-        // Remover modal existente
-        const existing = document.getElementById('employeeViewModal');
-        if (existing) existing.remove();
+        // Búsqueda
+        if (this.searchTerm) {
+            const term = this.searchTerm.toLowerCase();
+            filtered = filtered.filter(emp => 
+                emp.nombre.toLowerCase().includes(term) ||
+                emp.cedula.includes(term) ||
+                emp.cargo.toLowerCase().includes(term)
+            );
+        }
         
-        const modalHTML = `
-            <div class="modal-overlay" id="employeeViewModal" style="
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0.5);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 10000;
-                animation: fadeIn 0.2s ease;
-            ">
-                <div class="modal-dialog" style="
-                    background: white;
-                    border-radius: 12px;
-                    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-                    max-width: 500px;
-                    width: 90%;
-                    animation: slideUp 0.3s ease;
-                ">
-                    <div class="modal-header" style="
-                        padding: 24px;
-                        border-bottom: 1px solid #E5E7EB;
-                        display: flex;
-                        align-items: center;
-                        justify-content: space-between;
-                    ">
-                        <h3 class="modal-title" style="
-                            font-size: 20px;
-                            font-weight: 700;
-                            color: #111827;
-                            margin: 0;
-                        ">👤 Detalles del Empleado</h3>
-                        <button onclick="document.getElementById('employeeViewModal').remove()" style="
-                            background: none;
-                            border: none;
-                            font-size: 24px;
-                            cursor: pointer;
-                            color: #6B7280;
-                            padding: 0;
-                            width: 32px;
-                            height: 32px;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            border-radius: 6px;
-                        ">✕</button>
-                    </div>
-                    <div class="modal-body" style="padding: 24px;">
-                        <div style="display: grid; gap: 20px;">
-                            <div>
-                                <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px; font-weight: 600;">NOMBRE</div>
-                                <div style="font-size: 18px; font-weight: 700; color: #111827;">${employee.nombre}</div>
-                            </div>
-                            
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                                <div>
-                                    <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px; font-weight: 600;">CÉDULA</div>
-                                    <div style="font-weight: 600; color: #374151;">${employee.cedula}</div>
-                                </div>
-                                <div>
-                                    <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px; font-weight: 600;">CARGO</div>
-                                    <div style="font-weight: 600; color: #374151;">${employee.cargo}</div>
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <div style="font-size: 12px; color: #6B7280; margin-bottom: 4px; font-weight: 600;">SUCURSAL</div>
-                                <div style="font-weight: 600; color: #374151;">${employee.sucursal}</div>
-                            </div>
-                            
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                                <div>
-                                    <div style="font-size: 12px; color: #6B7280; margin-bottom: 8px; font-weight: 600;">ROL</div>
-                                    <span style="
-                                        display: inline-block;
-                                        padding: 6px 12px;
-                                        background: ${employee.is_admin ? '#DBEAFE' : '#E0E7FF'};
-                                        color: ${employee.is_admin ? '#1E40AF' : '#4338CA'};
-                                        border-radius: 6px;
-                                        font-size: 13px;
-                                        font-weight: 600;
-                                    ">
-                                        ${employee.is_admin ? '👑 Administrador' : '👤 Empleado'}
-                                    </span>
-                                </div>
-                                <div>
-                                    <div style="font-size: 12px; color: #6B7280; margin-bottom: 8px; font-weight: 600;">ESTADO</div>
-                                    <span style="
-                                        display: inline-block;
-                                        padding: 6px 12px;
-                                        background: ${employee.active ? '#D1FAE5' : '#FEE2E2'};
-                                        color: ${employee.active ? '#065F46' : '#991B1B'};
-                                        border-radius: 6px;
-                                        font-size: 13px;
-                                        font-weight: 600;
-                                    ">
-                                        ${employee.active ? '✓ Activo' : '✕ Inactivo'}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer" style="
-                        padding: 16px 24px;
-                        border-top: 1px solid #E5E7EB;
-                        display: flex;
-                        gap: 12px;
-                        justify-content: flex-end;
-                        background: #F9FAFB;
-                    ">
-                        <button onclick="document.getElementById('employeeViewModal').remove()" style="
-                            padding: 10px 20px;
-                            border: 1px solid #D1D5DB;
-                            background: white;
-                            color: #374151;
-                            border-radius: 6px;
-                            font-weight: 600;
-                            cursor: pointer;
-                        ">
-                            Cerrar
-                        </button>
-                        <button onclick="document.getElementById('employeeViewModal').remove(); Modules.Employees.openEditModal(${employee.id})" style="
-                            padding: 10px 20px;
-                            border: none;
-                            background: #3B82F6;
-                            color: white;
-                            border-radius: 6px;
-                            font-weight: 600;
-                            cursor: pointer;
-                        ">
-                            ✏️ Editar
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
+        // Filtro de estado
+        if (this.filterStatus !== 'all') {
+            if (this.filterStatus === 'active') {
+                filtered = filtered.filter(e => e.active);
+            } else if (this.filterStatus === 'inactive') {
+                filtered = filtered.filter(e => !e.active);
+            } else if (this.filterStatus === 'admin') {
+                filtered = filtered.filter(e => e.is_admin);
+            }
+        }
         
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        return filtered;
+    },
+    
+    /**
+     * Ordenar datos
+     */
+    getSortedData(data) {
+        return [...data].sort((a, b) => {
+            let valA = a[this.sortBy];
+            let valB = b[this.sortBy];
+            
+            // Convertir a minúsculas para comparación de strings
+            if (typeof valA === 'string') valA = valA.toLowerCase();
+            if (typeof valB === 'string') valB = valB.toLowerCase();
+            
+            if (valA < valB) return this.sortOrder === 'asc' ? -1 : 1;
+            if (valA > valB) return this.sortOrder === 'asc' ? 1 : -1;
+            return 0;
+        });
+    },
+    
+    /**
+     * Paginar datos
+     */
+    getPaginatedData(data) {
+        const start = (this.currentPage - 1) * this.pageSize;
+        return data.slice(start, start + this.pageSize);
+    },
+    
+    /**
+     * Ir a página
+     */
+    goToPage(page) {
+        const totalPages = Math.ceil(this.getFilteredData().length / this.pageSize);
+        if (page < 1 || page > totalPages) return;
+        
+        this.currentPage = page;
+        this.render();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    
+    /**
+     * Adjuntar eventos
+     */
+    attachEvents() {
+        // Búsqueda
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                this.searchTerm = e.target.value;
+                this.currentPage = 1;
+                this.render();
+            });
+        }
+        
+        // Filtro de estado
+        const filterStatus = document.getElementById('filterStatus');
+        if (filterStatus) {
+            filterStatus.addEventListener('change', (e) => {
+                this.filterStatus = e.target.value;
+                this.currentPage = 1;
+                this.render();
+            });
+        }
+        
+        // Ordenamiento
+        const sortBy = document.getElementById('sortBy');
+        if (sortBy) {
+            sortBy.addEventListener('change', (e) => {
+                this.sortBy = e.target.value;
+                this.render();
+            });
+        }
+    },
+    
+    /**
+     * Cerrar modal
+     */
+    closeModal() {
+        const modal = document.getElementById('employeeModal');
+        if (modal) modal.remove();
+    },
+    
+    /**
+     * Cerrar modal de vista
+     */
+    closeViewModal() {
+        const modal = document.getElementById('viewModal');
+        if (modal) modal.remove();
+    },
+    
+    /**
+     * Mostrar notificación
+     */
+    showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => notification.classList.add('show'), 10);
+        
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    },
+    
+    /**
+     * Escapar HTML
+     */
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    },
+    
+    /**
+     * Formatear fecha
+     */
+    formatDate(dateString) {
+        if (!dateString) return '-';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('es-EC', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
     }
 };
 
-console.log('✅ Módulo Employees CORREGIDO cargado');
+// Exportar módulo
+window.EmployeeModule = EmployeeModule;
+
+console.log('Módulo de empleados profesional cargado');
