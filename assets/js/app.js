@@ -1,7 +1,9 @@
 /**
- * MAWEWE E-COMMERCE - VERSIÓN CORREGIDA FINAL
- * ✅ FIX 1: Envío SIEMPRE GRATIS (sin umbral)
- * ✅ FIX 2: Stock se actualiza al cerrar carrito
+ * MAWEWE E-COMMERCE - VERSIÓN CORREGIDA
+ * ✅ FIX: Búsqueda funcionando correctamente
+ * ✅ FIX: Filtros de categoría funcionando
+ * ✅ FIX: Routing integrado para URLs compartibles
+ * ✅ FIX: Categorías ordenadas por cantidad de productos
  */
 
 // =============================================================================
@@ -10,11 +12,7 @@
 
 const CONFIG = {
   api: {
-    // Auto-detectar la URL base de la API
-    
-      baseUrl: 'https://mawewe.com.ec/api',
-      
-    
+    baseUrl: 'https://mawewe.com.ec/api',
     endpoints: {
       products: '/products.php',
       saveOrder: '/save-order.php'
@@ -66,21 +64,26 @@ const state = {
 const api = {
   async fetchProducts(filters = {}) {
     try {
-      // Construir URL
       let url = `${CONFIG.api.baseUrl}${CONFIG.api.endpoints.products}`;
       
       const params = new URLSearchParams();
       
+      // Solo agregar categoría si no es 'all'
       if (filters.category && filters.category !== 'all') {
         params.append('category', filters.category.toLowerCase().trim());
+        console.log('📂 Filtrando categoría:', filters.category);
       }
       
+      // Agregar subcategoría si existe
       if (filters.subcategory && filters.subcategory !== '') {
         params.append('subcategory', filters.subcategory.toLowerCase().trim());
+        console.log('📁 Filtrando subcategoría:', filters.subcategory);
       }
       
+      // Agregar búsqueda si cumple requisitos
       if (filters.search && filters.search.trim().length >= CONFIG.search.minChars) {
         params.append('search', filters.search.trim());
+        console.log('🔍 Búsqueda:', filters.search);
       }
       
       if (params.toString()) {
@@ -89,7 +92,6 @@ const api = {
       
       console.log('📡 Fetching:', url);
       
-      // Hacer la petición con headers explícitos
       const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -101,21 +103,16 @@ const api = {
       });
       
       console.log('📥 Response status:', response.status);
-      console.log('📥 Response headers:', {
-        'content-type': response.headers.get('content-type'),
-        'access-control-allow-origin': response.headers.get('access-control-allow-origin')
-      });
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       
-      // Verificar que la respuesta sea JSON
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         const text = await response.text();
         console.error('❌ Respuesta no es JSON:', text.substring(0, 500));
-        throw new Error('La API no está respondiendo con JSON. Verifica products.php');
+        throw new Error('La API no está respondiendo con JSON');
       }
       
       const data = await response.json();
@@ -135,12 +132,6 @@ const api = {
       
     } catch (error) {
       console.error('❌ API Error:', error);
-      
-      // Mostrar error detallado al usuario
-      if (error.message.includes('Failed to fetch')) {
-        throw new Error('No se puede conectar con el servidor. Verifica:\n1. Que la API esté funcionando\n2. Configuración CORS\n3. URL de la API: ' + CONFIG.api.baseUrl);
-      }
-      
       throw error;
     }
   },
@@ -181,133 +172,6 @@ const api = {
     }
   }
 };
-async function loadProducts(category = 'all', subcategory = '') {
-  console.log('🚀 Mawewe iniciando...');
-  console.log('📡 API URL:', CONFIG.api.baseUrl);
-  
-  try {
-    let url = `${CONFIG.api.baseUrl}${CONFIG.api.endpoints.products}`;
-    
-    const params = new URLSearchParams();
-    if (category && category !== 'all') {
-      params.append('category', category);
-    }
-    if (subcategory) {
-      params.append('subcategory', subcategory);
-    }
-    
-    if (params.toString()) {
-      url += '?' + params.toString();
-    }
-    
-    console.log('📡 Fetching:', url);
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      mode: 'cors', // IMPORTANTE: Forzar CORS
-      credentials: 'omit' // No enviar cookies
-    });
-    
-    console.log('📊 Status:', response.status);
-    console.log('📊 Headers:', Object.fromEntries(response.headers.entries()));
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      throw new Error(`Expected JSON, got ${contentType}`);
-    }
-    
-    const data = await response.json();
-    console.log('✅ Data received:', data);
-    
-    if (!data.success) {
-      throw new Error(data.message || 'Error desconocido');
-    }
-    
-    // Filtrar solo productos activos
-    const activeProducts = data.products.filter(p => p.active === 1 || p.active === "1" || p.active === true);
-    console.log(`✅ ${activeProducts.length} productos activos cargados`);
-    
-    return {
-      products: activeProducts,
-      categories: data.categories || [],
-      subcategoriesByCategory: data.subcategoriesByCategory || {},
-      shippingConfig: data.shippingConfig || CONFIG.shipping
-    };
-    
-  } catch (error) {
-    console.error('❌ Error al cargar productos:', error);
-    console.error('📋 Detalles:', {
-      message: error.message,
-      stack: error.stack
-    });
-    
-    throw error;
-  }
-}
-
-async function testAPIConnection() {
-  console.log('🔍 Probando conexión con la API...');
-  
-  try {
-    const testUrl = `${CONFIG.api.baseUrl}${CONFIG.api.endpoints.products}`;
-    console.log('🔗 URL de prueba:', testUrl);
-    
-    const response = await fetch(testUrl, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json'
-      },
-      mode: 'cors'
-    });
-    
-    console.log('✅ Respuesta del servidor:', response.status, response.statusText);
-    
-    const contentType = response.headers.get('content-type');
-    console.log('📄 Content-Type:', contentType);
-    
-    if (!contentType || !contentType.includes('application/json')) {
-      const text = await response.text();
-      console.error('❌ La API no está respondiendo JSON:', text.substring(0, 500));
-      return false;
-    }
-    
-    const data = await response.json();
-    console.log('✅ Datos recibidos:', data);
-    
-    return data.success === true;
-    
-  } catch (error) {
-    console.error('❌ Error en test de conexión:', error);
-    return false;
-  }
-}
-
-async function testConnection() {
-  console.log('🔍 Testing connection...');
-  
-  try {
-    const response = await fetch(`${CONFIG.api.baseUrl}/test-cors.php`);
-    const data = await response.json();
-    console.log('✅ Test CORS:', data);
-    return true;
-  } catch (error) {
-    console.error('❌ Test CORS failed:', error);
-    return false;
-  }
-}
-
-// Test automático al cargar
-testConnection();
-
-console.log('✅ CONFIG cargado:', CONFIG);
 
 // =============================================================================
 // CART FUNCTIONS
@@ -415,10 +279,7 @@ const cart = {
   
   calculateTotals() {
     const subtotal = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    
-    // ✅ ENVÍO SIEMPRE GRATIS
     const shipping = 0.00;
-    
     const total = subtotal + shipping;
     
     return { subtotal, shipping, total };
@@ -452,13 +313,12 @@ const ui = {
     const isOpen = modal.classList.contains('open');
     
     if (isOpen) {
-      // ✅ AL CERRAR CARRITO: ACTUALIZAR PRODUCTOS
       console.log('🔄 Cerrando carrito, actualizando productos...');
       modal.classList.remove('open');
       overlay.classList.remove('active');
       document.body.style.overflow = '';
       
-      // ✅ REFRESCAR PRODUCTOS DESDE API
+      // Refrescar productos
       filters.apply();
     } else {
       modal.classList.add('open');
@@ -513,7 +373,7 @@ const ui = {
 };
 
 // =============================================================================
-// PRODUCT MODAL (igual que antes)
+// PRODUCT MODAL
 // =============================================================================
 
 const productModal = {
@@ -531,7 +391,6 @@ const productModal = {
       ? product.images.slice(0, 3)
       : [product.image, product.image, product.image];
     
-    // ✅ GENERAR URL COMPARTIBLE
     const productURL = window.location.origin + '/?product=' + productId;
     const shareTitle = `${product.name} - Mawewe`;
     const shareText = `Mira este producto: ${product.name} - $${Number(product.price).toFixed(2)}`;
@@ -581,53 +440,38 @@ const productModal = {
             
             <p class="modal-description">${product.description}</p>
             
-            <!-- ✅ BOTONES DE COMPARTIR -->
             <div class="share-section" style="margin: var(--spacing-lg) 0; padding: var(--spacing-md); background: var(--gray-50); border-radius: var(--radius-lg); border: 1px solid var(--gray-200);">
               <p style="font-size: var(--font-size-sm); font-weight: 600; margin-bottom: var(--spacing-sm); color: var(--gray-700);">
                 📤 Compartir este producto:
               </p>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--spacing-sm);">
-                
-                <!-- Copiar Enlace -->
                 <button 
                   onclick="routing.copyToClipboard('${productURL}')"
                   style="padding: var(--spacing-sm); background: var(--gray-200); border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-xs); font-weight: 600; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px;"
-                  onmouseover="this.style.background='var(--gray-300)'"
-                  onmouseout="this.style.background='var(--gray-200)'"
                 >
                   🔗 Copiar
                 </button>
                 
-                <!-- WhatsApp -->
                 <button 
                   onclick="routing.shareOn('whatsapp', '${productURL}', '${encodeURIComponent(shareTitle)}', '${encodeURIComponent(shareText)}')"
-                  style="padding: var(--spacing-sm); background: #25D366; color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-xs); font-weight: 600; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px;"
-                  onmouseover="this.style.background='#128C7E'"
-                  onmouseout="this.style.background='#25D366'"
+                  style="padding: var(--spacing-sm); background: #25D366; color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-xs); font-weight: 600; transition: all 0.2s;"
                 >
                   📱 WhatsApp
                 </button>
                 
-                <!-- Facebook -->
                 <button 
                   onclick="routing.shareOn('facebook', '${productURL}', '${encodeURIComponent(shareTitle)}')"
-                  style="padding: var(--spacing-sm); background: #1877F2; color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-xs); font-weight: 600; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px;"
-                  onmouseover="this.style.background='#0C63D4'"
-                  onmouseout="this.style.background='#1877F2'"
+                  style="padding: var(--spacing-sm); background: #1877F2; color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-xs); font-weight: 600; transition: all 0.2s;"
                 >
                   📘 Facebook
                 </button>
                 
-                <!-- Twitter -->
                 <button 
                   onclick="routing.shareOn('twitter', '${productURL}', '${encodeURIComponent(shareTitle)}')"
-                  style="padding: var(--spacing-sm); background: #1DA1F2; color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-xs); font-weight: 600; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px;"
-                  onmouseover="this.style.background='#0C8BD9'"
-                  onmouseout="this.style.background='#1DA1F2'"
+                  style="padding: var(--spacing-sm); background: #1DA1F2; color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--font-size-xs); font-weight: 600; transition: all 0.2s;"
                 >
                   🐦 Twitter
                 </button>
-                
               </div>
             </div>
             
@@ -665,8 +509,10 @@ const productModal = {
       }
     });
     
-    // ✅ ACTUALIZAR URL (esto lo hace routing.js automáticamente)
-    console.log('🔗 Producto abierto:', productURL);
+    // Actualizar URL con routing
+    if (window.routing) {
+      window.routing.updateURL({ product: productId });
+    }
   },
   
   close() {
@@ -677,6 +523,14 @@ const productModal = {
     }
     this.currentProduct = null;
     this.currentImageIndex = 0;
+    
+    // Limpiar parámetro de producto de la URL
+    if (window.routing) {
+      window.routing.updateURL({
+        category: state.currentFilter !== 'all' ? state.currentFilter : null,
+        subcategory: state.currentSubcategory
+      });
+    }
   },
   
   selectImage(index) {
@@ -721,7 +575,7 @@ const productModal = {
 };
 
 // =============================================================================
-// RENDER FUNCTIONS (actualizado con envío gratis)
+// RENDER FUNCTIONS
 // =============================================================================
 
 const render = {
@@ -750,6 +604,7 @@ const render = {
           ` : ''}
         </div>
       `;
+      ui.updateSearchPlaceholder(0);
       return;
     }
     
@@ -808,7 +663,6 @@ const render = {
     }).join('');
     
     console.log(`✅ ${sortedProducts.length} productos renderizados`);
-    
     ui.updateSearchPlaceholder(sortedProducts.length);
   },
   
@@ -817,16 +671,26 @@ const render = {
     
     if (!container || !categories) return;
     
-    container.innerHTML = categories.map(cat => `
+    // ✅ ORDENAR CATEGORÍAS POR CANTIDAD DE PRODUCTOS (descendente)
+    const sortedCategories = [...categories].sort((a, b) => {
+      // "Todos" siempre primero
+      if (a.id === 'all') return -1;
+      if (b.id === 'all') return 1;
+      
+      // Luego por cantidad de productos
+      return (b.count || 0) - (a.count || 0);
+    });
+    
+    container.innerHTML = sortedCategories.map(cat => `
       <button 
         class="filter-button ${state.currentFilter === cat.id ? 'active' : ''}" 
         onclick="filters.setCategory('${cat.id}')"
       >
-        ${cat.name}
+        ${cat.name} ${cat.count ? `(${cat.count})` : ''}
       </button>
     `).join('');
     
-    console.log('✅ Categorías renderizadas:', categories);
+    console.log('✅ Categorías renderizadas (ordenadas por cantidad):', sortedCategories);
   },
   
   subcategories() {
@@ -954,7 +818,7 @@ const render = {
 };
 
 // =============================================================================
-// FILTERS
+// FILTERS - CORREGIDO
 // =============================================================================
 
 const filters = {
@@ -962,14 +826,30 @@ const filters = {
     state.currentFilter = category;
     state.currentSubcategory = null;
     
+    // Actualizar botones activos
     document.querySelectorAll('.filter-button').forEach(btn => {
       btn.classList.remove('active');
     });
-    event.target.classList.add('active');
+    
+    // Encontrar y activar el botón correcto
+    document.querySelectorAll('.filter-button').forEach(btn => {
+      const btnText = btn.textContent.toLowerCase();
+      const categoryName = state.categories.find(c => c.id === category)?.name.toLowerCase() || category.toLowerCase();
+      if (btnText.includes(categoryName) || (btnText === 'todos' && category === 'all')) {
+        btn.classList.add('active');
+      }
+    });
     
     render.subcategories();
-    
     this.apply();
+    
+    // Actualizar URL
+    if (window.routing) {
+      window.routing.updateURL({
+        category: category !== 'all' ? category : null,
+        subcategory: null
+      });
+    }
   },
   
   setSubcategory(subcategory) {
@@ -981,17 +861,35 @@ const filters = {
     
     render.subcategories();
     this.apply();
+    
+    // Actualizar URL
+    if (window.routing) {
+      window.routing.updateURL({
+        category: state.currentFilter !== 'all' ? state.currentFilter : null,
+        subcategory: state.currentSubcategory
+      });
+    }
   },
   
   setSearch(query) {
     const trimmedQuery = query ? query.trim() : '';
     
-    if (trimmedQuery.length === 0 || trimmedQuery.length >= CONFIG.search.minChars) {
-      state.searchQuery = trimmedQuery;
-      console.log('🔍 Búsqueda:', state.searchQuery || '(vacía)');
-      this.apply();
-    } else {
-      console.log(`⚠️ Búsqueda requiere al menos ${CONFIG.search.minChars} caracteres`);
+    state.searchQuery = trimmedQuery;
+    console.log('🔍 Búsqueda:', state.searchQuery || '(vacía)');
+    
+    // Aplicar búsqueda
+    this.apply();
+    
+    // Actualizar URL
+    if (window.routing && trimmedQuery) {
+      window.routing.updateURL({
+        search: trimmedQuery
+      });
+    } else if (window.routing && !trimmedQuery) {
+      window.routing.updateURL({
+        category: state.currentFilter !== 'all' ? state.currentFilter : null,
+        subcategory: state.currentSubcategory
+      });
     }
   },
   
@@ -1002,6 +900,14 @@ const filters = {
     }
     state.searchQuery = '';
     this.apply();
+    
+    // Limpiar URL
+    if (window.routing) {
+      window.routing.updateURL({
+        category: state.currentFilter !== 'all' ? state.currentFilter : null,
+        subcategory: state.currentSubcategory
+      });
+    }
   },
   
   apply() {
@@ -1013,23 +919,35 @@ const filters = {
     state.isSearching = true;
     ui.showLoading(true);
     
-    const filters = {
-      category: state.currentFilter,
-      search: state.searchQuery
-    };
+    // Construir filtros
+    const filterParams = {};
     
-    if (state.currentSubcategory) {
-      filters.subcategory = state.currentSubcategory;
+    // Solo agregar categoría si no es 'all'
+    if (state.currentFilter && state.currentFilter !== 'all') {
+      filterParams.category = state.currentFilter;
     }
     
-    api.fetchProducts(filters)
+    // Agregar subcategoría si existe
+    if (state.currentSubcategory) {
+      filterParams.subcategory = state.currentSubcategory;
+    }
+    
+    // Agregar búsqueda si existe y cumple requisitos
+    if (state.searchQuery && state.searchQuery.length >= CONFIG.search.minChars) {
+      filterParams.search = state.searchQuery;
+    }
+    
+    console.log('📊 Aplicando filtros:', filterParams);
+    
+    api.fetchProducts(filterParams)
       .then(data => {
         if (data && data.success) {
           state.products = data.products || [];
+          console.log(`✅ ${state.products.length} productos encontrados`);
           render.products(state.products);
           
-          if (state.products.length === 0 && state.searchQuery) {
-            console.log('❌ No se encontraron productos');
+          if (state.products.length === 0) {
+            console.log('ℹ️ No se encontraron productos con estos filtros');
           }
         } else {
           throw new Error(data.message || 'Error en la respuesta');
@@ -1088,9 +1006,13 @@ async function init() {
       
       console.log(`✅ ${state.products.length} productos cargados`);
       console.log(`✅ ${state.categories.length} categorías cargadas`);
-      console.log(`✅ Subcategorías cargadas:`, Object.keys(state.subcategoriesByCategory).length);
       
       cart.load();
+      
+      // Procesar URL inicial si hay routing
+      if (window.routing) {
+        window.routing.handleInitialURL();
+      }
     } else {
       throw new Error(data?.message || 'Error al cargar productos');
     }
@@ -1191,4 +1113,4 @@ window.mawewe = {
 
 window.productModal = productModal;
 
-console.log('✅ Mawewe cargado (envío gratis + actualización automática)');
+console.log('✅ Mawewe cargado (búsqueda + filtros + routing + categorías ordenadas)');
