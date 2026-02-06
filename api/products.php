@@ -5,7 +5,7 @@ header('Access-Control-Allow-Methods: GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, cache-control');
 header('Content-Type: application/json; charset=UTF-8');
 
-// ✅ NUEVO: Headers para evitar caché
+// ✅ Headers para evitar caché
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Cache-Control: post-check=0, pre-check=0', false);
 header('Pragma: no-cache');
@@ -42,7 +42,23 @@ try {
     }
 
     // ========================================
-    // 2. OBTENER Y LIMPIAR PARÁMETROS DE BÚSQUEDA
+    // 2. VERIFICAR COLUMNAS DISPONIBLES
+    // ========================================
+    $stmt = $db->query("DESCRIBE products");
+    $columns = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    
+    error_log("📋 Columnas disponibles en products: " . implode(", ", $columns));
+    
+    // Columnas requeridas
+    $requiredColumns = ['id', 'name', 'price', 'active'];
+    $missingColumns = array_diff($requiredColumns, $columns);
+    
+    if (!empty($missingColumns)) {
+        throw new Exception('Faltan columnas requeridas: ' . implode(', ', $missingColumns));
+    }
+
+    // ========================================
+    // 3. OBTENER Y LIMPIAR PARÁMETROS
     // ========================================
     $category = isset($_GET['category']) && $_GET['category'] !== 'all' && $_GET['category'] !== '' 
         ? trim($_GET['category']) 
@@ -56,42 +72,40 @@ try {
         ? trim($_GET['search']) 
         : null;
     
-    // Log de parámetros recibidos (para debug)
-    error_log("📥 Parámetros recibidos - Category: " . ($category ?? 'null') . ", Subcategory: " . ($subcategory ?? 'null') . ", Search: " . ($search ?? 'null'));
+    error_log("📥 Parámetros - Category: " . ($category ?? 'null') . ", Subcategory: " . ($subcategory ?? 'null') . ", Search: " . ($search ?? 'null'));
 
     // ========================================
-    // 3. CONSTRUIR QUERY SQL PARA PRODUCTOS
-    // ✅ CRÍTICO: Verificar active = 1 SIEMPRE
+    // 4. CONSTRUIR QUERY DINÁMICA
     // ========================================
-    $sql = "SELECT 
-                id,
-                sku,
-                name,
-                category,
-                subcategory,
-                price,
-                description,
-                image,
-                images,
-                stock,
-                featured,
-                rating,
-                review_count,
-                created_at,
-                updated_at
-            FROM products
-            WHERE active = 1";
-
+    
+    // Seleccionar solo las columnas que existen
+    $selectColumns = ['id', 'name', 'price', 'active'];
+    
+    // Columnas opcionales (sin featured, rating, review_count que fueron eliminadas)
+    $optionalColumns = [
+        'sku', 'category', 'subcategory', 'description', 
+        'image', 'images', 'stock', 'created_at', 'updated_at'
+    ];
+    
+    foreach ($optionalColumns as $col) {
+        if (in_array($col, $columns)) {
+            $selectColumns[] = $col;
+        }
+    }
+    
+    $selectString = implode(', ', $selectColumns);
+    
+    $sql = "SELECT $selectString FROM products WHERE active = 1";
     $params = [];
 
-    // Filtro por categoría
-    if ($category) {
+    // Filtro por categoría (si la columna existe)
+    if ($category && in_array('category', $columns)) {
         $sql .= " AND LOWER(category) = LOWER(:category)";
         $params[':category'] = $category;
     }
 
-    // Filtro por subcategoría
-    if ($subcategory) {
+    // Filtro por subcategoría (si la columna existe)
+    if ($subcategory && in_array('subcategory', $columns)) {
         $sql .= " AND LOWER(subcategory) = LOWER(:subcategory)";
         $params[':subcategory'] = $subcategory;
     }
@@ -99,27 +113,31 @@ try {
     // Filtro por búsqueda
     if ($search && strlen($search) >= 2) {
         $searchTerm = '%' . $search . '%';
-        $sql .= " AND (
-            LOWER(name) LIKE LOWER(:search1) 
-            OR LOWER(description) LIKE LOWER(:search2) 
-            OR LOWER(sku) LIKE LOWER(:search3)
-            OR LOWER(category) LIKE LOWER(:search4)
-            OR LOWER(subcategory) LIKE LOWER(:search5)
-        )";
+        $searchConditions = ["LOWER(name) LIKE LOWER(:search1)"];
         $params[':search1'] = $searchTerm;
-        $params[':search2'] = $searchTerm;
-        $params[':search3'] = $searchTerm;
-        $params[':search4'] = $searchTerm;
-        $params[':search5'] = $searchTerm;
         
+        $searchIndex = 2;
+        foreach (['description', 'sku', 'category', 'subcategory'] as $col) {
+            if (in_array($col, $columns)) {
+                $searchConditions[] = "LOWER($col) LIKE LOWER(:search$searchIndex)";
+                $params[":search$searchIndex"] = $searchTerm;
+                $searchIndex++;
+            }
+        }
+        
+        $sql .= " AND (" . implode(' OR ', $searchConditions) . ")";
         error_log("🔍 Buscando: " . $search);
     }
 
-    // Ordenar: destacados primero, luego por fecha
-    $sql .= " ORDER BY featured DESC, created_at DESC";
+    // Ordenar (sin usar 'featured' porque fue eliminado)
+    if (in_array('created_at', $columns)) {
+        $sql .= " ORDER BY created_at DESC";
+    } else {
+        $sql .= " ORDER BY id DESC";
+    }
 
     // ========================================
-    // 4. EJECUTAR QUERY DE PRODUCTOS
+    // 5. EJECUTAR QUERY
     // ========================================
     $stmt = $db->prepare($sql);
     
@@ -130,13 +148,29 @@ try {
         error_log("✅ Productos activos encontrados: " . count($products));
     } catch (PDOException $e) {
         error_log("❌ Error ejecutando query: " . $e->getMessage());
-        throw new Exception("Error en la búsqueda de productos");
+        throw new Exception("Error en la búsqueda de productos: " . $e->getMessage());
     }
 
     // ========================================
-    // 5. PROCESAR RESULTADOS DE PRODUCTOS
+    // 6. PROCESAR RESULTADOS
     // ========================================
     foreach ($products as &$product) {
+        // Valores por defecto para columnas faltantes
+        $defaults = [
+            'sku' => 'SKU-' . $product['id'],
+            'category' => '',
+            'subcategory' => '',
+            'description' => '',
+            'image' => 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIiB2aWV3Qm94PSIwIDAgNDAwIDQwMCI+CiAgPHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9IiNmMGYwZjAiIHJ4PSIxMiIvPgogIDxyZWN0IHg9IjE0MCIgeT0iMTQwIiB3aWR0aD0iMTIwIiBoZWlnaHQ9IjkwIiByeD0iOCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYmJiIiBzdHJva2Utd2lkdGg9IjMiLz4KICA8Y2lyY2xlIGN4PSIxNzAiIGN5PSIxNzAiIHI9IjEyIiBmaWxsPSJub25lIiBzdHJva2U9IiNiYmIiIHN0cm9rZS13aWR0aD0iMyIvPgogIDxwb2x5Z29uIHBvaW50cz0iMTQwLDIzMCAxODUsMTg1IDIxMCwyMTAgMjQwLDE5MCAyNjAsMjMwIiBmaWxsPSIjYmJiIi8+CiAgPHRleHQgeD0iMjAwIiB5PSIyODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjIyIiBmaWxsPSIjOTk5Ij5TaW4gSW1hZ2VuPC90ZXh0Pgo8L3N2Zz4=',
+            'stock' => 0
+        ];
+        
+        foreach ($defaults as $key => $value) {
+            if (!isset($product[$key])) {
+                $product[$key] = $value;
+            }
+        }
+        
         // Convertir campo 'images' de JSON a array
         if (isset($product['images']) && is_string($product['images'])) {
             $decoded = json_decode($product['images'], true);
@@ -149,163 +183,115 @@ try {
         $product['id'] = (int)$product['id'];
         $product['price'] = (float)$product['price'];
         $product['stock'] = (int)$product['stock'];
-        $product['featured'] = (bool)$product['featured'];
-        $product['rating'] = (float)($product['rating'] ?? 0);
-        $product['review_count'] = (int)($product['review_count'] ?? 0);
-        
-        $product['category'] = $product['category'] ?? '';
-        $product['subcategory'] = $product['subcategory'] ?? '';
     }
 
     // ========================================
-    // 6. OBTENER CATEGORÍAS ÚNICAS - ✅ DINÁMICAS DESDE BD
+    // 7. OBTENER CATEGORÍAS
     // ========================================
     
-    // ✅ ORDEN PREFERIDO (las que queremos mostrar primero)
-    $categoryOrder = [
-        'san valentin',   // ✅ AGREGADO PARA SAN VALENTÍN
-        'ropa',
-        'belleza',
-        'perfumes',
-        'juguetes',
-        'peluches',
-        'joyas',
-        'relojes',
-        'deportes',
-        'accesorios'
-    ];
-    
-    // ✅ OBTENER TODAS LAS CATEGORÍAS ACTIVAS DE LA BD
-    $sqlCategories = "SELECT 
-                        LOWER(TRIM(category)) as category_lower,
-                        category as category_original,
-                        COUNT(*) as count
-                      FROM products 
-                      WHERE active = 1 
-                      AND category IS NOT NULL
-                      AND category != ''
-                      GROUP BY LOWER(TRIM(category)), category
-                      ORDER BY category";
-    
-    $stmtCategories = $db->prepare($sqlCategories);
-    $stmtCategories->execute();
-    $categoriesData = $stmtCategories->fetchAll();
-
-    // Crear mapa de categorías con conteos
-    $categoryMap = [];
-    $totalCount = 0;
-    foreach ($categoriesData as $cat) {
-        $catLower = $cat['category_lower'];
-        $categoryMap[$catLower] = [
-            'original' => $cat['category_original'],
-            'count' => (int)$cat['count']
-        ];
-        $totalCount += (int)$cat['count'];
-    }
-
     $categories = [];
-    
-    // Agregar "Todos" primero
-    $categories[] = [
-        'id' => 'all',
-        'name' => 'Todos',
-        'count' => $totalCount
-    ];
-    
-    // ✅ PRIMERO: Agregar categorías en el orden preferido
-    foreach ($categoryOrder as $catId) {
-        if (isset($categoryMap[$catId])) {
-            $categories[] = [
-                'id' => $catId,
-                'name' => ucwords($categoryMap[$catId]['original']),
-                'count' => $categoryMap[$catId]['count']
-            ];
-            // Marcar como agregada para no duplicar
-            unset($categoryMap[$catId]);
-        }
-    }
-    
-    // ✅ SEGUNDO: Agregar categorías adicionales que no están en el orden preferido
-    // Esto garantiza que CUALQUIER categoría nueva aparezca automáticamente
-    foreach ($categoryMap as $catLower => $data) {
-        $categories[] = [
-            'id' => $catLower,
-            'name' => ucwords($data['original']),
-            'count' => $data['count']
-        ];
-    }
-
-    error_log("✅ Total de categorías encontradas: " . count($categories));
-
-    // ========================================
-    // 7. OBTENER SUBCATEGORÍAS - ✅ SOLO ACTIVAS
-    // ========================================
-    
-    // ✅ CRÍTICO: Solo subcategorías de productos activos
-    $sqlAllSubcategories = "SELECT 
-                                category,
-                                subcategory,
-                                COUNT(*) as count
-                            FROM products 
-                            WHERE active = 1 
-                            AND subcategory IS NOT NULL
-                            AND subcategory != ''
-                            GROUP BY category, subcategory 
-                            ORDER BY category, subcategory";
-    
-    $stmtAllSubcategories = $db->prepare($sqlAllSubcategories);
-    $stmtAllSubcategories->execute();
-    $allSubcategoriesData = $stmtAllSubcategories->fetchAll();
-
-    // Organizar subcategorías por categoría
     $subcategoriesByCategory = [];
-    foreach ($allSubcategoriesData as $subcat) {
-        $cat = strtolower(trim($subcat['category']));
-        $sub = strtolower(trim($subcat['subcategory']));
+    
+    if (in_array('category', $columns)) {
+        $categoryOrder = [
+            'ropa', 'belleza', 'perfumes', 'juguetes', 'peluches',
+            'joyas', 'relojes', 'deportes', 'accesorios'
+        ];
         
-        if (!isset($subcategoriesByCategory[$cat])) {
-            $subcategoriesByCategory[$cat] = [];
+        $sqlCategories = "SELECT DISTINCT category, COUNT(*) as count
+                          FROM products 
+                          WHERE active = 1 AND category IS NOT NULL AND category != ''
+                          GROUP BY category";
+        
+        $stmtCategories = $db->prepare($sqlCategories);
+        $stmtCategories->execute();
+        $categoriesData = $stmtCategories->fetchAll();
+
+        $categoryMap = [];
+        $totalCount = 0;
+        
+        foreach ($categoriesData as $cat) {
+            $catLower = strtolower(trim($cat['category']));
+            $categoryMap[$catLower] = (int)$cat['count'];
+            $totalCount += (int)$cat['count'];
+        }
+
+        // Agregar "Todos" primero
+        $categories[] = [
+            'id' => 'all',
+            'name' => 'Todos',
+            'count' => $totalCount
+        ];
+        
+        // Agregar categorías en orden
+        foreach ($categoryOrder as $catId) {
+            if (isset($categoryMap[$catId])) {
+                $categories[] = [
+                    'id' => $catId,
+                    'name' => ucfirst($catId),
+                    'count' => $categoryMap[$catId]
+                ];
+            }
         }
         
-        $subcategoriesByCategory[$cat][] = [
-            'id' => $sub,
-            'name' => ucfirst($sub),
-            'count' => (int)$subcat['count']
-        ];
+        // Obtener subcategorías si existen
+        if (in_array('subcategory', $columns)) {
+            $sqlSubcat = "SELECT category, subcategory, COUNT(*) as count
+                          FROM products 
+                          WHERE active = 1 
+                          AND category IS NOT NULL 
+                          AND subcategory IS NOT NULL
+                          AND subcategory != ''
+                          GROUP BY category, subcategory";
+            
+            $stmtSubcat = $db->prepare($sqlSubcat);
+            $stmtSubcat->execute();
+            $subcatData = $stmtSubcat->fetchAll();
+
+            foreach ($subcatData as $subcat) {
+                $cat = strtolower(trim($subcat['category']));
+                $sub = strtolower(trim($subcat['subcategory']));
+                
+                if (!isset($subcategoriesByCategory[$cat])) {
+                    $subcategoriesByCategory[$cat] = [];
+                }
+                
+                $subcategoriesByCategory[$cat][] = [
+                    'id' => $sub,
+                    'name' => ucfirst($sub),
+                    'count' => (int)$subcat['count']
+                ];
+            }
+        }
     }
 
     // ========================================
-    // 8. CONFIGURACIÓN DE ENVÍO
-    // ========================================
-    $shippingConfig = [
-        'cost' => 5.0,
-        'freeThreshold' => 50.0,
-        'expressCost' => 10.0
-    ];
-
-    // ========================================
-    // 9. RESPUESTA EXITOSA
+    // 8. RESPUESTA EXITOSA
     // ========================================
     $response = [
         'success' => true,
         'products' => $products,
         'categories' => $categories,
         'subcategoriesByCategory' => $subcategoriesByCategory,
-        'shippingConfig' => $shippingConfig,
+        'shippingConfig' => [
+            'cost' => 0.0,
+            'freeThreshold' => 0.0,
+            'expressCost' => 0.0
+        ],
         'total' => count($products),
         'filters' => [
             'category' => $category,
             'subcategory' => $subcategory,
             'search' => $search
         ],
-        'timestamp' => date('c')
+        'timestamp' => date('c'),
+        'available_columns' => $selectColumns
     ];
 
     echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 
 } catch (PDOException $e) {
-    // Error de base de datos
-    error_log("❌ MySQL Connection Error: " . $e->getMessage());
+    error_log("❌ Database Error: " . $e->getMessage());
     
     http_response_code(500);
     echo json_encode([
@@ -316,7 +302,6 @@ try {
     ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     
 } catch (Exception $e) {
-    // Error general
     error_log("❌ General Error: " . $e->getMessage());
     
     http_response_code(500);

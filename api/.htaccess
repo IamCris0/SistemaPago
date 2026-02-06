@@ -1,17 +1,17 @@
 # .htaccess para API de Mawewe
-# Configuración CORS y PHP
+# CORS para desarrollo (localhost) Y producción (tienda.mawewe.com.ec)
 
 # ========================================
-# HABILITAR CORS
+# HABILITAR CORS PARA TODOS LOS ORÍGENES
 # ========================================
 <IfModule mod_headers.c>
-    # Permitir peticiones desde cualquier origen
+    # Permitir CUALQUIER origen (para desarrollo)
     Header always set Access-Control-Allow-Origin "*"
     
     # Métodos HTTP permitidos
     Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
     
-    # Headers permitidos en las peticiones (✅ MODIFICADO: agregado cache-control)
+    # Headers permitidos
     Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, cache-control"
     
     # Permitir credenciales
@@ -26,6 +26,8 @@
 # ========================================
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    
+    # Responder OPTIONS con 200
     RewriteCond %{REQUEST_METHOD} OPTIONS
     RewriteRule ^(.*)$ $1 [R=200,L]
 </IfModule>
@@ -40,10 +42,8 @@
 # ========================================
 # SEGURIDAD
 # ========================================
-# Deshabilitar listado de directorios
 Options -Indexes
 
-# Bloquear acceso a archivos sensibles
 <FilesMatch "\.(htaccess|htpasswd|ini|log|sh|sql)$">
     Order Allow,Deny
     Deny from all
@@ -61,7 +61,6 @@ Options -Indexes
 # CACHE CONTROL
 # ========================================
 <IfModule mod_headers.c>
-    # No cachear respuestas JSON
     <FilesMatch "\.(php)$">
         Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
         Header set Pragma "no-cache"
