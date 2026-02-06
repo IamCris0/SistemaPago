@@ -11,18 +11,9 @@
 const CONFIG = {
   api: {
     // Auto-detectar la URL base de la API
-    baseUrl: (() => {
-      // Si estamos en localhost o desarrollo
-      if (window.location.hostname === 'localhost' || 
-          window.location.hostname === '127.0.0.1') {
-        return 'http://localhost/api';
-      }
+    
+      baseUrl: 'https://mawewe.com.ec/api',
       
-      // Si estamos en producción, usar el dominio actual
-      const protocol = window.location.protocol;
-      const host = window.location.hostname;
-      return `${protocol}//${host}/api`;
-    })(),
     
     endpoints: {
       products: '/products.php',
@@ -190,6 +181,78 @@ const api = {
     }
   }
 };
+async function loadProducts(category = 'all', subcategory = '') {
+  console.log('🚀 Mawewe iniciando...');
+  console.log('📡 API URL:', CONFIG.api.baseUrl);
+  
+  try {
+    let url = `${CONFIG.api.baseUrl}${CONFIG.api.endpoints.products}`;
+    
+    const params = new URLSearchParams();
+    if (category && category !== 'all') {
+      params.append('category', category);
+    }
+    if (subcategory) {
+      params.append('subcategory', subcategory);
+    }
+    
+    if (params.toString()) {
+      url += '?' + params.toString();
+    }
+    
+    console.log('📡 Fetching:', url);
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      mode: 'cors', // IMPORTANTE: Forzar CORS
+      credentials: 'omit' // No enviar cookies
+    });
+    
+    console.log('📊 Status:', response.status);
+    console.log('📊 Headers:', Object.fromEntries(response.headers.entries()));
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error(`Expected JSON, got ${contentType}`);
+    }
+    
+    const data = await response.json();
+    console.log('✅ Data received:', data);
+    
+    if (!data.success) {
+      throw new Error(data.message || 'Error desconocido');
+    }
+    
+    // Filtrar solo productos activos
+    const activeProducts = data.products.filter(p => p.active === 1 || p.active === "1" || p.active === true);
+    console.log(`✅ ${activeProducts.length} productos activos cargados`);
+    
+    return {
+      products: activeProducts,
+      categories: data.categories || [],
+      subcategoriesByCategory: data.subcategoriesByCategory || {},
+      shippingConfig: data.shippingConfig || CONFIG.shipping
+    };
+    
+  } catch (error) {
+    console.error('❌ Error al cargar productos:', error);
+    console.error('📋 Detalles:', {
+      message: error.message,
+      stack: error.stack
+    });
+    
+    throw error;
+  }
+}
+
 async function testAPIConnection() {
   console.log('🔍 Probando conexión con la API...');
   
@@ -226,6 +289,25 @@ async function testAPIConnection() {
     return false;
   }
 }
+
+async function testConnection() {
+  console.log('🔍 Testing connection...');
+  
+  try {
+    const response = await fetch(`${CONFIG.api.baseUrl}/test-cors.php`);
+    const data = await response.json();
+    console.log('✅ Test CORS:', data);
+    return true;
+  } catch (error) {
+    console.error('❌ Test CORS failed:', error);
+    return false;
+  }
+}
+
+// Test automático al cargar
+testConnection();
+
+console.log('✅ CONFIG cargado:', CONFIG);
 
 // =============================================================================
 // CART FUNCTIONS
