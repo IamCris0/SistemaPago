@@ -158,10 +158,12 @@ try {
     }
 
     // ========================================
-    // 6. OBTENER CATEGORÍAS ÚNICAS - ✅ SOLO ACTIVAS
+    // 6. OBTENER CATEGORÍAS ÚNICAS - ✅ DINÁMICAS DESDE BD
     // ========================================
     
+    // ✅ ORDEN PREFERIDO (las que queremos mostrar primero)
     $categoryOrder = [
+        'san valentin',   // ✅ AGREGADO PARA SAN VALENTÍN
         'ropa',
         'belleza',
         'perfumes',
@@ -173,13 +175,16 @@ try {
         'accesorios'
     ];
     
-    // ✅ CRÍTICO: Solo contar productos activos
+    // ✅ OBTENER TODAS LAS CATEGORÍAS ACTIVAS DE LA BD
     $sqlCategories = "SELECT 
-                        DISTINCT category,
+                        LOWER(TRIM(category)) as category_lower,
+                        category as category_original,
                         COUNT(*) as count
                       FROM products 
                       WHERE active = 1 
-                      GROUP BY category 
+                      AND category IS NOT NULL
+                      AND category != ''
+                      GROUP BY LOWER(TRIM(category)), category
                       ORDER BY category";
     
     $stmtCategories = $db->prepare($sqlCategories);
@@ -190,8 +195,11 @@ try {
     $categoryMap = [];
     $totalCount = 0;
     foreach ($categoriesData as $cat) {
-        $catLower = strtolower(trim($cat['category']));
-        $categoryMap[$catLower] = (int)$cat['count'];
+        $catLower = $cat['category_lower'];
+        $categoryMap[$catLower] = [
+            'original' => $cat['category_original'],
+            'count' => (int)$cat['count']
+        ];
         $totalCount += (int)$cat['count'];
     }
 
@@ -204,16 +212,30 @@ try {
         'count' => $totalCount
     ];
     
-    // Agregar categorías en el orden especificado
+    // ✅ PRIMERO: Agregar categorías en el orden preferido
     foreach ($categoryOrder as $catId) {
         if (isset($categoryMap[$catId])) {
             $categories[] = [
                 'id' => $catId,
-                'name' => ucfirst($catId),
-                'count' => $categoryMap[$catId]
+                'name' => ucwords($categoryMap[$catId]['original']),
+                'count' => $categoryMap[$catId]['count']
             ];
+            // Marcar como agregada para no duplicar
+            unset($categoryMap[$catId]);
         }
     }
+    
+    // ✅ SEGUNDO: Agregar categorías adicionales que no están en el orden preferido
+    // Esto garantiza que CUALQUIER categoría nueva aparezca automáticamente
+    foreach ($categoryMap as $catLower => $data) {
+        $categories[] = [
+            'id' => $catLower,
+            'name' => ucwords($data['original']),
+            'count' => $data['count']
+        ];
+    }
+
+    error_log("✅ Total de categorías encontradas: " . count($categories));
 
     // ========================================
     // 7. OBTENER SUBCATEGORÍAS - ✅ SOLO ACTIVAS
@@ -283,7 +305,7 @@ try {
 
 } catch (PDOException $e) {
     // Error de base de datos
-    error_log("❌ Database Error: " . $e->getMessage());
+    error_log("❌ MySQL Connection Error: " . $e->getMessage());
     
     http_response_code(500);
     echo json_encode([
