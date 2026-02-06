@@ -5,23 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema Seguimiento - MAWEWE/ELPALACIO</title>
     
-    <!-- Estilos -->
-    <link rel="stylesheet" href="css/crm-main.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Estilos Actualizados -->
+    <link rel="stylesheet" href="css/crm-main-updated.css">
+    <link rel="stylesheet" href="css/modules-updated.css">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="img/logo.jpeg">
+    <link rel="icon" type="image/jpeg" href="img/logos.jpeg">
 </head>
 <body>
     <div class="crm-container">
         <!-- ========================================
-             SIDEBAR
+             SIDEBAR CON LOGO
              ======================================== -->
         <aside class="sidebar" id="sidebar">
-            <!-- Header del Sidebar -->
+            <!-- Header del Sidebar con Logo Real -->
             <div class="sidebar-header">
                 <div class="sidebar-logo">
                     <div class="sidebar-logo-icon">
-                        <img src="img/logo.jpeg" alt="MAWEWE Logo">
+                        <img src="img/logos.jpeg" alt="MAWEWE Logo" onerror="this.style.display='none'">
                     </div>
                     <div class="sidebar-logo-text">
                         <h1>MAWEWE</h1>
@@ -114,7 +120,7 @@
              CONTENIDO PRINCIPAL
              ======================================== -->
         <main class="main-content" id="mainContent">
-            <!-- Topbar -->
+            <!-- Topbar con Logo -->
             <div class="topbar">
                 <div class="topbar-content">
                     <div class="topbar-left">
@@ -148,6 +154,10 @@
                             <button class="topbar-btn" onclick="showProfile()" title="Perfil">
                                 <span>👤</span>
                             </button>
+                            <!-- Logo pequeño en topbar -->
+                            <div style="width: 42px; height: 42px; border-radius: 10px; overflow: hidden; border: 1px solid #e2e8f0;">
+                                <img src="img/logos.jpeg" alt="MAWEWE" style="width: 100%; height: 100%; object-fit: cover;">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -159,8 +169,11 @@
                      MÓDULO: DASHBOARD
                      ======================================== -->
                 <div id="module-dashboard" class="module active">
-                    <!-- Header de Página -->
-                    <div class="page-header">
+                    <!-- Header de Página con Marca de Agua del Logo -->
+                    <div class="page-header" style="position: relative;">
+                        <div style="position: absolute; top: 0; right: 0; opacity: 0.03; width: 200px; height: 200px; pointer-events: none;">
+                            <img src="img/logos.jpeg" alt="" style="width: 100%; height: 100%; object-fit: contain;">
+                        </div>
                         <div class="page-header-top">
                             <div>
                                 <h1 class="page-title">Panel de Control</h1>
@@ -239,7 +252,7 @@
                                     <h3 class="card-title">Ventas de la Semana</h3>
                                     <p class="card-subtitle">Evolución diaria de ingresos</p>
                                 </div>
-                                <select class="form-control" style="width: auto;" onchange="updateSalesChart(this.value)">
+                                <select class="form-control" style="width: auto; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;" onchange="updateSalesChart(this.value)">
                                     <option value="week">Esta Semana</option>
                                     <option value="month">Este Mes</option>
                                     <option value="year">Este Año</option>
@@ -389,6 +402,16 @@
                     </div>
                 </div>
                 
+                <div id="module-reports-employees" class="module">
+                    <div class="page-header">
+                        <h1 class="page-title">Reportes de RRHH</h1>
+                    </div>
+                    <div class="card" id="reportsEmployeesContent">
+                        <div class="card-body" style="text-align: center; padding: 2rem;">
+                            Cargando reportes...
+                        </div>
+                    </div>
+                </div>
                 
                 <div id="module-audit" class="module">
                     <div class="page-header">
@@ -424,5 +447,9 @@
     <script src="js/config.js"></script>
     <script src="js/crm-main.js"></script>
     <script src="js/modules/employees.js"></script>
+    <script src="js/modules/dashboard.js"></script>
+    <script src="js/modules/attendance.js"></script>
+    <script src="js/modules/products.js"></script>
+    <script src="js/modules/reports.js"></script>
 </body>
 </html>
