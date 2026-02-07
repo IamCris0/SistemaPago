@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Sistema Seguimiento MAWEWE/ELPALACIO</title>
+    <title>Login - Sistema MAWEWE/ELPALACIO</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/jpeg" href="img/logos.jpeg">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,7 +14,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -25,7 +32,7 @@
             overflow: hidden;
         }
         
-        /* Fondo animado */
+        /* Fondo animado con puntos */
         body::before {
             content: '';
             position: absolute;
@@ -33,19 +40,20 @@
             right: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
-            animation: rotate 20s linear infinite;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: backgroundPulse 20s ease-in-out infinite;
         }
         
-        @keyframes rotate {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        @keyframes backgroundPulse {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
         }
         
         .login-container {
             background: white;
             border-radius: 24px;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4), 0 10px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 10px 20px rgba(0, 0, 0, 0.3);
             overflow: hidden;
             width: 100%;
             max-width: 480px;
@@ -65,30 +73,38 @@
             }
         }
         
+        /* Header con gradiente azul marino */
         .login-header {
-            background: linear-gradient(135deg, #003d82, #002952);
+            background: linear-gradient(135deg, #003d82 0%, #002952 100%);
             color: white;
             padding: 48px 40px;
             text-align: center;
             position: relative;
+            overflow: hidden;
         }
         
         .login-header::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="0.5"/></svg>');
-            opacity: 0.3;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 60%);
+            animation: rotate 15s linear infinite;
         }
         
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Logo con imagen real */
         .login-logo {
-            width: 120px;
-            height: 120px;
+            width: 140px;
+            height: 140px;
             background: rgba(255, 255, 255, 0.15);
-            border-radius: 24px;
+            border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -96,7 +112,7 @@
             backdrop-filter: blur(10px);
             overflow: hidden;
             border: 3px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
             position: relative;
             z-index: 1;
         }
@@ -107,19 +123,31 @@
             object-fit: cover;
         }
         
+        .login-logo::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+        }
+        
         .login-header h1 {
             font-size: 28px;
             font-weight: 800;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             letter-spacing: -0.5px;
+            position: relative;
+            z-index: 1;
         }
         
         .login-header p {
             font-size: 15px;
             opacity: 0.9;
             font-weight: 500;
+            position: relative;
+            z-index: 1;
         }
         
+        /* Body del formulario */
         .login-body {
             padding: 48px 40px;
         }
@@ -143,7 +171,7 @@
             font-size: 16px;
             border: 2px solid #e2e8f0;
             border-radius: 12px;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-family: inherit;
             background: #f8fafc;
         }
@@ -153,8 +181,10 @@
             border-color: #003d82;
             background: white;
             box-shadow: 0 0 0 4px rgba(0, 61, 130, 0.1);
+            transform: translateY(-2px);
         }
         
+        /* Botón con gradiente azul marino */
         .btn {
             width: 100%;
             padding: 18px;
@@ -163,7 +193,7 @@
             border: none;
             border-radius: 12px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -172,17 +202,17 @@
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #003d82, #002952);
+            background: linear-gradient(135deg, #003d82 0%, #002952 100%);
             color: white;
-            box-shadow: 0 8px 16px rgba(0, 61, 130, 0.3);
+            box-shadow: 0 8px 16px rgba(0, 61, 130, 0.35);
         }
         
-        .btn-primary:hover {
+        .btn-primary:hover:not(:disabled) {
             transform: translateY(-3px);
-            box-shadow: 0 12px 24px rgba(0, 61, 130, 0.4);
+            box-shadow: 0 12px 24px rgba(0, 61, 130, 0.45);
         }
         
-        .btn-primary:active {
+        .btn-primary:active:not(:disabled) {
             transform: translateY(-1px);
         }
         
@@ -192,25 +222,7 @@
             transform: none !important;
         }
         
-        .login-footer {
-            padding: 24px 40px;
-            background: #f8fafc;
-            text-align: center;
-            font-size: 14px;
-            color: #64748b;
-            border-top: 1px solid #e2e8f0;
-        }
-        
-        .login-footer a {
-            color: #003d82;
-            text-decoration: none;
-            font-weight: 700;
-        }
-        
-        .login-footer a:hover {
-            text-decoration: underline;
-        }
-        
+        /* Alertas */
         .alert {
             padding: 16px 18px;
             border-radius: 12px;
@@ -218,10 +230,12 @@
             font-size: 14px;
             display: none;
             font-weight: 600;
+            align-items: center;
+            gap: 12px;
         }
         
         .alert.show {
-            display: block;
+            display: flex;
             animation: shake 0.5s, fadeIn 0.3s;
         }
         
@@ -237,6 +251,10 @@
             border: 2px solid rgba(16, 185, 129, 0.3);
         }
         
+        .alert-icon {
+            font-size: 20px;
+        }
+        
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-12px); }
@@ -244,10 +262,11 @@
         }
         
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
+        /* Spinner de carga */
         .loading-spinner {
             width: 22px;
             height: 22px;
@@ -261,14 +280,13 @@
             to { transform: rotate(360deg); }
         }
         
-        /* Features */
+        /* Features con iconos mejorados */
         .features {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 16px;
-            margin-top: 32px;
-            padding: 24px 40px;
-            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            padding: 28px 40px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
             border-top: 1px solid #e2e8f0;
         }
         
@@ -279,14 +297,15 @@
         }
         
         .feature-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
             background: linear-gradient(135deg, rgba(0, 61, 130, 0.1), rgba(0, 61, 130, 0.15));
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 22px;
+            flex-shrink: 0;
         }
         
         .feature-text {
@@ -305,14 +324,50 @@
             color: #64748b;
         }
         
+        /* Footer */
+        .login-footer {
+            padding: 24px 40px;
+            background: #f8fafc;
+            text-align: center;
+            font-size: 13px;
+            color: #64748b;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .login-footer p {
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        .login-footer a {
+            color: #003d82;
+            text-decoration: none;
+            font-weight: 700;
+        }
+        
+        .login-footer a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Responsive */
         @media (max-width: 480px) {
+            body {
+                padding: 0;
+            }
+            
             .login-container {
                 border-radius: 0;
                 max-width: none;
+                min-height: 100vh;
             }
             
             .login-header {
-                padding: 36px 28px;
+                padding: 40px 28px;
+            }
+            
+            .login-logo {
+                width: 120px;
+                height: 120px;
             }
             
             .login-body {
@@ -321,6 +376,10 @@
             
             .features {
                 grid-template-columns: 1fr;
+                padding: 24px 28px;
+            }
+            
+            .login-footer {
                 padding: 20px 28px;
             }
         }
@@ -331,15 +390,18 @@
         <!-- Header con Logo Real -->
         <div class="login-header">
             <div class="login-logo">
-                <img src="img/logos.jpeg" alt="MAWEWE Logo" onerror="this.parentElement.innerHTML='🏪'">
+                <img src="img/logos.jpeg" alt="MAWEWE Logo" onerror="this.parentElement.innerHTML='<div style=\'font-size:60px;\'>🏪</div>'">
             </div>
             <h1>MAWEWE/ELPALACIO</h1>
             <p>Sistema de Seguimiento v4.0</p>
         </div>
         
-        <!-- Body -->
+        <!-- Formulario -->
         <div class="login-body">
-            <div id="alert" class="alert"></div>
+            <div id="alert" class="alert">
+                <span class="alert-icon"></span>
+                <span class="alert-text"></span>
+            </div>
             
             <form id="loginForm">
                 <div class="form-group">
@@ -396,19 +458,16 @@
         
         <!-- Footer -->
         <div class="login-footer">
-            <p>© 2026 Mawewe/El Palacio • Lago Agrio, Ecuador</p>
-            <p style="margin-top: 10px;">
-                ¿Problemas? <a href="mailto:soporte@mawewe.com.ec">Contactar Soporte</a>
+            <p><strong>© 2026 Mawewe/El Palacio</strong></p>
+            <p style="margin-top: 4px;">Lago Agrio, Ecuador</p>
+            <p style="margin-top: 12px;">
+                ¿Problemas de acceso? <a href="mailto:soporte@mawewe.com.ec">Contactar Soporte</a>
             </p>
         </div>
     </div>
     
+    <script src="js/config.js"></script>
     <script>
-        const CONFIG = {
-            API_URL: 'https://mawewe.com.ec/api',
-            VERSION: '4.0.0'
-        };
-        
         const form = document.getElementById('loginForm');
         const cedulaInput = document.getElementById('cedula');
         const btnLogin = document.getElementById('btnLogin');
@@ -453,7 +512,7 @@
                     localStorage.setItem('mawewe_token_v3', data.token);
                     localStorage.setItem('mawewe_permissions_v3', JSON.stringify(data.permissions));
                     
-                    showAlert('✅ Login exitoso! Redirigiendo...', 'success');
+                    showAlert('Login exitoso! Redirigiendo...', 'success');
                     
                     // Redirigir según el rol
                     setTimeout(() => {
@@ -470,16 +529,18 @@
                 
             } catch (error) {
                 console.error('Error en login:', error);
-                showAlert('❌ ' + error.message, 'error');
+                showAlert(error.message, 'error');
                 
                 // Rehabilitar botón
                 btnLogin.disabled = false;
-                btnText.textContent = '🔐 Iniciar Sesión';
+                btnText.innerHTML = '🔐 Iniciar Sesión';
             }
         });
         
         function showAlert(message, type) {
-            alertBox.textContent = message;
+            const icon = type === 'success' ? '✓' : '✕';
+            alertBox.querySelector('.alert-icon').textContent = icon;
+            alertBox.querySelector('.alert-text').textContent = message;
             alertBox.className = `alert alert-${type} show`;
             
             setTimeout(() => {
@@ -487,7 +548,7 @@
             }, 5000);
         }
         
-        // Verificar si ya hay sesión activa
+        // Verificar sesión activa
         window.addEventListener('DOMContentLoaded', () => {
             const user = localStorage.getItem('mawewe_user_v3');
             const token = localStorage.getItem('mawewe_token_v3');
@@ -496,7 +557,7 @@
                 try {
                     const userData = JSON.parse(user);
                     
-                    showAlert('Ya tienes una sesión activa. Redirigiendo...', 'success');
+                    showAlert('Sesión activa. Redirigiendo...', 'success');
                     
                     setTimeout(() => {
                         if (userData.is_admin) {
@@ -507,13 +568,13 @@
                     }, 1500);
                     
                 } catch (e) {
-                    // Si hay error parseando, limpiar storage
                     localStorage.clear();
                 }
             }
         });
         
-        console.log('🔐 Sistema de Login v4.0 - MAWEWE/ELPALACIO');
+        console.log('🔐 Sistema de Login MAWEWE/ELPALACIO v4.0');
+        console.log('Tema: Azul Marino Profesional (#003d82)');
     </script>
 </body>
 </html>
