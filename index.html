@@ -53,8 +53,15 @@
       content="https://mawewe.com.ec/assets/images/twitter-card.jpg"
     />
     <!-- Favicon: emoji 🛒 via inline SVG (no archivo externo necesario) -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🛒</text></svg>" />
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🛒</text></svg>" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🛒</text></svg>"
+    />
+    <link
+      rel="apple-touch-icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🛒</text></svg>"
+    />
     <link rel="manifest" href="./site.webmanifest" />
     <link rel="canonical" href="https://mawewe.com.ec/" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -70,7 +77,7 @@
     <link rel="stylesheet" href="./assets/css/modal-styles.css" />
     <link rel="stylesheet" href="./assets/css/checkout-styles.css" />
     <link rel="stylesheet" href="./assets/css/fix-modal-images.css" />
-    <link rel="stylesheet" href="./assets/css/fix-spacing-hero-products.css">
+    <link rel="stylesheet" href="./assets/css/fix-spacing-hero-products.css" />
     <meta name="theme-color" content="#d51f88" />
     <meta name="msapplication-TileColor" content="#d51f88" />
     <script type="application/ld+json">
@@ -169,7 +176,9 @@
             aria-expanded="false"
             aria-controls="cart-modal"
           >
-            <span aria-hidden="true" style="font-size: 1.25rem; line-height: 1;">🛒</span>
+            <span aria-hidden="true" style="font-size: 1.25rem; line-height: 1"
+              >🛒</span
+            >
             <span>Carrito</span>
             <span
               class="cart-badge"
@@ -237,17 +246,28 @@
             role="search"
             aria-label="Filtros de productos"
           >
-            <label for="search-input" class="visually-hidden"
-              >Buscar productos</label
-            >
-            <input
-              type="search"
-              id="search-input"
-              class="search-bar"
-              placeholder="Buscar productos..."
-              aria-label="Buscar productos por nombre o descripción"
-              autocomplete="off"
-            />
+            <div class="search-container" style="position: relative">
+              <label for="search-input" class="visually-hidden"
+                >Buscar productos</label
+              >
+              <input
+                type="search"
+                id="search-input"
+                class="search-bar"
+                placeholder="Buscar productos..."
+                aria-label="Buscar productos por nombre o descripción"
+                autocomplete="off"
+              />
+              <button
+                id="clear-search"
+                class="btn-clear-search"
+                onclick="filters.clearSearch()"
+                style="display: none"
+                aria-label="Limpiar búsqueda"
+              >
+                ×
+              </button>
+            </div>
             <div
               id="category-filters"
               class="category-filters"
@@ -563,7 +583,14 @@
               </p>
               <p>
                 <strong>Email:</strong><br />
-                <a href="/cdn-cgi/l/email-protection#c7aea9a1a887aaa6b0a2b0a2e9a4a8aae9a2a4" style="color: var(--gray-400); text-decoration: none"><span class="__cf_email__" data-cfemail="462f282029062b27312331236825292b682325">[email&#160;protected]</span></a
+                <a
+                  href="/cdn-cgi/l/email-protection#c7aea9a1a887aaa6b0a2b0a2e9a4a8aae9a2a4"
+                  style="color: var(--gray-400); text-decoration: none"
+                  ><span
+                    class="__cf_email__"
+                    data-cfemail="462f282029062b27312331236825292b682325"
+                    >[email&#160;protected]</span
+                  ></a
                 >
               </p>
               <p>
@@ -660,7 +687,11 @@
       <div class="spinner"></div>
       <p>Cargando productos...</p>
     </div>
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    <script
+      data-cfasync="false"
+      src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"
+    ></script>
+    <script>
       const observer = new MutationObserver(() => {
         const checkoutContainer = document.getElementById(
           "checkout-form-container",

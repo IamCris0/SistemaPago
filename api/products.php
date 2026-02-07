@@ -1,10 +1,8 @@
 <?php
 /**
  * MAWEWE API - PRODUCTS.PHP - VERSIÓN CORREGIDA
- * ✅ Filtros de categoría funcionando
- * ✅ Filtros de búsqueda funcionando
- * ✅ Filtros de subcategoría funcionando
- * ✅ CORS configurado
+ * ✅ Búsqueda global funcionando
+ * ✅ Fix error 500 en búsqueda
  */
 
 // ============================================================
@@ -58,7 +56,24 @@ try {
     }
     
     // ============================================================
-    // 6. CONSTRUIR QUERY CON FILTROS
+    // 6. OBTENER Y LIMPIAR PARÁMETROS
+    // ============================================================
+    $search = isset($_GET['search']) && trim($_GET['search']) !== '' 
+        ? trim($_GET['search']) : null;
+    
+    $category = isset($_GET['category']) && trim($_GET['category']) !== '' 
+        ? trim($_GET['category']) : null;
+    
+    $subcategory = isset($_GET['subcategory']) && trim($_GET['subcategory']) !== '' 
+        ? trim($_GET['subcategory']) : null;
+    
+    error_log("🔍 PARÁMETROS RECIBIDOS:");
+    error_log("  - search: " . ($search ?? 'null'));
+    error_log("  - category: " . ($category ?? 'null'));
+    error_log("  - subcategory: " . ($subcategory ?? 'null'));
+    
+    // ============================================================
+    // 7. CONSTRUIR QUERY CON FILTROS
     // ============================================================
     
     // SQL base
@@ -71,64 +86,67 @@ try {
     
     $params = [];
     
-    // ✅ FILTRO POR CATEGORÍA
-    $category = isset($_GET['category']) && $_GET['category'] !== '' 
-        ? trim($_GET['category']) : null;
-    
-    if ($category) {
-        $sql .= " AND LOWER(TRIM(category)) = LOWER(:category)";
-        $params[':category'] = $category;
-        error_log("🔍 PHP: Filtrando categoría: " . $category);
-    }
-    
-    // ✅ FILTRO POR SUBCATEGORÍA
-    $subcategory = isset($_GET['subcategory']) && $_GET['subcategory'] !== '' 
-        ? trim($_GET['subcategory']) : null;
-    
-    if ($subcategory) {
-        $sql .= " AND LOWER(TRIM(subcategory)) = LOWER(:subcategory)";
-        $params[':subcategory'] = $subcategory;
-        error_log("🔍 PHP: Filtrando subcategoría: " . $subcategory);
-    }
-    
-    // ✅ FILTRO POR BÚSQUEDA
-    $search = isset($_GET['search']) && $_GET['search'] !== '' 
-        ? trim($_GET['search']) : null;
-    
+    // ✅ BÚSQUEDA GLOBAL (tiene prioridad sobre categorías)
     if ($search && strlen($search) >= 2) {
-        $sql .= " AND LOWER(name) LIKE LOWER(:search)";
-        $params[':search'] = '%' . $search . '%';
-        error_log("🔍 PHP: Filtrando búsqueda: " . $search);
+        error_log("🔍 BÚSQUEDA GLOBAL ACTIVADA: " . $search);
+        
+        $sql .= " AND (
+            LOWER(name) LIKE LOWER(:search1) OR
+            LOWER(description) LIKE LOWER(:search2) OR
+            LOWER(sku) LIKE LOWER(:search3) OR
+            LOWER(category) LIKE LOWER(:search4) OR
+            LOWER(subcategory) LIKE LOWER(:search5)
+        )";
+        
+        $searchParam = '%' . $search . '%';
+        $params[':search1'] = $searchParam;
+        $params[':search2'] = $searchParam;
+        $params[':search3'] = $searchParam;
+        $params[':search4'] = $searchParam;
+        $params[':search5'] = $searchParam;
+        
+    } else {
+        // Solo aplicar filtros de categoría si NO hay búsqueda
+        
+        if ($category) {
+            $sql .= " AND LOWER(TRIM(category)) = LOWER(:category)";
+            $params[':category'] = $category;
+            error_log("📂 Filtrando por categoría: " . $category);
+        }
+        
+        if ($subcategory) {
+            $sql .= " AND LOWER(TRIM(subcategory)) = LOWER(:subcategory)";
+            $params[':subcategory'] = $subcategory;
+            error_log("📁 Filtrando por subcategoría: " . $subcategory);
+        }
     }
     
-    // Ordenar por fecha de creación (más recientes primero)
+    // Ordenar
     $sql .= " ORDER BY created_at DESC";
     
-    error_log("📊 PHP: SQL completo: " . $sql);
-    error_log("📊 PHP: Parámetros: " . json_encode($params));
+    error_log("📊 SQL: " . $sql);
+    error_log("📊 Params: " . json_encode($params));
     
     // ============================================================
-    // 7. EJECUTAR QUERY
+    // 8. EJECUTAR QUERY
     // ============================================================
     $stmt = $db->prepare($sql);
     $stmt->execute($params);
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    error_log("✅ PHP: " . count($products) . " productos encontrados");
+    error_log("✅ " . count($products) . " productos encontrados");
     
     // ============================================================
-    // 8. PROCESAR PRODUCTOS
+    // 9. PROCESAR PRODUCTOS
     // ============================================================
     foreach ($products as &$product) {
         // Asegurar campos básicos
-        if (!isset($product['sku']) || empty($product['sku'])) {
-            $product['sku'] = 'SKU-' . $product['id'];
-        }
-        if (!isset($product['category'])) $product['category'] = '';
-        if (!isset($product['subcategory'])) $product['subcategory'] = '';
-        if (!isset($product['description'])) $product['description'] = '';
-        if (!isset($product['image'])) $product['image'] = '';
-        if (!isset($product['stock'])) $product['stock'] = 0;
+        $product['sku'] = $product['sku'] ?? 'SKU-' . $product['id'];
+        $product['category'] = $product['category'] ?? '';
+        $product['subcategory'] = $product['subcategory'] ?? '';
+        $product['description'] = $product['description'] ?? '';
+        $product['image'] = $product['image'] ?? '';
+        $product['stock'] = $product['stock'] ?? 0;
         
         // Convertir tipos
         $product['id'] = (int)$product['id'];
@@ -146,14 +164,15 @@ try {
     }
     
     // ============================================================
-    // 9. OBTENER CATEGORÍAS (solo si NO hay filtros aplicados)
+    // 10. OBTENER CATEGORÍAS Y SUBCATEGORÍAS
     // ============================================================
     $categories = [];
     $subcategoriesByCategory = [];
     
-    // Solo calcular categorías si no hay filtros (para optimizar)
-    if (!$category && !$search) {
-        // Contar todas las categorías
+    // Solo si NO hay búsqueda activa
+    if (!$search) {
+        
+        // Contar categorías
         $sqlCat = "SELECT 
                         category, 
                         COUNT(*) as count 
@@ -167,17 +186,14 @@ try {
         $stmtCat = $db->query($sqlCat);
         $catsData = $stmtCat->fetchAll(PDO::FETCH_ASSOC);
         
-        // Calcular total
         $total = array_sum(array_column($catsData, 'count'));
         
-        // Agregar "Todos" primero
         $categories[] = [
             'id' => 'all',
             'name' => 'Todos',
             'count' => $total
         ];
         
-        // Agregar categorías individuales
         foreach ($catsData as $cat) {
             $categories[] = [
                 'id' => strtolower($cat['category']),
@@ -186,14 +202,44 @@ try {
             ];
         }
         
-        error_log("✅ PHP: " . count($categories) . " categorías calculadas");
+        // Obtener subcategorías
+        $sqlSubcat = "SELECT 
+                          category,
+                          subcategory,
+                          COUNT(*) as count
+                      FROM products
+                      WHERE active = 1
+                      AND category IS NOT NULL
+                      AND category != ''
+                      AND subcategory IS NOT NULL
+                      AND subcategory != ''
+                      GROUP BY category, subcategory
+                      ORDER BY category, count DESC";
+        
+        $stmtSubcat = $db->query($sqlSubcat);
+        $subcatsData = $stmtSubcat->fetchAll(PDO::FETCH_ASSOC);
+        
+        foreach ($subcatsData as $subcat) {
+            $catKey = strtolower($subcat['category']);
+            
+            if (!isset($subcategoriesByCategory[$catKey])) {
+                $subcategoriesByCategory[$catKey] = [];
+            }
+            
+            $subcategoriesByCategory[$catKey][] = [
+                'id' => strtolower($subcat['subcategory']),
+                'name' => ucfirst($subcat['subcategory']),
+                'count' => (int)$subcat['count']
+            ];
+        }
+        
     } else {
-        // Si hay filtros, devolver categorías básicas sin recalcular
+        // Búsqueda activa: devolver categorías básicas
         $categories[] = ['id' => 'all', 'name' => 'Todos', 'count' => 0];
     }
     
     // ============================================================
-    // 10. RESPUESTA FINAL
+    // 11. RESPUESTA FINAL
     // ============================================================
     $response = [
         'success' => true,
@@ -210,19 +256,23 @@ try {
         'filters_applied' => [
             'category' => $category,
             'subcategory' => $subcategory,
-            'search' => $search
+            'search' => $search,
+            'search_is_global' => !empty($search)
         ]
     ];
     
-    error_log("✅ PHP: Enviando respuesta con " . count($products) . " productos");
+    error_log("✅ Enviando respuesta con " . count($products) . " productos");
     
     // ============================================================
-    // 11. ENVIAR RESPUESTA
+    // 12. ENVIAR RESPUESTA
     // ============================================================
     echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     
 } catch (Exception $e) {
-    error_log("❌ PHP ERROR: " . $e->getMessage());
+    error_log("❌ ERROR: " . $e->getMessage());
+    error_log("❌ FILE: " . $e->getFile());
+    error_log("❌ LINE: " . $e->getLine());
+    error_log("❌ TRACE: " . $e->getTraceAsString());
     
     http_response_code(500);
     echo json_encode([
@@ -235,8 +285,9 @@ try {
 }
 
 // ============================================================
-// 12. FLUSH FINAL
+// 13. FLUSH FINAL
 // ============================================================
 if (function_exists('fastcgi_finish_request')) {
     fastcgi_finish_request();
 }
+?>
