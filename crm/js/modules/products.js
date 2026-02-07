@@ -45,7 +45,7 @@ const ProductsModule = {
      * Cargar productos desde API
      */
     async loadProducts() {
-        const response = await fetch(`${CONFIG.API_URL}/products.php?action=list&limit=1000`);
+        const response = await fetch(`${CONFIG.API_URL}/products_crud.php?action=list&limit=1000`);
         const data = await response.json();
         
         if (!data.success) throw new Error(data.message || 'Error al cargar productos');
@@ -471,7 +471,7 @@ const ProductsModule = {
         
         try {
             const action = productId ? 'update' : 'create';
-            const response = await fetch(`${CONFIG.API_URL}/products.php`, {
+            const response = await fetch(`${CONFIG.API_URL}/products_crud.php`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action, ...data })
@@ -515,7 +515,7 @@ const ProductsModule = {
         }
         
         try {
-            const response = await fetch(`${CONFIG.API_URL}/products.php`, {
+            const response = await fetch(`${CONFIG.API_URL}/products_crud.php`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -554,7 +554,7 @@ const ProductsModule = {
         const newStatus = product.status === 'active' ? 'inactive' : 'active';
         
         try {
-            const response = await fetch(`${CONFIG.API_URL}/products.php`, {
+            const response = await fetch(`${CONFIG.API_URL}/products_crud.php`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -591,7 +591,7 @@ const ProductsModule = {
         }
         
         try {
-            const response = await fetch(`${CONFIG.API_URL}/products.php`, {
+            const response = await fetch(`${CONFIG.API_URL}/products_crud.php`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
