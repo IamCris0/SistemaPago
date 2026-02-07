@@ -1,873 +1,719 @@
 /**
- * MÓDULO DE PRODUCTOS - MAWEWE CRM v4.0
- * Gestión completa de productos con imágenes
- * 
- * IMPORTANTE - Campos que NUNCA se envían en formularios:
- * - id: Auto-generado por la BD
- * - created_at: Auto-generado por la BD
- * - updated_at: Auto-generado por la BD
+ * MÓDULO DE PRODUCTOS - MAWEWE CRM v5.0 COMPLETO
+ * ✅ CRUD Completo: Crear, Leer, Actualizar, Eliminar
+ * ✅ Gestión de stock
+ * ✅ Categorías
+ * ✅ Búsqueda y filtros
+ * ✅ Sin imágenes (foco en gestión de datos)
  */
 
 const ProductsModule = {
-    // Estado del módulo
     products: [],
     categories: [],
-    currentPage: 1,
-    pageSize: 50,
-    totalPages: 1,
-    searchTerm: '',
-    filterCategory: '',
-    filterSubcategory: '',
-    filterStockStatus: '',
+    filteredProducts: [],
+    currentFilter: {
+        search: '',
+        category: '',
+        status: ''
+    },
     
-    // Inicializar módulo
+    /**
+     * Inicializar módulo
+     */
     async init() {
-        console.log('🎯 Inicializando módulo de productos...');
+        console.log('🎯 ProductsModule.init() ejecutado');
+        
+        const container = document.getElementById('productsContainer');
+        if (!container) {
+            console.error('❌ #productsContainer no encontrado');
+            return;
+        }
         
         try {
-            await this.loadCategories();
+            container.innerHTML = this.renderLoading();
             await this.loadProducts();
             this.render();
             this.attachEvents();
-            
-            console.log('✅ Módulo de productos iniciado correctamente');
+            console.log('✅ ProductsModule inicializado');
         } catch (error) {
-            console.error('❌ Error al inicializar productos:', error);
-            this.showError('Error al cargar productos: ' + error.message);
+            console.error('❌ Error:', error);
+            this.showError(error.message);
         }
     },
     
-    // Cargar categorías únicas
-    async loadCategories() {
-        try {
-            const response = await fetch(`${CONFIG.API_URL}/products_crud.php?action=list&limit=1000`);
-            const data = await response.json();
-            
-            if (data.success && data.products) {
-                const uniqueCategories = [...new Set(data.products.map(p => p.category))].filter(Boolean);
-                this.categories = uniqueCategories.sort();
-            }
-        } catch (error) {
-            console.error('Error cargando categorías:', error);
-        }
-    },
-    
-    // Cargar productos desde la API
+    /**
+     * Cargar productos desde API
+     */
     async loadProducts() {
-        console.log('📦 Cargando productos desde API...');
+        const response = await fetch(`${CONFIG.API_URL}/products.php?action=list&limit=1000`);
+        const data = await response.json();
         
-        try {
-            const params = new URLSearchParams({
-                action: 'list',
-                page: this.currentPage,
-                limit: this.pageSize
-            });
-            
-            if (this.searchTerm) params.append('search', this.searchTerm);
-            if (this.filterCategory) params.append('category', this.filterCategory);
-            if (this.filterSubcategory) params.append('subcategory', this.filterSubcategory);
-            if (this.filterStockStatus) params.append('stock_status', this.filterStockStatus);
-            
-            const response = await fetch(`${CONFIG.API_URL}/products_crud.php?${params}`);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            
-            const data = await response.json();
-            
-            if (!data.success) {
-                throw new Error(data.message || 'Error al cargar productos');
-            }
-            
-            this.products = data.products || [];
-            this.totalPages = data.pages || 1;
-            
-            console.log(`✅ ${this.products.length} productos cargados`);
-            
-        } catch (error) {
-            console.error('❌ Error al cargar productos:', error);
-            this.products = [];
-            throw error;
-        }
+        if (!data.success) throw new Error(data.message || 'Error al cargar productos');
+        
+        this.products = data.products || [];
+        this.filteredProducts = [...this.products];
+        this.categories = [...new Set(this.products.map(p => p.category))].filter(Boolean);
+        
+        console.log(`✅ ${this.products.length} productos cargados`);
     },
     
-    // Renderizar el módulo completo
+    /**
+     * Renderizar módulo completo
+     */
     render() {
         const container = document.getElementById('productsContainer');
-        if (!container) {
-            console.error('❌ Contenedor #productsContainer no encontrado');
-            return;
-        }
+        if (!container) return;
         
         container.innerHTML = `
             ${this.renderHeader()}
             ${this.renderStats()}
             ${this.renderFilters()}
-            ${this.renderGrid()}
-            ${this.renderPagination()}
+            ${this.renderProductsGrid()}
         `;
     },
     
-    // Header con botón de nuevo producto
+    /**
+     * Renderizar encabezado
+     */
     renderHeader() {
         return `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                <div>
-                    <h2 style="margin: 0; font-size: 28px; font-weight: 800; color: #0f172a;">
-                        📦 Productos
-                    </h2>
-                    <p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">
-                        Gestión de inventario y catálogo
-                    </p>
+            <div class="products-header">
+                <div class="header-left">
+                    <h2>📦 Productos (${this.filteredProducts.length})</h2>
+                    <p>Gestión completa de inventario</p>
                 </div>
-                <button onclick="ProductsModule.openCreateModal()" 
-                        style="background: linear-gradient(135deg, #003d82, #002952); color: white; border: none; 
-                               padding: 12px 24px; border-radius: 10px; font-weight: 700; cursor: pointer;
-                               box-shadow: 0 4px 12px rgba(0,61,130,0.3); transition: all 0.3s;">
-                    ➕ Nuevo Producto
+                <div class="header-right">
+                    <button class="btn btn-primary" onclick="ProductsModule.openCreateModal()">
+                        ➕ Nuevo Producto
+                    </button>
+                </div>
+            </div>
+        `;
+    },
+    
+    /**
+     * Renderizar estadísticas
+     */
+    renderStats() {
+        const total = this.products.length;
+        const active = this.products.filter(p => p.status === 'active').length;
+        const lowStock = this.products.filter(p => p.stock > 0 && p.stock < 10).length;
+        const outStock = this.products.filter(p => p.stock === 0).length;
+        
+        return `
+            <div class="products-stats">
+                <div class="stat-card stat-primary">
+                    <div class="stat-icon">📦</div>
+                    <div class="stat-info">
+                        <p class="stat-label">Total Productos</p>
+                        <p class="stat-value">${total}</p>
+                    </div>
+                </div>
+                <div class="stat-card stat-success">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-info">
+                        <p class="stat-label">Activos</p>
+                        <p class="stat-value">${active}</p>
+                    </div>
+                </div>
+                <div class="stat-card stat-warning">
+                    <div class="stat-icon">⚠️</div>
+                    <div class="stat-info">
+                        <p class="stat-label">Stock Bajo</p>
+                        <p class="stat-value">${lowStock}</p>
+                    </div>
+                </div>
+                <div class="stat-card stat-danger">
+                    <div class="stat-icon">❌</div>
+                    <div class="stat-info">
+                        <p class="stat-label">Sin Stock</p>
+                        <p class="stat-value">${outStock}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+    
+    /**
+     * Renderizar filtros
+     */
+    renderFilters() {
+        return `
+            <div class="products-filters">
+                <div class="filter-group">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        class="filter-input" 
+                        placeholder="🔍 Buscar producto..."
+                        value="${this.currentFilter.search}"
+                    >
+                </div>
+                <div class="filter-group">
+                    <select id="categoryFilter" class="filter-select">
+                        <option value="">📂 Todas las categorías</option>
+                        ${this.categories.map(cat => `
+                            <option value="${cat}" ${this.currentFilter.category === cat ? 'selected' : ''}>
+                                ${cat}
+                            </option>
+                        `).join('')}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <select id="statusFilter" class="filter-select">
+                        <option value="">📊 Todos los estados</option>
+                        <option value="active" ${this.currentFilter.status === 'active' ? 'selected' : ''}>✅ Activos</option>
+                        <option value="inactive" ${this.currentFilter.status === 'inactive' ? 'selected' : ''}>❌ Inactivos</option>
+                        <option value="low-stock" ${this.currentFilter.status === 'low-stock' ? 'selected' : ''}>⚠️ Stock Bajo</option>
+                        <option value="out-stock" ${this.currentFilter.status === 'out-stock' ? 'selected' : ''}>🚫 Sin Stock</option>
+                    </select>
+                </div>
+                <button class="btn btn-secondary" onclick="ProductsModule.clearFilters()">
+                    🔄 Limpiar
                 </button>
             </div>
         `;
     },
     
-    // Estadísticas
-    renderStats() {
-        const total = this.products.length;
-        const lowStock = this.products.filter(p => p.stock > 0 && p.stock < 10).length;
-        const outStock = this.products.filter(p => p.stock === 0).length;
-        const totalValue = this.products.reduce((sum, p) => sum + (p.price * p.stock), 0);
-        
-        return `
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 24px;">
-                <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-                    <div style="color: #64748b; font-size: 13px; font-weight: 600; margin-bottom: 8px;">TOTAL PRODUCTOS</div>
-                    <div style="font-size: 32px; font-weight: 800; color: #0f172a;">${total}</div>
-                </div>
-                
-                <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-                    <div style="color: #64748b; font-size: 13px; font-weight: 600; margin-bottom: 8px;">STOCK BAJO</div>
-                    <div style="font-size: 32px; font-weight: 800; color: #f59e0b;">${lowStock}</div>
-                </div>
-                
-                <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-                    <div style="color: #64748b; font-size: 13px; font-weight: 600; margin-bottom: 8px;">AGOTADOS</div>
-                    <div style="font-size: 32px; font-weight: 800; color: #ef4444;">${outStock}</div>
-                </div>
-                
-                <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-                    <div style="color: #64748b; font-size: 13px; font-weight: 600; margin-bottom: 8px;">VALOR INVENTARIO</div>
-                    <div style="font-size: 32px; font-weight: 800; color: #10b981;">$${totalValue.toFixed(2)}</div>
-                </div>
-            </div>
-        `;
-    },
-    
-    // Filtros
-    renderFilters() {
-        const categoryOptions = this.categories.map(cat => 
-            `<option value="${cat}" ${this.filterCategory === cat ? 'selected' : ''}>${cat.toUpperCase()}</option>`
-        ).join('');
-        
-        return `
-            <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 24px; 
-                        box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
-                    <div>
-                        <label style="display: block; font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">
-                            🔍 Buscar
-                        </label>
-                        <input type="text" id="searchInput" placeholder="SKU, nombre o descripción..."
-                               value="${this.searchTerm}"
-                               style="width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px;
-                                      font-size: 14px; transition: all 0.3s;">
-                    </div>
-                    
-                    <div>
-                        <label style="display: block; font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">
-                            📁 Categoría
-                        </label>
-                        <select id="categoryFilter"
-                                style="width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px;
-                                       font-size: 14px; cursor: pointer;">
-                            <option value="">Todas las categorías</option>
-                            ${categoryOptions}
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label style="display: block; font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">
-                            📊 Stock
-                        </label>
-                        <select id="stockFilter"
-                                style="width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px;
-                                       font-size: 14px; cursor: pointer;">
-                            <option value="">Todos</option>
-                            <option value="ok" ${this.filterStockStatus === 'ok' ? 'selected' : ''}>Stock OK (≥10)</option>
-                            <option value="low" ${this.filterStockStatus === 'low' ? 'selected' : ''}>Stock Bajo (1-9)</option>
-                            <option value="out" ${this.filterStockStatus === 'out' ? 'selected' : ''}>Agotado (0)</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        `;
-    },
-    
-    // Grid de productos
-    renderGrid() {
-        if (this.products.length === 0) {
+    /**
+     * Renderizar grid de productos
+     */
+    renderProductsGrid() {
+        if (this.filteredProducts.length === 0) {
             return `
-                <div style="background: white; padding: 60px; text-align: center; border-radius: 12px;
-                            box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-                    <div style="font-size: 64px; margin-bottom: 16px;">📦</div>
-                    <h3 style="color: #0f172a; margin-bottom: 8px;">No hay productos</h3>
-                    <p style="color: #64748b; margin-bottom: 24px;">Comienza agregando tu primer producto</p>
-                    <button onclick="ProductsModule.openCreateModal()"
-                            style="background: linear-gradient(135deg, #003d82, #002952); color: white; border: none;
-                                   padding: 12px 24px; border-radius: 10px; font-weight: 700; cursor: pointer;">
+                <div class="empty-state">
+                    <div class="empty-icon">📭</div>
+                    <h3>No hay productos</h3>
+                    <p>Comienza agregando tu primer producto</p>
+                    <button class="btn btn-primary" onclick="ProductsModule.openCreateModal()">
                         ➕ Crear Producto
                     </button>
                 </div>
             `;
         }
         
-        const productsHTML = this.products.map(p => this.renderProductCard(p)).join('');
-        
         return `
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
-                        gap: 20px; margin-bottom: 24px;">
-                ${productsHTML}
+            <div class="products-grid">
+                ${this.filteredProducts.map(product => this.renderProductCard(product)).join('')}
             </div>
         `;
     },
     
-    // Tarjeta de producto
+    /**
+     * Renderizar tarjeta de producto
+     */
     renderProductCard(product) {
-        const stockColor = product.stock === 0 ? '#ef4444' : product.stock < 10 ? '#f59e0b' : '#10b981';
-        const stockText = product.stock === 0 ? 'AGOTADO' : product.stock < 10 ? `BAJO (${product.stock})` : `${product.stock}`;
-        
-        const imageUrl = product.image || 'https://via.placeholder.com/300x300?text=Sin+Imagen';
+        const stockClass = product.stock === 0 ? 'stock-out' : product.stock < 10 ? 'stock-low' : 'stock-ok';
+        const stockText = product.stock === 0 ? 'Sin stock' : product.stock < 10 ? `Stock bajo: ${product.stock}` : `Stock: ${product.stock}`;
+        const statusClass = product.status === 'active' ? 'status-active' : 'status-inactive';
         
         return `
-            <div onclick="ProductsModule.viewProduct(${product.id})"
-                 style="background: white; border-radius: 12px; overflow: hidden; cursor: pointer;
-                        box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.3s;
-                        position: relative;"
-                 onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.15)';"
-                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)';">
-                
-                <!-- Imagen -->
-                <div style="width: 100%; height: 200px; background: #f1f5f9; position: relative; overflow: hidden;">
-                    <img src="${imageUrl}" 
-                         alt="${product.name}"
-                         style="width: 100%; height: 100%; object-fit: cover;"
-                         onerror="this.src='https://via.placeholder.com/300x300?text=Sin+Imagen'">
-                    
-                    <!-- Badge de stock -->
-                    <div style="position: absolute; top: 12px; right: 12px; background: ${stockColor}; 
-                                color: white; padding: 6px 12px; border-radius: 20px; font-size: 11px; 
-                                font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
-                        ${stockText}
-                    </div>
+            <div class="product-card" data-id="${product.id}">
+                <div class="product-header">
+                    <span class="product-badge ${stockClass}">${stockText}</span>
+                    <span class="product-status ${statusClass}">
+                        ${product.status === 'active' ? '✅' : '❌'}
+                    </span>
                 </div>
-                
-                <!-- Info -->
-                <div style="padding: 16px;">
-                    <div style="color: #64748b; font-size: 12px; font-weight: 600; margin-bottom: 4px;">
-                        ${product.sku}
-                    </div>
-                    <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 700; color: #0f172a;
-                               overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                        ${product.name}
-                    </h3>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                        <span style="color: #64748b; font-size: 13px; text-transform: capitalize;">
-                            📁 ${product.category}
-                        </span>
-                        <span style="font-size: 20px; font-weight: 800; color: #003d82;">
-                            $${parseFloat(product.price).toFixed(2)}
-                        </span>
-                    </div>
-                    
-                    <button onclick="event.stopPropagation(); ProductsModule.openEditModal(${product.id})"
-                            style="width: 100%; padding: 10px; background: linear-gradient(135deg, #003d82, #002952);
-                                   color: white; border: none; border-radius: 8px; font-weight: 700;
-                                   cursor: pointer; font-size: 13px; transition: all 0.3s;"
-                            onmouseover="this.style.transform='scale(1.02)'"
-                            onmouseout="this.style.transform='scale(1)'">
-                        ✏️ Editar
+                <div class="product-body">
+                    <h3 class="product-name">${product.name}</h3>
+                    <p class="product-category">📂 ${product.category || 'Sin categoría'}</p>
+                    <p class="product-code">🏷️ Código: ${product.code || 'N/A'}</p>
+                    <div class="product-price">$${parseFloat(product.price || 0).toFixed(2)}</div>
+                    ${product.description ? `<p class="product-description">${product.description}</p>` : ''}
+                </div>
+                <div class="product-actions">
+                    <button class="btn-action btn-edit" onclick="ProductsModule.openEditModal(${product.id})" title="Editar">
+                        ✏️
+                    </button>
+                    <button class="btn-action btn-stock" onclick="ProductsModule.openStockModal(${product.id})" title="Ajustar Stock">
+                        📦
+                    </button>
+                    <button class="btn-action btn-toggle" onclick="ProductsModule.toggleStatus(${product.id})" title="Activar/Desactivar">
+                        ${product.status === 'active' ? '⏸️' : '▶️'}
+                    </button>
+                    <button class="btn-action btn-delete" onclick="ProductsModule.deleteProduct(${product.id})" title="Eliminar">
+                        🗑️
                     </button>
                 </div>
             </div>
         `;
     },
     
-    // Paginación
-    renderPagination() {
-        if (this.totalPages <= 1) return '';
-        
-        let pages = '';
-        for (let i = 1; i <= this.totalPages; i++) {
-            const isActive = i === this.currentPage;
-            pages += `
-                <button onclick="ProductsModule.goToPage(${i})"
-                        style="padding: 8px 16px; border: 2px solid ${isActive ? '#003d82' : '#e2e8f0'};
-                               background: ${isActive ? '#003d82' : 'white'}; 
-                               color: ${isActive ? 'white' : '#64748b'};
-                               border-radius: 8px; font-weight: 700; cursor: pointer; margin: 0 4px;">
-                    ${i}
-                </button>
-            `;
-        }
-        
-        return `
-            <div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 24px;">
-                <button onclick="ProductsModule.goToPage(${this.currentPage - 1})" 
-                        ${this.currentPage === 1 ? 'disabled' : ''}
-                        style="padding: 8px 16px; border: 2px solid #e2e8f0; background: white; 
-                               border-radius: 8px; font-weight: 700; cursor: pointer;">
-                    ← Anterior
-                </button>
-                ${pages}
-                <button onclick="ProductsModule.goToPage(${this.currentPage + 1})" 
-                        ${this.currentPage === this.totalPages ? 'disabled' : ''}
-                        style="padding: 8px 16px; border: 2px solid #e2e8f0; background: white; 
-                               border-radius: 8px; font-weight: 700; cursor: pointer;">
-                    Siguiente →
-                </button>
-            </div>
-        `;
-    },
-    
-    // Adjuntar eventos
+    /**
+     * Adjuntar eventos
+     */
     attachEvents() {
-        // Búsqueda con debounce
         const searchInput = document.getElementById('searchInput');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const statusFilter = document.getElementById('statusFilter');
+        
         if (searchInput) {
-            let timeout;
             searchInput.addEventListener('input', (e) => {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => {
-                    this.searchTerm = e.target.value;
-                    this.currentPage = 1;
-                    this.loadProducts().then(() => this.render());
-                }, 500);
+                this.currentFilter.search = e.target.value;
+                this.applyFilters();
             });
         }
         
-        // Filtro de categoría
-        const categoryFilter = document.getElementById('categoryFilter');
         if (categoryFilter) {
             categoryFilter.addEventListener('change', (e) => {
-                this.filterCategory = e.target.value;
-                this.currentPage = 1;
-                this.loadProducts().then(() => this.render());
+                this.currentFilter.category = e.target.value;
+                this.applyFilters();
             });
         }
         
-        // Filtro de stock
-        const stockFilter = document.getElementById('stockFilter');
-        if (stockFilter) {
-            stockFilter.addEventListener('change', (e) => {
-                this.filterStockStatus = e.target.value;
-                this.currentPage = 1;
-                this.loadProducts().then(() => this.render());
+        if (statusFilter) {
+            statusFilter.addEventListener('change', (e) => {
+                this.currentFilter.status = e.target.value;
+                this.applyFilters();
             });
         }
     },
     
-    // Ir a página
-    async goToPage(page) {
-        if (page < 1 || page > this.totalPages) return;
-        this.currentPage = page;
-        await this.loadProducts();
+    /**
+     * Aplicar filtros
+     */
+    applyFilters() {
+        this.filteredProducts = this.products.filter(product => {
+            const matchSearch = !this.currentFilter.search || 
+                product.name.toLowerCase().includes(this.currentFilter.search.toLowerCase()) ||
+                (product.code && product.code.toLowerCase().includes(this.currentFilter.search.toLowerCase()));
+            
+            const matchCategory = !this.currentFilter.category || product.category === this.currentFilter.category;
+            
+            let matchStatus = true;
+            if (this.currentFilter.status === 'active') matchStatus = product.status === 'active';
+            else if (this.currentFilter.status === 'inactive') matchStatus = product.status === 'inactive';
+            else if (this.currentFilter.status === 'low-stock') matchStatus = product.stock > 0 && product.stock < 10;
+            else if (this.currentFilter.status === 'out-stock') matchStatus = product.stock === 0;
+            
+            return matchSearch && matchCategory && matchStatus;
+        });
+        
         this.render();
         this.attachEvents();
     },
     
-    // Ver detalles del producto
-    async viewProduct(id) {
-        try {
-            const response = await fetch(`${CONFIG.API_URL}/products_crud.php?action=get&id=${id}`);
-            const data = await response.json();
-            
-            if (!data.success) throw new Error(data.message);
-            
-            const p = data.product;
-            
-            // Galería de imágenes
-            const allImages = [p.image, ...(p.images || [])].filter(Boolean);
-            const galleryHTML = allImages.map(img => `
-                <img src="${img}" alt="${p.name}" 
-                     style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px;"
-                     onerror="this.src='https://via.placeholder.com/300x300?text=Sin+Imagen'">
-            `).join('');
-            
-            this.showModal({
-                title: `📦 ${p.name}`,
-                content: `
-                    <div style="display: grid; gap: 20px;">
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
-                            ${galleryHTML || '<div style="text-align:center; padding: 40px; color: #64748b;">Sin imágenes</div>'}
-                        </div>
-                        
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
-                            <div>
-                                <label style="font-size: 12px; color: #64748b; font-weight: 600;">SKU</label>
-                                <div style="font-size: 16px; font-weight: 700; color: #0f172a;">${p.sku}</div>
-                            </div>
-                            <div>
-                                <label style="font-size: 12px; color: #64748b; font-weight: 600;">Precio</label>
-                                <div style="font-size: 20px; font-weight: 800; color: #003d82;">$${parseFloat(p.price).toFixed(2)}</div>
-                            </div>
-                            <div>
-                                <label style="font-size: 12px; color: #64748b; font-weight: 600;">Categoría</label>
-                                <div style="font-size: 16px; font-weight: 700; color: #0f172a; text-transform: capitalize;">${p.category}</div>
-                            </div>
-                            <div>
-                                <label style="font-size: 12px; color: #64748b; font-weight: 600;">Stock</label>
-                                <div style="font-size: 16px; font-weight: 700; color: ${p.stock === 0 ? '#ef4444' : p.stock < 10 ? '#f59e0b' : '#10b981'};">
-                                    ${p.stock} unidades
-                                </div>
-                            </div>
-                        </div>
-                        
-                        ${p.description ? `
-                            <div>
-                                <label style="font-size: 12px; color: #64748b; font-weight: 600;">Descripción</label>
-                                <div style="font-size: 14px; color: #0f172a; margin-top: 4px;">${p.description}</div>
-                            </div>
-                        ` : ''}
-                    </div>
-                `,
-                actions: `
-                    <button onclick="ProductsModule.openEditModal(${p.id}); document.getElementById('globalModal').style.display='none';"
-                            style="background: linear-gradient(135deg, #003d82, #002952); color: white; border: none;
-                                   padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer;">
-                        ✏️ Editar
-                    </button>
-                    <button onclick="document.getElementById('globalModal').style.display='none'"
-                            style="background: #e2e8f0; color: #64748b; border: none;
-                                   padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer;">
-                        Cerrar
-                    </button>
-                `
-            });
-            
-        } catch (error) {
-            console.error('Error al ver producto:', error);
-            this.showError('Error al cargar detalles del producto');
-        }
+    /**
+     * Limpiar filtros
+     */
+    clearFilters() {
+        this.currentFilter = { search: '', category: '', status: '' };
+        this.applyFilters();
     },
     
-    // Abrir modal de crear
+    /**
+     * Abrir modal de creación
+     */
     openCreateModal() {
-        const categoryOptions = this.categories.map(cat => 
-            `<option value="${cat}">${cat.toUpperCase()}</option>`
-        ).join('');
-        
-        this.showModal({
-            title: '➕ Crear Producto',
-            content: `
-                <form id="productForm" style="display: grid; gap: 16px;">
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
-                        <div>
-                            <label style="font-size: 13px; font-weight: 700; color: #0f172a; display: block; margin-bottom: 8px;">
-                                SKU * <span style="color: #64748b; font-weight: 400; font-size: 11px;">(único)</span>
-                            </label>
-                            <input type="text" name="sku" required
-                                   placeholder="Ej: ROP-AME-001"
-                                   style="width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
-                        </div>
-                        <div>
-                            <label style="font-size: 13px; font-weight: 700; color: #0f172a; display: block; margin-bottom: 8px;">
-                                Precio *
-                            </label>
-                            <input type="number" name="price" required step="0.01" min="0"
-                                   placeholder="0.00"
-                                   style="width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
-                        </div>
+        const modalBody = `
+            <form id="productForm" class="product-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nombre del Producto *</label>
+                        <input type="text" name="name" required placeholder="Ej: Laptop Dell XPS 15">
                     </div>
-                    
-                    <div>
-                        <label style="font-size: 13px; font-weight: 700; color: #0f172a; display: block; margin-bottom: 8px;">
-                            Nombre *
-                        </label>
-                        <input type="text" name="name" required
-                               placeholder="Ej: POLO LINEA COLOR BLANCO"
-                               style="width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
+                    <div class="form-group">
+                        <label>Código</label>
+                        <input type="text" name="code" placeholder="Ej: PROD-001">
                     </div>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
-                        <div>
-                            <label style="font-size: 13px; font-weight: 700; color: #0f172a; display: block; margin-bottom: 8px;">
-                                Categoría *
-                            </label>
-                            <input type="text" name="category" required list="categoriesList"
-                                   placeholder="Ej: ropa"
-                                   style="width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
-                            <datalist id="categoriesList">
-                                ${categoryOptions}
-                            </datalist>
-                        </div>
-                        <div>
-                            <label style="font-size: 13px; font-weight: 700; color: #0f172a; display: block; margin-bottom: 8px;">
-                                Subcategoría
-                            </label>
-                            <input type="text" name="subcategory"
-                                   placeholder="Ej: americanino"
-                                   style="width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <label style="font-size: 13px; font-weight: 700; color: #0f172a; display: block; margin-bottom: 8px;">
-                            Stock
-                        </label>
-                        <input type="number" name="stock" min="0" value="0"
-                               style="width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
-                    </div>
-                    
-                    <div>
-                        <label style="font-size: 13px; font-weight: 700; color: #0f172a; display: block; margin-bottom: 8px;">
-                            Descripción
-                        </label>
-                        <textarea name="description" rows="3"
-                                  placeholder="Descripción del producto..."
-                                  style="width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; resize: vertical;"></textarea>
-                    </div>
-                    
-                    <div>
-                        <label style="font-size: 13px; font-weight: 700; color: #0f172a; display: block; margin-bottom: 8px;">
-                            Imagen Principal (URL)
-                        </label>
-                        <input type="text" name="image"
-                               placeholder="assets/img/ropa/AMERICANINO/producto.jpg"
-                               style="width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
-                        <div style="font-size: 11px; color: #64748b; margin-top: 4px;">
-                            💡 Ejemplo: assets/img/productos/foto.jpg
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <label style="font-size: 13px; font-weight: 700; color: #0f172a; display: block; margin-bottom: 8px;">
-                            Imágenes Adicionales (URLs separadas por coma)
-                        </label>
-                        <input type="text" name="images"
-                               placeholder="url1.jpg, url2.jpg, url3.jpg"
-                               style="width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
-                        <div style="font-size: 11px; color: #64748b; margin-top: 4px;">
-                            💡 Separa múltiples URLs con comas
-                        </div>
-                    </div>
-                    
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <input type="checkbox" name="active" id="activeCheck" checked
-                               style="width: 20px; height: 20px; cursor: pointer;">
-                        <label for="activeCheck" style="font-size: 14px; font-weight: 600; color: #0f172a; cursor: pointer;">
-                            Producto activo
-                        </label>
-                    </div>
-                </form>
-            `,
-            actions: `
-                <button onclick="ProductsModule.saveProduct()"
-                        style="background: linear-gradient(135deg, #003d82, #002952); color: white; border: none;
-                               padding: 12px 32px; border-radius: 8px; font-weight: 700; cursor: pointer;">
-                    💾 Guardar
-                </button>
-                <button onclick="document.getElementById('globalModal').style.display='none'"
-                        style="background: #e2e8f0; color: #64748b; border: none;
-                               padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer;">
-                    Cancelar
-                </button>
-            `
-        });
-    },
-    
-    // Abrir modal de editar
-    async openEditModal(id) {
-        try {
-            const response = await fetch(`${CONFIG.API_URL}/products_crud.php?action=get&id=${id}`);
-            const data = await response.json();
-            
-            if (!data.success) throw new Error(data.message);
-            
-            const p = data.product;
-            
-            // Convertir array de images a string separado por comas
-            const imagesString = (p.images || []).join(', ');
-            
-            const categoryOptions = this.categories.map(cat => 
-                `<option value="${cat}">${cat.toUpperCase()}</option>`
-            ).join('');
-            
-            this.showModal({
-                title: `✏️ Editar: ${p.name}`,
-                content: `
-                    <form id="productForm" style="display: grid; gap: 16px;">
-                        <input type="hidden" name="id" value="${p.id}">
-                        
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
-                            <div>
-                                <label style="font-size: 13px; font-weight: 700; color: #0f172a; display: block; margin-bottom: 8px;">
-                                    SKU *
-                                </label>
-                                <input type="text" name="sku" required value="${p.sku}"
-                                       style="width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
-                            </div>
-                            <div>
-                                <label style="font-size: 13px; font-weight: 700; color: #0f172a; display: block; margin-bottom: 8px;">
-                                    Precio *
-                                </label>
-                                <input type="number" name="price" required step="0.01" min="0" value="${p.price}"
-                                       style="width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <label style="font-size: 13px; font-weight: 700; color: #0f172a; display: block; margin-bottom: 8px;">
-                                Nombre *
-                            </label>
-                            <input type="text" name="name" required value="${p.name}"
-                                   style="width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
-                        </div>
-                        
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
-                            <div>
-                                <label style="font-size: 13px; font-weight: 700; color: #0f172a; display: block; margin-bottom: 8px;">
-                                    Categoría *
-                                </label>
-                                <input type="text" name="category" required value="${p.category}" list="categoriesList"
-                                       style="width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
-                                <datalist id="categoriesList">
-                                    ${categoryOptions}
-                                </datalist>
-                            </div>
-                            <div>
-                                <label style="font-size: 13px; font-weight: 700; color: #0f172a; display: block; margin-bottom: 8px;">
-                                    Subcategoría
-                                </label>
-                                <input type="text" name="subcategory" value="${p.subcategory || ''}"
-                                       style="width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <label style="font-size: 13px; font-weight: 700; color: #0f172a; display: block; margin-bottom: 8px;">
-                                Stock
-                            </label>
-                            <input type="number" name="stock" min="0" value="${p.stock}"
-                                   style="width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
-                        </div>
-                        
-                        <div>
-                            <label style="font-size: 13px; font-weight: 700; color: #0f172a; display: block; margin-bottom: 8px;">
-                                Descripción
-                            </label>
-                            <textarea name="description" rows="3"
-                                      style="width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; resize: vertical;">${p.description || ''}</textarea>
-                        </div>
-                        
-                        <div>
-                            <label style="font-size: 13px; font-weight: 700; color: #0f172a; display: block; margin-bottom: 8px;">
-                                Imagen Principal (URL)
-                            </label>
-                            <input type="text" name="image" value="${p.image || ''}"
-                                   style="width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
-                        </div>
-                        
-                        <div>
-                            <label style="font-size: 13px; font-weight: 700; color: #0f172a; display: block; margin-bottom: 8px;">
-                                Imágenes Adicionales (URLs separadas por coma)
-                            </label>
-                            <input type="text" name="images" value="${imagesString}"
-                                   style="width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
-                        </div>
-                        
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <input type="checkbox" name="active" id="activeCheck" ${p.active ? 'checked' : ''}
-                                   style="width: 20px; height: 20px; cursor: pointer;">
-                            <label for="activeCheck" style="font-size: 14px; font-weight: 600; color: #0f172a; cursor: pointer;">
-                                Producto activo
-                            </label>
-                        </div>
-                    </form>
-                `,
-                actions: `
-                    <button onclick="ProductsModule.saveProduct(${p.id})"
-                            style="background: linear-gradient(135deg, #003d82, #002952); color: white; border: none;
-                                   padding: 12px 32px; border-radius: 8px; font-weight: 700; cursor: pointer;">
-                        💾 Actualizar
-                    </button>
-                    <button onclick="ProductsModule.deleteProduct(${p.id})"
-                            style="background: #ef4444; color: white; border: none;
-                                   padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer;">
-                        🗑️ Eliminar
-                    </button>
-                    <button onclick="document.getElementById('globalModal').style.display='none'"
-                            style="background: #e2e8f0; color: #64748b; border: none;
-                                   padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer;">
-                        Cancelar
-                    </button>
-                `
-            });
-            
-        } catch (error) {
-            console.error('Error al cargar producto:', error);
-            this.showError('Error al cargar producto para editar');
-        }
-    },
-    
-    // Guardar producto (crear o actualizar)
-    async saveProduct(id = null) {
-        const form = document.getElementById('productForm');
-        const formData = new FormData(form);
-        
-        // Construir objeto de producto
-        // IMPORTANTE: NO enviar id, created_at, updated_at (auto-gestionados)
-        const product = {
-            sku: formData.get('sku').trim(),
-            name: formData.get('name').trim(),
-            category: formData.get('category').trim(),
-            subcategory: formData.get('subcategory')?.trim() || '',
-            price: parseFloat(formData.get('price')),
-            description: formData.get('description')?.trim() || '',
-            image: formData.get('image')?.trim() || '',
-            stock: parseInt(formData.get('stock')) || 0,
-            active: formData.get('active') ? 1 : 0
-        };
-        
-        // Procesar imágenes adicionales (convertir string separado por comas a array)
-        const imagesString = formData.get('images')?.trim() || '';
-        if (imagesString) {
-            product.images = imagesString.split(',').map(img => img.trim()).filter(Boolean);
-        } else {
-            product.images = [];
-        }
-        
-        // Si es edición, agregar el ID
-        if (id) {
-            product.id = id;
-        }
-        
-        try {
-            const action = id ? 'update' : 'create';
-            const method = id ? 'PUT' : 'POST';
-            
-            const response = await fetch(`${CONFIG.API_URL}/products_crud.php?action=${action}`, {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('mawewe_token_v3')}`
-                },
-                body: JSON.stringify(product)
-            });
-            
-            const data = await response.json();
-            
-            if (!data.success) {
-                throw new Error(data.message || 'Error al guardar producto');
-            }
-            
-            this.showSuccess(id ? 'Producto actualizado exitosamente' : 'Producto creado exitosamente');
-            
-            // Cerrar modal y recargar
-            document.getElementById('globalModal').style.display = 'none';
-            await this.loadProducts();
-            await this.loadCategories();
-            this.render();
-            this.attachEvents();
-            
-        } catch (error) {
-            console.error('Error al guardar producto:', error);
-            this.showError(error.message);
-        }
-    },
-    
-    // Eliminar producto
-    async deleteProduct(id) {
-        if (!confirm('¿Estás seguro de eliminar este producto?')) return;
-        
-        try {
-            const response = await fetch(`${CONFIG.API_URL}/products_crud.php?action=delete&id=${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('mawewe_token_v3')}`
-                }
-            });
-            
-            const data = await response.json();
-            
-            if (!data.success) {
-                throw new Error(data.message || 'Error al eliminar producto');
-            }
-            
-            this.showSuccess('Producto eliminado exitosamente');
-            
-            document.getElementById('globalModal').style.display = 'none';
-            await this.loadProducts();
-            this.render();
-            this.attachEvents();
-            
-        } catch (error) {
-            console.error('Error al eliminar producto:', error);
-            this.showError(error.message);
-        }
-    },
-    
-    // Modal genérico
-    showModal(options) {
-        let modal = document.getElementById('globalModal');
-        if (!modal) {
-            modal = document.createElement('div');
-            modal.id = 'globalModal';
-            modal.style.cssText = `
-                display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-                z-index: 10000; overflow: auto; padding: 20px;
-            `;
-            document.body.appendChild(modal);
-        }
-        
-        modal.innerHTML = `
-            <div style="background: white; max-width: 700px; margin: 40px auto; border-radius: 16px; 
-                        box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: modalSlide 0.3s;">
-                <div style="padding: 24px; border-bottom: 2px solid #e2e8f0;">
-                    <h2 style="margin: 0; font-size: 24px; font-weight: 800; color: #0f172a;">
-                        ${options.title}
-                    </h2>
                 </div>
-                <div style="padding: 24px; max-height: 70vh; overflow-y: auto;">
-                    ${options.content}
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Categoría *</label>
+                        <input type="text" name="category" required placeholder="Ej: Electrónica" list="categories">
+                        <datalist id="categories">
+                            ${this.categories.map(cat => `<option value="${cat}">`).join('')}
+                        </datalist>
+                    </div>
+                    <div class="form-group">
+                        <label>Precio *</label>
+                        <input type="number" name="price" step="0.01" required placeholder="0.00">
+                    </div>
                 </div>
-                <div style="padding: 24px; border-top: 2px solid #e2e8f0; display: flex; gap: 12px; justify-content: flex-end;">
-                    ${options.actions}
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Stock Inicial *</label>
+                        <input type="number" name="stock" required value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Estado</label>
+                        <select name="status">
+                            <option value="active">Activo</option>
+                            <option value="inactive">Inactivo</option>
+                        </select>
+                    </div>
                 </div>
-            </div>
+                
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <textarea name="description" rows="3" placeholder="Descripción del producto..."></textarea>
+                </div>
+            </form>
         `;
         
-        modal.style.display = 'flex';
+        this.openModal('Crear Producto', modalBody, () => this.saveProduct());
+    },
+    
+    /**
+     * Abrir modal de edición
+     */
+    async openEditModal(productId) {
+        const product = this.products.find(p => p.id === productId);
+        if (!product) return;
         
-        // Cerrar al hacer clic fuera
-        modal.onclick = (e) => {
-            if (e.target === modal) {
-                modal.style.display = 'none';
+        const modalBody = `
+            <form id="productForm" class="product-form">
+                <input type="hidden" name="id" value="${product.id}">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nombre del Producto *</label>
+                        <input type="text" name="name" required value="${product.name}">
+                    </div>
+                    <div class="form-group">
+                        <label>Código</label>
+                        <input type="text" name="code" value="${product.code || ''}">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Categoría *</label>
+                        <input type="text" name="category" required value="${product.category || ''}" list="categories">
+                        <datalist id="categories">
+                            ${this.categories.map(cat => `<option value="${cat}">`).join('')}
+                        </datalist>
+                    </div>
+                    <div class="form-group">
+                        <label>Precio *</label>
+                        <input type="number" name="price" step="0.01" required value="${product.price}">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Stock Actual</label>
+                        <input type="number" name="stock" required value="${product.stock}" readonly>
+                        <small>Para ajustar stock usa el botón 📦</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Estado</label>
+                        <select name="status">
+                            <option value="active" ${product.status === 'active' ? 'selected' : ''}>Activo</option>
+                            <option value="inactive" ${product.status === 'inactive' ? 'selected' : ''}>Inactivo</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <textarea name="description" rows="3">${product.description || ''}</textarea>
+                </div>
+            </form>
+        `;
+        
+        this.openModal('Editar Producto', modalBody, () => this.saveProduct(productId));
+    },
+    
+    /**
+     * Abrir modal de ajuste de stock
+     */
+    openStockModal(productId) {
+        const product = this.products.find(p => p.id === productId);
+        if (!product) return;
+        
+        const modalBody = `
+            <form id="stockForm" class="product-form">
+                <div class="stock-info">
+                    <h3>${product.name}</h3>
+                    <p>Stock actual: <strong>${product.stock}</strong> unidades</p>
+                </div>
+                
+                <div class="form-group">
+                    <label>Tipo de Ajuste</label>
+                    <select id="stockType" name="type">
+                        <option value="add">➕ Agregar Stock (Compra/Entrada)</option>
+                        <option value="subtract">➖ Restar Stock (Venta/Salida)</option>
+                        <option value="set">📝 Establecer Stock (Inventario)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Cantidad</label>
+                    <input type="number" name="quantity" required min="0" value="0">
+                </div>
+                
+                <div class="form-group">
+                    <label>Motivo</label>
+                    <input type="text" name="reason" placeholder="Ej: Compra de mercadería">
+                </div>
+            </form>
+        `;
+        
+        this.openModal('Ajustar Stock', modalBody, () => this.updateStock(productId));
+    },
+    
+    /**
+     * Guardar producto (crear o editar)
+     */
+    async saveProduct(productId = null) {
+        const form = document.getElementById('productForm');
+        if (!form || !form.checkValidity()) {
+            form?.reportValidity();
+            return;
+        }
+        
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData);
+        
+        try {
+            const action = productId ? 'update' : 'create';
+            const response = await fetch(`${CONFIG.API_URL}/products.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action, ...data })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                this.closeModal();
+                await this.loadProducts();
+                this.render();
+                this.attachEvents();
+                this.showNotification(`Producto ${productId ? 'actualizado' : 'creado'} exitosamente`, 'success');
+            } else {
+                this.showNotification(result.message || 'Error al guardar', 'error');
             }
-        };
+        } catch (error) {
+            console.error('Error:', error);
+            this.showNotification('Error al guardar el producto', 'error');
+        }
     },
     
-    // Mostrar error
+    /**
+     * Actualizar stock
+     */
+    async updateStock(productId) {
+        const form = document.getElementById('stockForm');
+        if (!form || !form.checkValidity()) {
+            form?.reportValidity();
+            return;
+        }
+        
+        const formData = new FormData(form);
+        const type = formData.get('type');
+        const quantity = parseInt(formData.get('quantity'));
+        const reason = formData.get('reason');
+        
+        if (quantity <= 0) {
+            this.showNotification('La cantidad debe ser mayor a 0', 'error');
+            return;
+        }
+        
+        try {
+            const response = await fetch(`${CONFIG.API_URL}/products.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'update-stock',
+                    id: productId,
+                    type,
+                    quantity,
+                    reason
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                this.closeModal();
+                await this.loadProducts();
+                this.render();
+                this.attachEvents();
+                this.showNotification('Stock actualizado exitosamente', 'success');
+            } else {
+                this.showNotification(result.message || 'Error al actualizar stock', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            this.showNotification('Error al actualizar el stock', 'error');
+        }
+    },
+    
+    /**
+     * Cambiar estado del producto
+     */
+    async toggleStatus(productId) {
+        const product = this.products.find(p => p.id === productId);
+        if (!product) return;
+        
+        const newStatus = product.status === 'active' ? 'inactive' : 'active';
+        
+        try {
+            const response = await fetch(`${CONFIG.API_URL}/products.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'toggle-status',
+                    id: productId
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                await this.loadProducts();
+                this.render();
+                this.attachEvents();
+                this.showNotification(`Producto ${newStatus === 'active' ? 'activado' : 'desactivado'}`, 'success');
+            } else {
+                this.showNotification(result.message || 'Error al cambiar estado', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            this.showNotification('Error al cambiar el estado', 'error');
+        }
+    },
+    
+    /**
+     * Eliminar producto
+     */
+    async deleteProduct(productId) {
+        const product = this.products.find(p => p.id === productId);
+        if (!product) return;
+        
+        if (!confirm(`¿Estás seguro de eliminar "${product.name}"?\n\nEsta acción no se puede deshacer.`)) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`${CONFIG.API_URL}/products.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'delete',
+                    id: productId
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                await this.loadProducts();
+                this.render();
+                this.attachEvents();
+                this.showNotification('Producto eliminado exitosamente', 'success');
+            } else {
+                this.showNotification(result.message || 'Error al eliminar', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            this.showNotification('Error al eliminar el producto', 'error');
+        }
+    },
+    
+    /**
+     * Abrir modal genérico
+     */
+    openModal(title, bodyHtml, onSave) {
+        const modal = document.getElementById('globalModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+        const modalFooter = document.getElementById('modalFooter');
+        
+        if (!modal) return;
+        
+        modalTitle.textContent = title;
+        modalBody.innerHTML = bodyHtml;
+        modalFooter.innerHTML = `
+            <button class="btn btn-secondary" onclick="ProductsModule.closeModal()">Cancelar</button>
+            <button class="btn btn-primary" onclick="event.preventDefault(); (${onSave.toString()})()">Guardar</button>
+        `;
+        
+        modal.classList.add('active');
+    },
+    
+    /**
+     * Cerrar modal
+     */
+    closeModal() {
+        const modal = document.getElementById('globalModal');
+        if (modal) {
+            modal.classList.remove('active');
+        }
+    },
+    
+    /**
+     * Mostrar notificación
+     */
+    showNotification(message, type = 'info') {
+        // Crear elemento de notificación
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.textContent = message;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 99999;
+            animation: slideIn 0.3s ease;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    },
+    
+    /**
+     * Renderizar loading
+     */
+    renderLoading() {
+        return `
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Cargando productos...</p>
+            </div>
+        `;
+    },
+    
+    /**
+     * Mostrar error
+     */
     showError(message) {
-        alert('❌ ' + message);
-    },
-    
-    // Mostrar éxito
-    showSuccess(message) {
-        alert('✅ ' + message);
+        const container = document.getElementById('productsContainer');
+        if (!container) return;
+        
+        container.innerHTML = `
+            <div class="error-state">
+                <div class="error-icon">❌</div>
+                <h3>Error al cargar productos</h3>
+                <p>${message}</p>
+                <button class="btn btn-primary" onclick="ProductsModule.init()">
+                    🔄 Reintentar
+                </button>
+            </div>
+        `;
     }
 };
 
-// Exponer globalmente
-window.ProductsModule = ProductsModule;
+// Registrar en el Router - Pasar solo la función init vinculada al módulo
+if (typeof Router !== 'undefined') {
+    Router.register('products', () => ProductsModule.init());
+    console.log('✅ products registrado en Router');
+}
 
-console.log('✅ Módulo Products cargado');
+// Exportar globalmente
+window.ProductsModule = ProductsModule;
+console.log('✅ products.js cargado');
