@@ -2381,3 +2381,27 @@ img[loading="lazy"].loaded {
   color: white;
   border-color: var(--primary-800);
 }
+.search-container {
+  position: relative;
+  width: 100%;
+}
+
+.btn-clear-search {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--gray-300);
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-clear-search:hover {
+  background: var(--gray-400);
+}

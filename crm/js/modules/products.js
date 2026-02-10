@@ -1,10 +1,6 @@
 /**
- * MÓDULO DE PRODUCTOS - MAWEWE CRM v5.0 COMPLETO
- * ✅ CRUD Completo: Crear, Leer, Actualizar, Eliminar
- * ✅ Gestión de stock
- * ✅ Categorías
- * ✅ Búsqueda y filtros
- * ✅ Sin imágenes (foco en gestión de datos)
+ * MÓDULO DE PRODUCTOS - VERSIÓN MEJORADA Y PROFESIONAL
+ * Sistema CRUD completo y fácil de usar
  */
 
 const ProductsModule = {
@@ -21,44 +17,65 @@ const ProductsModule = {
      * Inicializar módulo
      */
     async init() {
-        console.log('🎯 ProductsModule.init() ejecutado');
+        console.log('🎯 Inicializando módulo de productos...');
         
         const container = document.getElementById('productsContainer');
         if (!container) {
-            console.error('❌ #productsContainer no encontrado');
+            console.error('❌ Contenedor de productos no encontrado');
             return;
         }
         
         try {
+            // Mostrar loading
             container.innerHTML = this.renderLoading();
+            
+            // Cargar productos
             await this.loadProducts();
+            
+            // Renderizar interfaz
             this.render();
+            
+            // Adjuntar eventos
             this.attachEvents();
-            console.log('✅ ProductsModule inicializado');
+            
+            console.log('✅ Módulo de productos listo');
         } catch (error) {
-            console.error('❌ Error:', error);
-            this.showError(error.message);
+            console.error('❌ Error al inicializar productos:', error);
+            this.showError(container, error.message);
         }
     },
     
     /**
-     * Cargar productos desde API
+     * Cargar productos desde la API
      */
     async loadProducts() {
-        const response = await fetch(`${CONFIG.API_URL}/products_crud.php?action=list&limit=1000`);
-        const data = await response.json();
-        
-        if (!data.success) throw new Error(data.message || 'Error al cargar productos');
-        
-        this.products = data.products || [];
-        this.filteredProducts = [...this.products];
-        this.categories = [...new Set(this.products.map(p => p.category))].filter(Boolean);
-        
-        console.log(`✅ ${this.products.length} productos cargados`);
+        try {
+            const response = await fetch(`${CONFIG.API_URL}/products_crud.php?action=list&limit=1000`);
+            
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.message || 'Error al cargar productos');
+            }
+            
+            this.products = data.products || [];
+            this.filteredProducts = [...this.products];
+            this.categories = [...new Set(this.products.map(p => p.category).filter(Boolean))];
+            
+            console.log(`✅ ${this.products.length} productos cargados`);
+            
+        } catch (error) {
+            console.error('Error cargando productos:', error);
+            throw new Error('No se pudieron cargar los productos. Verifica tu conexión.');
+        }
     },
     
     /**
-     * Renderizar módulo completo
+     * Renderizar interfaz completa
      */
     render() {
         const container = document.getElementById('productsContainer');
@@ -69,6 +86,7 @@ const ProductsModule = {
             ${this.renderStats()}
             ${this.renderFilters()}
             ${this.renderProductsGrid()}
+            ${this.renderModal()}
         `;
     },
     
@@ -77,16 +95,18 @@ const ProductsModule = {
      */
     renderHeader() {
         return `
-            <div class="products-header">
-                <div class="header-left">
-                    <h2>📦 Productos (${this.filteredProducts.length})</h2>
-                    <p>Gestión completa de inventario</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb;">
+                <div>
+                    <h2 style="font-size: 28px; font-weight: 700; color: #003d82; margin: 0 0 4px 0;">
+                        📦 Productos (${this.filteredProducts.length})
+                    </h2>
+                    <p style="font-size: 14px; color: #6b7280; margin: 0;">
+                        Gestión simple de inventario
+                    </p>
                 </div>
-                <div class="header-right">
-                    <button class="btn btn-primary" onclick="ProductsModule.openCreateModal()">
-                        ➕ Nuevo Producto
-                    </button>
-                </div>
+                <button class="btn btn-primary" onclick="ProductsModule.openCreateModal()">
+                    ➕ Nuevo Producto
+                </button>
             </div>
         `;
     },
@@ -96,39 +116,42 @@ const ProductsModule = {
      */
     renderStats() {
         const total = this.products.length;
-        const active = this.products.filter(p => p.status === 'active').length;
+        const active = this.products.filter(p => p.active).length;
         const lowStock = this.products.filter(p => p.stock > 0 && p.stock < 10).length;
         const outStock = this.products.filter(p => p.stock === 0).length;
         
         return `
-            <div class="products-stats">
-                <div class="stat-card stat-primary">
-                    <div class="stat-icon">📦</div>
-                    <div class="stat-info">
-                        <p class="stat-label">Total Productos</p>
-                        <p class="stat-value">${total}</p>
+            <div class="stats-row" style="margin-bottom: 24px;">
+                <div class="stat-box primary">
+                    <div class="stat-box-header">
+                        <div class="stat-box-icon">📦</div>
                     </div>
+                    <div class="stat-box-label">Total</div>
+                    <div class="stat-box-value">${total}</div>
                 </div>
-                <div class="stat-card stat-success">
-                    <div class="stat-icon">✅</div>
-                    <div class="stat-info">
-                        <p class="stat-label">Activos</p>
-                        <p class="stat-value">${active}</p>
+                
+                <div class="stat-box success">
+                    <div class="stat-box-header">
+                        <div class="stat-box-icon">✅</div>
                     </div>
+                    <div class="stat-box-label">Activos</div>
+                    <div class="stat-box-value">${active}</div>
                 </div>
-                <div class="stat-card stat-warning">
-                    <div class="stat-icon">⚠️</div>
-                    <div class="stat-info">
-                        <p class="stat-label">Stock Bajo</p>
-                        <p class="stat-value">${lowStock}</p>
+                
+                <div class="stat-box warning">
+                    <div class="stat-box-header">
+                        <div class="stat-box-icon">⚠️</div>
                     </div>
+                    <div class="stat-box-label">Stock Bajo</div>
+                    <div class="stat-box-value">${lowStock}</div>
                 </div>
-                <div class="stat-card stat-danger">
-                    <div class="stat-icon">❌</div>
-                    <div class="stat-info">
-                        <p class="stat-label">Sin Stock</p>
-                        <p class="stat-value">${outStock}</p>
+                
+                <div class="stat-box danger">
+                    <div class="stat-box-header">
+                        <div class="stat-box-icon">❌</div>
                     </div>
+                    <div class="stat-box-label">Sin Stock</div>
+                    <div class="stat-box-value">${outStock}</div>
                 </div>
             </div>
         `;
@@ -139,18 +162,19 @@ const ProductsModule = {
      */
     renderFilters() {
         return `
-            <div class="products-filters">
-                <div class="filter-group">
+            <div style="background: white; padding: 20px; border-radius: 12px; border: 2px solid #e5e7eb; margin-bottom: 24px; display: flex; gap: 12px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 200px;">
                     <input 
                         type="text" 
                         id="searchInput" 
-                        class="filter-input" 
                         placeholder="🔍 Buscar producto..."
                         value="${this.currentFilter.search}"
+                        style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;"
                     >
                 </div>
-                <div class="filter-group">
-                    <select id="categoryFilter" class="filter-select">
+                
+                <div style="flex: 1; min-width: 200px;">
+                    <select id="categoryFilter" style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; cursor: pointer;">
                         <option value="">📂 Todas las categorías</option>
                         ${this.categories.map(cat => `
                             <option value="${cat}" ${this.currentFilter.category === cat ? 'selected' : ''}>
@@ -159,15 +183,17 @@ const ProductsModule = {
                         `).join('')}
                     </select>
                 </div>
-                <div class="filter-group">
-                    <select id="statusFilter" class="filter-select">
-                        <option value="">📊 Todos los estados</option>
+                
+                <div style="flex: 1; min-width: 200px;">
+                    <select id="statusFilter" style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; cursor: pointer;">
+                        <option value="">📊 Todos</option>
                         <option value="active" ${this.currentFilter.status === 'active' ? 'selected' : ''}>✅ Activos</option>
                         <option value="inactive" ${this.currentFilter.status === 'inactive' ? 'selected' : ''}>❌ Inactivos</option>
                         <option value="low-stock" ${this.currentFilter.status === 'low-stock' ? 'selected' : ''}>⚠️ Stock Bajo</option>
                         <option value="out-stock" ${this.currentFilter.status === 'out-stock' ? 'selected' : ''}>🚫 Sin Stock</option>
                     </select>
                 </div>
+                
                 <button class="btn btn-secondary" onclick="ProductsModule.clearFilters()">
                     🔄 Limpiar
                 </button>
@@ -181,10 +207,10 @@ const ProductsModule = {
     renderProductsGrid() {
         if (this.filteredProducts.length === 0) {
             return `
-                <div class="empty-state">
-                    <div class="empty-icon">📭</div>
-                    <h3>No hay productos</h3>
-                    <p>Comienza agregando tu primer producto</p>
+                <div style="text-align: center; padding: 80px 40px; background: white; border-radius: 12px; border: 2px solid #e5e7eb;">
+                    <div style="font-size: 80px; margin-bottom: 20px;">📭</div>
+                    <h3 style="font-size: 24px; color: #1f2937; margin-bottom: 12px;">No hay productos</h3>
+                    <p style="font-size: 16px; color: #6b7280; margin-bottom: 24px;">Comienza agregando tu primer producto</p>
                     <button class="btn btn-primary" onclick="ProductsModule.openCreateModal()">
                         ➕ Crear Producto
                     </button>
@@ -193,7 +219,7 @@ const ProductsModule = {
         }
         
         return `
-            <div class="products-grid">
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
                 ${this.filteredProducts.map(product => this.renderProductCard(product)).join('')}
             </div>
         `;
@@ -203,38 +229,110 @@ const ProductsModule = {
      * Renderizar tarjeta de producto
      */
     renderProductCard(product) {
-        const stockClass = product.stock === 0 ? 'stock-out' : product.stock < 10 ? 'stock-low' : 'stock-ok';
-        const stockText = product.stock === 0 ? 'Sin stock' : product.stock < 10 ? `Stock bajo: ${product.stock}` : `Stock: ${product.stock}`;
-        const statusClass = product.status === 'active' ? 'status-active' : 'status-inactive';
+        const stockStatus = product.stock === 0 ? 'out' : product.stock < 10 ? 'low' : 'ok';
+        const stockClass = `stock-${stockStatus}`;
+        const stockText = product.stock === 0 ? 'Sin stock' : product.stock < 10 ? `⚠️ ${product.stock}` : `✅ ${product.stock}`;
         
         return `
-            <div class="product-card" data-id="${product.id}">
-                <div class="product-header">
-                    <span class="product-badge ${stockClass}">${stockText}</span>
-                    <span class="product-status ${statusClass}">
-                        ${product.status === 'active' ? '✅' : '❌'}
+            <div style="background: white; border: 2px solid #e5e7eb; border-radius: 12px; overflow: hidden; transition: all 0.3s;">
+                <!-- Header -->
+                <div style="padding: 16px; background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%); border-bottom: 2px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; ${this.getStockStyle(stockStatus)}">
+                        ${stockText}
+                    </span>
+                    <span style="font-size: 20px;">
+                        ${product.active ? '✅' : '❌'}
                     </span>
                 </div>
-                <div class="product-body">
-                    <h3 class="product-name">${product.name}</h3>
-                    <p class="product-category">📂 ${product.category || 'Sin categoría'}</p>
-                    <p class="product-code">🏷️ Código: ${product.code || 'N/A'}</p>
-                    <div class="product-price">$${parseFloat(product.price || 0).toFixed(2)}</div>
-                    ${product.description ? `<p class="product-description">${product.description}</p>` : ''}
+                
+                <!-- Body -->
+                <div style="padding: 20px;">
+                    <h3 style="font-size: 18px; font-weight: 700; color: #1f2937; margin: 0 0 8px 0;">
+                        ${product.name}
+                    </h3>
+                    <p style="font-size: 13px; color: #6b7280; margin: 4px 0;">
+                        📂 ${product.category || 'Sin categoría'}
+                    </p>
+                    <p style="font-size: 13px; color: #6b7280; margin: 4px 0;">
+                        🏷️ ${product.sku || 'Sin código'}
+                    </p>
+                    <div style="font-size: 28px; font-weight: 800; color: #003d82; margin: 12px 0;">
+                        $${parseFloat(product.price || 0).toFixed(2)}
+                    </div>
+                    ${product.description ? `
+                        <p style="font-size: 13px; color: #6b7280; margin: 12px 0 0 0; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                            ${product.description}
+                        </p>
+                    ` : ''}
                 </div>
-                <div class="product-actions">
-                    <button class="btn-action btn-edit" onclick="ProductsModule.openEditModal(${product.id})" title="Editar">
+                
+                <!-- Actions -->
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); border-top: 2px solid #e5e7eb;">
+                    <button onclick="ProductsModule.openEditModal(${product.id})" 
+                            style="padding: 12px; border: none; background: white; cursor: pointer; font-size: 18px; border-right: 1px solid #e5e7eb; transition: all 0.2s;"
+                            onmouseover="this.style.background='#dbeafe'; this.style.color='#1e40af'"
+                            onmouseout="this.style.background='white'; this.style.color='inherit'"
+                            title="Editar">
                         ✏️
                     </button>
-                    <button class="btn-action btn-stock" onclick="ProductsModule.openStockModal(${product.id})" title="Ajustar Stock">
+                    <button onclick="ProductsModule.openStockModal(${product.id})" 
+                            style="padding: 12px; border: none; background: white; cursor: pointer; font-size: 18px; border-right: 1px solid #e5e7eb; transition: all 0.2s;"
+                            onmouseover="this.style.background='#d1fae5'; this.style.color='#065f46'"
+                            onmouseout="this.style.background='white'; this.style.color='inherit'"
+                            title="Stock">
                         📦
                     </button>
-                    <button class="btn-action btn-toggle" onclick="ProductsModule.toggleStatus(${product.id})" title="Activar/Desactivar">
-                        ${product.status === 'active' ? '⏸️' : '▶️'}
+                    <button onclick="ProductsModule.toggleStatus(${product.id})" 
+                            style="padding: 12px; border: none; background: white; cursor: pointer; font-size: 18px; border-right: 1px solid #e5e7eb; transition: all 0.2s;"
+                            onmouseover="this.style.background='#fef3c7'; this.style.color='#92400e'"
+                            onmouseout="this.style.background='white'; this.style.color='inherit'"
+                            title="${product.active ? 'Desactivar' : 'Activar'}">
+                        ${product.active ? '⏸️' : '▶️'}
                     </button>
-                    <button class="btn-action btn-delete" onclick="ProductsModule.deleteProduct(${product.id})" title="Eliminar">
+                    <button onclick="ProductsModule.deleteProduct(${product.id})" 
+                            style="padding: 12px; border: none; background: white; cursor: pointer; font-size: 18px; transition: all 0.2s;"
+                            onmouseover="this.style.background='#fee2e2'; this.style.color='#991b1b'"
+                            onmouseout="this.style.background='white'; this.style.color='inherit'"
+                            title="Eliminar">
                         🗑️
                     </button>
+                </div>
+            </div>
+        `;
+    },
+    
+    /**
+     * Obtener estilos de stock
+     */
+    getStockStyle(status) {
+        const styles = {
+            ok: 'background: linear-gradient(135deg, rgba(16, 185, 129, 0.9), rgba(5, 150, 105, 0.9)); color: white;',
+            low: 'background: linear-gradient(135deg, rgba(245, 158, 11, 0.9), rgba(217, 119, 6, 0.9)); color: white;',
+            out: 'background: linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 0.9)); color: white;'
+        };
+        return styles[status] || styles.ok;
+    },
+    
+    /**
+     * Renderizar modal
+     */
+    renderModal() {
+        return `
+            <div id="productModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.6); z-index: 10000; align-items: center; justify-content: center;">
+                <div style="background: white; border-radius: 16px; max-width: 700px; width: 90%; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);">
+                    <!-- Header -->
+                    <div style="padding: 24px 28px; background: linear-gradient(135deg, #003d82 0%, #0052b0 100%); color: white; display: flex; justify-content: space-between; align-items: center; border-radius: 16px 16px 0 0;">
+                        <h3 id="modalTitle" style="margin: 0; font-size: 20px; font-weight: 700;">Modal</h3>
+                        <button onclick="ProductsModule.closeModal()" style="background: rgba(255, 255, 255, 0.2); border: none; color: white; font-size: 28px; width: 36px; height: 36px; border-radius: 50%; cursor: pointer;">
+                            ×
+                        </button>
+                    </div>
+                    
+                    <!-- Body -->
+                    <div id="modalBody" style="padding: 28px; overflow-y: auto; flex: 1;"></div>
+                    
+                    <!-- Footer -->
+                    <div id="modalFooter" style="padding: 20px 28px; background: #f9fafb; border-top: 2px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 12px; border-radius: 0 0 16px 16px;"></div>
                 </div>
             </div>
         `;
@@ -277,13 +375,13 @@ const ProductsModule = {
         this.filteredProducts = this.products.filter(product => {
             const matchSearch = !this.currentFilter.search || 
                 product.name.toLowerCase().includes(this.currentFilter.search.toLowerCase()) ||
-                (product.code && product.code.toLowerCase().includes(this.currentFilter.search.toLowerCase()));
+                (product.sku && product.sku.toLowerCase().includes(this.currentFilter.search.toLowerCase()));
             
             const matchCategory = !this.currentFilter.category || product.category === this.currentFilter.category;
             
             let matchStatus = true;
-            if (this.currentFilter.status === 'active') matchStatus = product.status === 'active';
-            else if (this.currentFilter.status === 'inactive') matchStatus = product.status === 'inactive';
+            if (this.currentFilter.status === 'active') matchStatus = product.active;
+            else if (this.currentFilter.status === 'inactive') matchStatus = !product.active;
             else if (this.currentFilter.status === 'low-stock') matchStatus = product.stock > 0 && product.stock < 10;
             else if (this.currentFilter.status === 'out-stock') matchStatus = product.stock === 0;
             
@@ -307,54 +405,74 @@ const ProductsModule = {
      */
     openCreateModal() {
         const modalBody = `
-            <form id="productForm" class="product-form">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Nombre del Producto *</label>
-                        <input type="text" name="name" required placeholder="Ej: Laptop Dell XPS 15">
+            <form id="productForm">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div>
+                        <label style="font-size: 13px; font-weight: 600; color: #374151; display: block; margin-bottom: 8px;">
+                            Nombre *
+                        </label>
+                        <input type="text" name="name" required placeholder="Ej: Laptop Dell"
+                               style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
                     </div>
-                    <div class="form-group">
-                        <label>Código</label>
-                        <input type="text" name="code" placeholder="Ej: PROD-001">
+                    <div>
+                        <label style="font-size: 13px; font-weight: 600; color: #374151; display: block; margin-bottom: 8px;">
+                            Código/SKU
+                        </label>
+                        <input type="text" name="sku" placeholder="Ej: PROD-001"
+                               style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
                     </div>
                 </div>
                 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Categoría *</label>
-                        <input type="text" name="category" required placeholder="Ej: Electrónica" list="categories">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div>
+                        <label style="font-size: 13px; font-weight: 600; color: #374151; display: block; margin-bottom: 8px;">
+                            Categoría *
+                        </label>
+                        <input type="text" name="category" required placeholder="Ej: Electrónica" list="categories"
+                               style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
                         <datalist id="categories">
                             ${this.categories.map(cat => `<option value="${cat}">`).join('')}
                         </datalist>
                     </div>
-                    <div class="form-group">
-                        <label>Precio *</label>
-                        <input type="number" name="price" step="0.01" required placeholder="0.00">
+                    <div>
+                        <label style="font-size: 13px; font-weight: 600; color: #374151; display: block; margin-bottom: 8px;">
+                            Precio *
+                        </label>
+                        <input type="number" name="price" step="0.01" required placeholder="0.00"
+                               style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
                     </div>
                 </div>
                 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Stock Inicial *</label>
-                        <input type="number" name="stock" required value="0">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div>
+                        <label style="font-size: 13px; font-weight: 600; color: #374151; display: block; margin-bottom: 8px;">
+                            Stock Inicial *
+                        </label>
+                        <input type="number" name="stock" required value="0"
+                               style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
                     </div>
-                    <div class="form-group">
-                        <label>Estado</label>
-                        <select name="status">
-                            <option value="active">Activo</option>
-                            <option value="inactive">Inactivo</option>
+                    <div>
+                        <label style="font-size: 13px; font-weight: 600; color: #374151; display: block; margin-bottom: 8px;">
+                            Estado
+                        </label>
+                        <select name="active" style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; cursor: pointer;">
+                            <option value="1">Activo</option>
+                            <option value="0">Inactivo</option>
                         </select>
                     </div>
                 </div>
                 
-                <div class="form-group">
-                    <label>Descripción</label>
-                    <textarea name="description" rows="3" placeholder="Descripción del producto..."></textarea>
+                <div style="margin-bottom: 20px;">
+                    <label style="font-size: 13px; font-weight: 600; color: #374151; display: block; margin-bottom: 8px;">
+                        Descripción
+                    </label>
+                    <textarea name="description" rows="3" placeholder="Descripción del producto..."
+                              style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; resize: vertical;"></textarea>
                 </div>
             </form>
         `;
         
-        this.openModal('Crear Producto', modalBody, () => this.saveProduct());
+        this.showModal('Crear Producto', modalBody, () => this.saveProduct());
     },
     
     /**
@@ -365,99 +483,129 @@ const ProductsModule = {
         if (!product) return;
         
         const modalBody = `
-            <form id="productForm" class="product-form">
+            <form id="productForm">
                 <input type="hidden" name="id" value="${product.id}">
                 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Nombre del Producto *</label>
-                        <input type="text" name="name" required value="${product.name}">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div>
+                        <label style="font-size: 13px; font-weight: 600; color: #374151; display: block; margin-bottom: 8px;">
+                            Nombre *
+                        </label>
+                        <input type="text" name="name" required value="${product.name}"
+                               style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
                     </div>
-                    <div class="form-group">
-                        <label>Código</label>
-                        <input type="text" name="code" value="${product.code || ''}">
+                    <div>
+                        <label style="font-size: 13px; font-weight: 600; color: #374151; display: block; margin-bottom: 8px;">
+                            Código/SKU
+                        </label>
+                        <input type="text" name="sku" value="${product.sku || ''}"
+                               style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
                     </div>
                 </div>
                 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Categoría *</label>
-                        <input type="text" name="category" required value="${product.category || ''}" list="categories">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div>
+                        <label style="font-size: 13px; font-weight: 600; color: #374151; display: block; margin-bottom: 8px;">
+                            Categoría *
+                        </label>
+                        <input type="text" name="category" required value="${product.category || ''}" list="categories"
+                               style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
                         <datalist id="categories">
                             ${this.categories.map(cat => `<option value="${cat}">`).join('')}
                         </datalist>
                     </div>
-                    <div class="form-group">
-                        <label>Precio *</label>
-                        <input type="number" name="price" step="0.01" required value="${product.price}">
+                    <div>
+                        <label style="font-size: 13px; font-weight: 600; color: #374151; display: block; margin-bottom: 8px;">
+                            Precio *
+                        </label>
+                        <input type="number" name="price" step="0.01" required value="${product.price}"
+                               style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
                     </div>
                 </div>
                 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Stock Actual</label>
-                        <input type="number" name="stock" required value="${product.stock}" readonly>
-                        <small>Para ajustar stock usa el botón 📦</small>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div>
+                        <label style="font-size: 13px; font-weight: 600; color: #374151; display: block; margin-bottom: 8px;">
+                            Stock
+                        </label>
+                        <input type="number" name="stock" value="${product.stock}" readonly
+                               style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; background: #f3f4f6;">
+                        <small style="font-size: 12px; color: #6b7280; font-style: italic;">Usa el botón 📦 para ajustar stock</small>
                     </div>
-                    <div class="form-group">
-                        <label>Estado</label>
-                        <select name="status">
-                            <option value="active" ${product.status === 'active' ? 'selected' : ''}>Activo</option>
-                            <option value="inactive" ${product.status === 'inactive' ? 'selected' : ''}>Inactivo</option>
+                    <div>
+                        <label style="font-size: 13px; font-weight: 600; color: #374151; display: block; margin-bottom: 8px;">
+                            Estado
+                        </label>
+                        <select name="active" style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; cursor: pointer;">
+                            <option value="1" ${product.active ? 'selected' : ''}>Activo</option>
+                            <option value="0" ${!product.active ? 'selected' : ''}>Inactivo</option>
                         </select>
                     </div>
                 </div>
                 
-                <div class="form-group">
-                    <label>Descripción</label>
-                    <textarea name="description" rows="3">${product.description || ''}</textarea>
+                <div style="margin-bottom: 20px;">
+                    <label style="font-size: 13px; font-weight: 600; color: #374151; display: block; margin-bottom: 8px;">
+                        Descripción
+                    </label>
+                    <textarea name="description" rows="3"
+                              style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; resize: vertical;">${product.description || ''}</textarea>
                 </div>
             </form>
         `;
         
-        this.openModal('Editar Producto', modalBody, () => this.saveProduct(productId));
+        this.showModal('Editar Producto', modalBody, () => this.saveProduct(productId));
     },
     
     /**
-     * Abrir modal de ajuste de stock
+     * Abrir modal de stock
      */
     openStockModal(productId) {
         const product = this.products.find(p => p.id === productId);
         if (!product) return;
         
         const modalBody = `
-            <form id="stockForm" class="product-form">
-                <div class="stock-info">
-                    <h3>${product.name}</h3>
-                    <p>Stock actual: <strong>${product.stock}</strong> unidades</p>
-                </div>
-                
-                <div class="form-group">
-                    <label>Tipo de Ajuste</label>
-                    <select id="stockType" name="type">
-                        <option value="add">➕ Agregar Stock (Compra/Entrada)</option>
-                        <option value="subtract">➖ Restar Stock (Venta/Salida)</option>
-                        <option value="set">📝 Establecer Stock (Inventario)</option>
+            <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); padding: 20px; border-radius: 12px; border: 2px solid #bae6fd; margin-bottom: 20px;">
+                <h3 style="margin: 0 0 8px 0; font-size: 18px; color: #0c4a6e;">${product.name}</h3>
+                <p style="margin: 0; font-size: 14px; color: #075985;">
+                    Stock actual: <strong style="font-size: 24px; color: #003d82;">${product.stock}</strong> unidades
+                </p>
+            </div>
+            
+            <form id="stockForm">
+                <div style="margin-bottom: 20px;">
+                    <label style="font-size: 13px; font-weight: 600; color: #374151; display: block; margin-bottom: 8px;">
+                        Tipo de Ajuste
+                    </label>
+                    <select name="type" style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; cursor: pointer;">
+                        <option value="add">➕ Agregar (Compra/Entrada)</option>
+                        <option value="subtract">➖ Restar (Venta/Salida)</option>
+                        <option value="set">📝 Establecer (Inventario)</option>
                     </select>
                 </div>
                 
-                <div class="form-group">
-                    <label>Cantidad</label>
-                    <input type="number" name="quantity" required min="0" value="0">
+                <div style="margin-bottom: 20px;">
+                    <label style="font-size: 13px; font-weight: 600; color: #374151; display: block; margin-bottom: 8px;">
+                        Cantidad
+                    </label>
+                    <input type="number" name="quantity" required min="0" value="0"
+                           style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
                 </div>
                 
-                <div class="form-group">
-                    <label>Motivo</label>
-                    <input type="text" name="reason" placeholder="Ej: Compra de mercadería">
+                <div style="margin-bottom: 20px;">
+                    <label style="font-size: 13px; font-weight: 600; color: #374151; display: block; margin-bottom: 8px;">
+                        Motivo
+                    </label>
+                    <input type="text" name="reason" placeholder="Ej: Compra de mercadería"
+                           style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
                 </div>
             </form>
         `;
         
-        this.openModal('Ajustar Stock', modalBody, () => this.updateStock(productId));
+        this.showModal('Ajustar Stock', modalBody, () => this.updateStock(productId));
     },
     
     /**
-     * Guardar producto (crear o editar)
+     * Guardar producto
      */
     async saveProduct(productId = null) {
         const form = document.getElementById('productForm');
@@ -468,13 +616,18 @@ const ProductsModule = {
         
         const formData = new FormData(form);
         const data = Object.fromEntries(formData);
+        data.action = productId ? 'update' : 'create';
         
         try {
-            const action = productId ? 'update' : 'create';
+            showLoading();
+            
             const response = await fetch(`${CONFIG.API_URL}/products_crud.php`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action, ...data })
+                method: productId ? 'PUT' : 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${CONFIG.getToken()}`
+                },
+                body: JSON.stringify(data)
             });
             
             const result = await response.json();
@@ -484,13 +637,15 @@ const ProductsModule = {
                 await this.loadProducts();
                 this.render();
                 this.attachEvents();
-                this.showNotification(`Producto ${productId ? 'actualizado' : 'creado'} exitosamente`, 'success');
+                showToast('Éxito', `Producto ${productId ? 'actualizado' : 'creado'} correctamente`, 'success');
             } else {
-                this.showNotification(result.message || 'Error al guardar', 'error');
+                showToast('Error', result.message || 'Error al guardar', 'error');
             }
         } catch (error) {
             console.error('Error:', error);
-            this.showNotification('Error al guardar el producto', 'error');
+            showToast('Error', 'No se pudo guardar el producto', 'error');
+        } finally {
+            hideLoading();
         }
     },
     
@@ -510,14 +665,19 @@ const ProductsModule = {
         const reason = formData.get('reason');
         
         if (quantity <= 0) {
-            this.showNotification('La cantidad debe ser mayor a 0', 'error');
+            showToast('Error', 'La cantidad debe ser mayor a 0', 'error');
             return;
         }
         
         try {
+            showLoading();
+            
             const response = await fetch(`${CONFIG.API_URL}/products_crud.php`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${CONFIG.getToken()}`
+                },
                 body: JSON.stringify({
                     action: 'update-stock',
                     id: productId,
@@ -534,29 +694,34 @@ const ProductsModule = {
                 await this.loadProducts();
                 this.render();
                 this.attachEvents();
-                this.showNotification('Stock actualizado exitosamente', 'success');
+                showToast('Éxito', 'Stock actualizado correctamente', 'success');
             } else {
-                this.showNotification(result.message || 'Error al actualizar stock', 'error');
+                showToast('Error', result.message || 'Error al actualizar stock', 'error');
             }
         } catch (error) {
             console.error('Error:', error);
-            this.showNotification('Error al actualizar el stock', 'error');
+            showToast('Error', 'No se pudo actualizar el stock', 'error');
+        } finally {
+            hideLoading();
         }
     },
     
     /**
-     * Cambiar estado del producto
+     * Cambiar estado
      */
     async toggleStatus(productId) {
         const product = this.products.find(p => p.id === productId);
         if (!product) return;
         
-        const newStatus = product.status === 'active' ? 'inactive' : 'active';
-        
         try {
+            showLoading();
+            
             const response = await fetch(`${CONFIG.API_URL}/products_crud.php`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${CONFIG.getToken()}`
+                },
                 body: JSON.stringify({
                     action: 'toggle-status',
                     id: productId
@@ -569,13 +734,15 @@ const ProductsModule = {
                 await this.loadProducts();
                 this.render();
                 this.attachEvents();
-                this.showNotification(`Producto ${newStatus === 'active' ? 'activado' : 'desactivado'}`, 'success');
+                showToast('Éxito', `Producto ${result.active ? 'activado' : 'desactivado'}`, 'success');
             } else {
-                this.showNotification(result.message || 'Error al cambiar estado', 'error');
+                showToast('Error', result.message || 'Error al cambiar estado', 'error');
             }
         } catch (error) {
             console.error('Error:', error);
-            this.showNotification('Error al cambiar el estado', 'error');
+            showToast('Error', 'No se pudo cambiar el estado', 'error');
+        } finally {
+            hideLoading();
         }
     },
     
@@ -586,14 +753,19 @@ const ProductsModule = {
         const product = this.products.find(p => p.id === productId);
         if (!product) return;
         
-        if (!confirm(`¿Estás seguro de eliminar "${product.name}"?\n\nEsta acción no se puede deshacer.`)) {
+        if (!confirm(`¿Eliminar "${product.name}"?\n\nEsta acción no se puede deshacer.`)) {
             return;
         }
         
         try {
+            showLoading();
+            
             const response = await fetch(`${CONFIG.API_URL}/products_crud.php`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'DELETE',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${CONFIG.getToken()}`
+                },
                 body: JSON.stringify({
                     action: 'delete',
                     id: productId
@@ -606,74 +778,43 @@ const ProductsModule = {
                 await this.loadProducts();
                 this.render();
                 this.attachEvents();
-                this.showNotification('Producto eliminado exitosamente', 'success');
+                showToast('Éxito', 'Producto eliminado correctamente', 'success');
             } else {
-                this.showNotification(result.message || 'Error al eliminar', 'error');
+                showToast('Error', result.message || 'Error al eliminar', 'error');
             }
         } catch (error) {
             console.error('Error:', error);
-            this.showNotification('Error al eliminar el producto', 'error');
+            showToast('Error', 'No se pudo eliminar el producto', 'error');
+        } finally {
+            hideLoading();
         }
     },
     
     /**
-     * Abrir modal genérico
+     * Mostrar modal
      */
-    openModal(title, bodyHtml, onSave) {
-        const modal = document.getElementById('globalModal');
-        const modalTitle = document.getElementById('modalTitle');
-        const modalBody = document.getElementById('modalBody');
-        const modalFooter = document.getElementById('modalFooter');
-        
+    showModal(title, bodyHtml, onSave) {
+        const modal = document.getElementById('productModal');
         if (!modal) return;
         
-        modalTitle.textContent = title;
-        modalBody.innerHTML = bodyHtml;
-        modalFooter.innerHTML = `
+        document.getElementById('modalTitle').textContent = title;
+        document.getElementById('modalBody').innerHTML = bodyHtml;
+        document.getElementById('modalFooter').innerHTML = `
             <button class="btn btn-secondary" onclick="ProductsModule.closeModal()">Cancelar</button>
             <button class="btn btn-primary" onclick="event.preventDefault(); (${onSave.toString()})()">Guardar</button>
         `;
         
-        modal.classList.add('active');
+        modal.style.display = 'flex';
     },
     
     /**
      * Cerrar modal
      */
     closeModal() {
-        const modal = document.getElementById('globalModal');
+        const modal = document.getElementById('productModal');
         if (modal) {
-            modal.classList.remove('active');
+            modal.style.display = 'none';
         }
-    },
-    
-    /**
-     * Mostrar notificación
-     */
-    showNotification(message, type = 'info') {
-        // Crear elemento de notificación
-        const notification = document.createElement('div');
-        notification.className = `notification notification-${type}`;
-        notification.textContent = message;
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
-            color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 99999;
-            animation: slideIn 0.3s ease;
-        `;
-        
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            notification.style.animation = 'slideOut 0.3s ease';
-            setTimeout(() => notification.remove(), 300);
-        }, 3000);
     },
     
     /**
@@ -681,9 +822,9 @@ const ProductsModule = {
      */
     renderLoading() {
         return `
-            <div class="loading-state">
-                <div class="loading-spinner"></div>
-                <p>Cargando productos...</p>
+            <div style="text-align: center; padding: 80px 40px;">
+                <div style="width: 60px; height: 60px; border: 6px solid #e5e7eb; border-top-color: #003d82; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+                <p style="font-size: 16px; color: #6b7280;">Cargando productos...</p>
             </div>
         `;
     },
@@ -691,15 +832,12 @@ const ProductsModule = {
     /**
      * Mostrar error
      */
-    showError(message) {
-        const container = document.getElementById('productsContainer');
-        if (!container) return;
-        
+    showError(container, message) {
         container.innerHTML = `
-            <div class="error-state">
-                <div class="error-icon">❌</div>
-                <h3>Error al cargar productos</h3>
-                <p>${message}</p>
+            <div style="text-align: center; padding: 80px 40px;">
+                <div style="font-size: 80px; margin-bottom: 20px; color: #ef4444;">❌</div>
+                <h3 style="font-size: 24px; color: #1f2937; margin-bottom: 12px;">Error al cargar productos</h3>
+                <p style="font-size: 16px; color: #6b7280; margin-bottom: 24px;">${message}</p>
                 <button class="btn btn-primary" onclick="ProductsModule.init()">
                     🔄 Reintentar
                 </button>
@@ -708,12 +846,12 @@ const ProductsModule = {
     }
 };
 
-// Registrar en el Router - Pasar solo la función init vinculada al módulo
+// Registrar en Router
 if (typeof Router !== 'undefined') {
     Router.register('products', () => ProductsModule.init());
-    console.log('✅ products registrado en Router');
 }
 
 // Exportar globalmente
 window.ProductsModule = ProductsModule;
-console.log('✅ products.js cargado');
+
+console.log('✅ Módulo de Productos v2.0 cargado');

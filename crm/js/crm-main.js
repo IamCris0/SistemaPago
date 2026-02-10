@@ -1,7 +1,6 @@
 /**
  * SISTEMA SEGUIMIENTO MAWEWE/ELPALACIO - CRM v4.0
- * JavaScript Principal con Sistema de Routing Interno
- * © 2026 Joyería Mawewe
+ * Con cierre automático de sesión al cerrar pestaña
  */
 
 // ========================================
@@ -11,7 +10,7 @@ const CRMState = {
     currentUser: null,
     currentModule: 'dashboard',
     sidebarOpen: true,
-    moduleInitialized: {}, // Track which modules have been initialized
+    moduleInitialized: {},
     data: {
         employees: [],
         products: [],
@@ -28,7 +27,7 @@ const CRMState = {
 };
 
 // ========================================
-// CONTENEDOR DE MÓDULOS - IMPORTANTE!
+// CONTENEDOR DE MÓDULOS
 // ========================================
 const Modules = {
     Employees: {},
@@ -40,24 +39,59 @@ const Modules = {
 };
 
 // ========================================
+// CIERRE DE SESIÓN AL CERRAR PESTAÑA
+// ========================================
+let sessionWarningShown = false;
+
+// Detectar intento de cerrar pestaña
+window.addEventListener('beforeunload', (e) => {
+    if (!sessionWarningShown) {
+        // Mostrar mensaje de confirmación
+        const confirmationMessage = '⚠️ ¿Cerrar pestaña? Tu sesión se cerrará automáticamente.';
+        e.preventDefault();
+        e.returnValue = confirmationMessage;
+        
+        sessionWarningShown = true;
+        
+        return confirmationMessage;
+    }
+});
+
+// Limpiar sesión al cerrar definitivamente
+window.addEventListener('unload', () => {
+    // Registrar cierre en auditoría (sin esperar respuesta)
+    if (CRMState.currentUser) {
+        navigator.sendBeacon(
+            `${CONFIG.API_URL}/audit.php?action=log`,
+            JSON.stringify({
+                user_id: CRMState.currentUser.id,
+                action: 'LOGOUT',
+                entity_type: 'SESSION',
+                description: 'Cierre de sesión por cierre de pestaña'
+            })
+        );
+    }
+    
+    // Limpiar localStorage
+    localStorage.clear();
+});
+
+// ========================================
 // SISTEMA DE ROUTING INTERNO
 // ========================================
 const Router = {
     routes: {},
     
-    /**
-     * Registrar una ruta
-     */
     register(moduleName, initFunction) {
         this.routes[moduleName] = initFunction;
         console.log(`✅ Ruta registrada: ${moduleName}`);
     },
     
-    /**
-     * Navegar a un módulo
-     */
     async navigate(moduleName) {
         console.log(`🧭 Navegando a: ${moduleName}`);
+        
+        // Resetear advertencia de cierre
+        sessionWarningShown = false;
         
         // Ocultar todos los módulos
         document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
@@ -83,7 +117,6 @@ const Router = {
             await this.initializeModule(moduleName);
             CRMState.moduleInitialized[moduleName] = true;
         } else {
-            // Si ya fue inicializado, solo recargar datos
             await this.loadModuleData(moduleName);
         }
         
@@ -97,20 +130,15 @@ const Router = {
         }
     },
     
-    /**
-     * Inicializar módulo por primera vez
-     */
     async initializeModule(moduleName) {
         console.log(`🚀 Inicializando módulo: ${moduleName}`);
         
         try {
             showLoading();
             
-            // Si hay una función de inicialización registrada, ejecutarla
             if (this.routes[moduleName]) {
                 await this.routes[moduleName]();
             } else {
-                // Fallback: cargar datos del módulo
                 await this.loadModuleData(moduleName);
             }
         } catch (error) {
@@ -121,9 +149,6 @@ const Router = {
         }
     },
     
-    /**
-     * Cargar datos del módulo
-     */
     async loadModuleData(moduleName) {
         try {
             switch (moduleName) {
@@ -131,7 +156,6 @@ const Router = {
                     await loadDashboardData();
                     break;
                 case 'employees':
-                    // El módulo de empleados se inicializa con EmployeeModule.init()
                     if (typeof EmployeeModule !== 'undefined' && EmployeeModule.init) {
                         await EmployeeModule.init();
                     }
@@ -140,7 +164,10 @@ const Router = {
                     await loadAttendanceData();
                     break;
                 case 'products':
-                    await loadProductsData();
+                    // Usar el nuevo ProductsModule
+                    if (typeof ProductsModule !== 'undefined' && ProductsModule.init) {
+                        await ProductsModule.init();
+                    }
                     break;
                 case 'orders':
                     await loadOrdersData();
@@ -158,7 +185,7 @@ const Router = {
 };
 
 // ========================================
-// FUNCIONES GLOBALES REQUERIDAS
+// FUNCIONES GLOBALES
 // ========================================
 function showToast(title, message, type = 'info') {
     console.log(`[${type}] ${title}: ${message}`);
@@ -265,19 +292,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Cargar información del usuario
     loadUserInfo();
     
-    // ✅ REGISTRAR RUTAS DE MÓDULOS
+    // Registrar rutas de módulos
     Router.register('employees', async () => {
         if (typeof EmployeeModule !== 'undefined' && EmployeeModule.init) {
             await EmployeeModule.init();
         }
     });
     
-    // Verificar hash en URL para routing directo
-    const hash = window.location.hash.substring(1); // Remove #
+    Router.register('products', async () => {
+        if (typeof ProductsModule !== 'undefined' && ProductsModule.init) {
+            await ProductsModule.init();
+        }
+    });
+    
+    // Verificar hash en URL
+    const hash = window.location.hash.substring(1);
     if (hash && document.getElementById(`module-${hash}`)) {
         await Router.navigate(hash);
     } else {
-        // Cargar dashboard por defecto
         await Router.navigate('dashboard');
     }
     
@@ -291,7 +323,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // ========================================
-// FUNCIÓN showModule ACTUALIZADA PARA USAR ROUTER
+// FUNCIÓN showModule
 // ========================================
 async function showModule(moduleName) {
     await Router.navigate(moduleName);
@@ -327,7 +359,7 @@ function loadUserInfo() {
 function logout() {
     if (confirm('¿Está seguro de cerrar sesión?')) {
         // Registrar logout en auditoría
-        logAuditAction('LOGOUT', 'SESSION', null, 'Cierre de sesión');
+        logAuditAction('LOGOUT', 'SESSION', null, 'Cierre de sesión manual');
         
         // Limpiar storage
         localStorage.clear();
@@ -338,7 +370,7 @@ function logout() {
 }
 
 // ========================================
-// NAVEGACIÓN Y MÓDULOS
+// NAVEGACIÓN
 // ========================================
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
@@ -349,11 +381,9 @@ function toggleSidebar() {
     if (CRMState.sidebarOpen) {
         sidebar.classList.remove('collapsed');
         mainContent.classList.remove('expanded');
-        document.getElementById('menuIcon').textContent = '☰';
     } else {
         sidebar.classList.add('collapsed');
         mainContent.classList.add('expanded');
-        document.getElementById('menuIcon').textContent = '☰';
     }
 }
 
@@ -429,40 +459,13 @@ function updateDashboardStats(data) {
     };
 }
 
-// ========================================
-// EMPLEADOS (Fallback si no hay módulo)
-// ========================================
-async function loadEmployeesData() {
-    // Este método ya no es necesario si EmployeeModule.init() maneja todo
-    console.log('loadEmployeesData: usando EmployeeModule.init() en su lugar');
-}
-
-// ========================================
-// PRODUCTOS, ASISTENCIA, ÓRDENES, AUDITORÍA
-// ========================================
-async function loadProductsData() {
-    console.log('Cargando productos...');
-}
-
-async function loadAttendanceData() {
-    console.log('Cargando asistencia...');
-}
-
-async function loadOrdersData() {
-    console.log('Cargando órdenes...');
-}
-
-async function loadAuditData() {
-    console.log('Cargando auditoría...');
-}
-
-async function loadRecentActivity() {
-    console.log('Cargando actividad reciente...');
-}
-
-async function loadTopProducts() {
-    console.log('Cargando top productos...');
-}
+// Stubs para otros módulos
+async function loadProductsData() { console.log('Cargando productos...'); }
+async function loadAttendanceData() { console.log('Cargando asistencia...'); }
+async function loadOrdersData() { console.log('Cargando órdenes...'); }
+async function loadAuditData() { console.log('Cargando auditoría...'); }
+async function loadRecentActivity() { console.log('Cargando actividad reciente...'); }
+async function loadTopProducts() { console.log('Cargando top productos...'); }
 
 // ========================================
 // BÚSQUEDA GLOBAL
@@ -483,7 +486,6 @@ function setupGlobalSearch() {
 
 function performGlobalSearch(query) {
     if (!query || query.length < 2) return;
-    
     console.log('Buscando:', query);
     showToast('Búsqueda', `Buscando: ${query}`, 'info');
 }
@@ -571,7 +573,7 @@ function startAutoRefresh() {
 }
 
 // ========================================
-// MANEJO DE HASH EN URL
+// HASH EN URL
 // ========================================
 window.addEventListener('hashchange', async () => {
     const hash = window.location.hash.substring(1);
@@ -631,4 +633,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-console.log('✅ CRM JavaScript con Sistema de Routing cargado correctamente');
+console.log('✅ CRM Main con Cierre de Sesión Automático cargado');
