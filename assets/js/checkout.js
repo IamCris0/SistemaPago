@@ -1,8 +1,8 @@
 /**
- * MAWEWE E-COMMERCE - CHECKOUT CORREGIDO
- * ✅ FIX: Envío SIEMPRE GRATIS (sin opciones)
- * ✅ SIN PDF - Solo WhatsApp
- * ✅ Sin paypal_order_id
+ * MAWEWE E-COMMERCE - CHECKOUT CON PAYPAL LIVE
+ * ✅ PayPal LIVE con credenciales reales
+ * ✅ Transferencia bancaria
+ * ✅ Pago en efectivo
  */
 
 // =============================================================================
@@ -10,13 +10,13 @@
 // =============================================================================
 
 const checkout = {
-  // Estado del checkout
   state: {
     step: 1,
     customerData: {},
     paymentMethod: null,
     orderNumber: null,
     orderId: null,
+    paypalOrderId: null,
   },
 
   // ========================================
@@ -33,9 +33,6 @@ const checkout = {
     return null;
   },
 
-  // ========================================
-  // HELPER: Obtener referencia al state
-  // ========================================
   getState() {
     if (window.mawewe && window.mawewe.state) {
       return window.mawewe.state;
@@ -47,9 +44,6 @@ const checkout = {
     return null;
   },
 
-  // ========================================
-  // HELPER: Obtener items del carrito
-  // ========================================
   getCartItems() {
     const state = this.getState();
     if (state && state.cart && Array.isArray(state.cart)) {
@@ -89,7 +83,6 @@ const checkout = {
 
     console.log("✅ Carrito válido, abriendo checkout...");
 
-    // Ocultar items del carrito y footer
     const cartItemsContainer = document.getElementById("cart-items");
     const cartFooter = document.getElementById("cart-footer");
     const container = document.getElementById("checkout-form-container");
@@ -97,7 +90,6 @@ const checkout = {
     if (cartItemsContainer) cartItemsContainer.style.display = "none";
     if (cartFooter) cartFooter.style.display = "none";
 
-    // Mostrar formulario de checkout
     if (container) {
       container.style.display = "block";
       container.innerHTML = this.renderCheckoutForm();
@@ -240,7 +232,7 @@ const checkout = {
           </div>
         </div>
         
-        <!-- ✅ MÉTODO DE ENVÍO - SOLO GRATIS -->
+        <!-- Método de Envío -->
         <div class="form-section">
           <h3>🚚 Método de Envío</h3>
           
@@ -374,6 +366,22 @@ const checkout = {
           
           <div class="payment-options">
             
+            <!-- PayPal LIVE -->
+            <label class="payment-option" onclick="checkout.selectPaymentMethod('paypal')">
+              <input type="radio" name="payment" value="paypal" />
+              <div class="payment-method-content">
+                <div class="payment-icon">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="#003087">
+                    <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.72a.77.77 0 0 1 .76-.653h8.023c2.83 0 4.8.584 5.856 1.735 1.087 1.185 1.423 2.923 1.023 5.318-.016.094-.033.187-.052.281-.73 3.474-2.935 5.237-6.557 5.237h-1.672a.77.77 0 0 0-.76.652l-.055.283-.867 5.5a.641.641 0 0 1-.633.55z"/>
+                  </svg>
+                </div>
+                <div class="payment-details">
+                  <div class="payment-name">PayPal</div>
+                  <div class="payment-description">Pago rápido y seguro (LIVE)</div>
+                </div>
+              </div>
+            </label>
+            
             <!-- Transferencia Bancaria -->
             <label class="payment-option" onclick="checkout.selectPaymentMethod('transfer')">
               <input type="radio" name="payment" value="transfer" />
@@ -386,18 +394,6 @@ const checkout = {
               </div>
             </label>
             
-            <!-- Tarjeta de Crédito/Débito (Simulado) -->
-            <label class="payment-option" onclick="checkout.selectPaymentMethod('card')">
-              <input type="radio" name="payment" value="card" />
-              <div class="payment-method-content">
-                <div class="payment-icon">💳</div>
-                <div class="payment-details">
-                  <div class="payment-name">Tarjeta de Crédito/Débito</div>
-                  <div class="payment-description">Pago seguro con tarjeta (Simulado)</div>
-                </div>
-              </div>
-            </label>
-            
             <!-- Pago en Efectivo -->
             <label class="payment-option" onclick="checkout.selectPaymentMethod('cash')">
               <input type="radio" name="payment" value="cash" />
@@ -406,22 +402,6 @@ const checkout = {
                 <div class="payment-details">
                   <div class="payment-name">Pago en Efectivo</div>
                   <div class="payment-description">Paga al recibir tu pedido</div>
-                </div>
-              </div>
-            </label>
-            
-            <!-- PayPal (Simulado) -->
-            <label class="payment-option" onclick="checkout.selectPaymentMethod('paypal')">
-              <input type="radio" name="payment" value="paypal" />
-              <div class="payment-method-content">
-                <div class="payment-icon">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="#003087">
-                    <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.72a.77.77 0 0 1 .76-.653h8.023c2.83 0 4.8.584 5.856 1.735 1.087 1.185 1.423 2.923 1.023 5.318-.016.094-.033.187-.052.281-.73 3.474-2.935 5.237-6.557 5.237h-1.672a.77.77 0 0 0-.76.652l-.055.283-.867 5.5a.641.641 0 0 1-.633.55z"/>
-                  </svg>
-                </div>
-                <div class="payment-details">
-                  <div class="payment-name">PayPal</div>
-                  <div class="payment-description">Pago rápido y seguro (Simulado)</div>
                 </div>
               </div>
             </label>
@@ -448,14 +428,8 @@ const checkout = {
           </div>
         </div>
         
-        <button 
-          id="btn-confirm-payment" 
-          class="btn-continue-payment" 
-          style="opacity: 0.5; cursor: not-allowed;" 
-          disabled
-        >
-          Selecciona un método de pago
-        </button>
+        <!-- Botón de pago / PayPal Container -->
+        <div id="payment-button-container"></div>
       </div>
     `;
 
@@ -474,31 +448,184 @@ const checkout = {
     });
     event.currentTarget.classList.add("selected");
 
-    const btn = document.getElementById("btn-confirm-payment");
-    btn.disabled = false;
-    btn.style.opacity = "1";
-    btn.style.cursor = "pointer";
+    const buttonContainer = document.getElementById("payment-button-container");
 
-    const paymentNames = {
-      transfer: "Transferencia Bancaria",
-      card: "Tarjeta de Crédito/Débito",
-      cash: "Pago en Efectivo",
-      paypal: "PayPal",
-    };
+    if (method === 'paypal') {
+      // ✅ RENDERIZAR BOTONES PAYPAL
+      this.renderPayPalButtons();
+    } else if (method === 'transfer' || method === 'cash') {
+      // Para transferencia y efectivo: botón manual
+      const paymentNames = {
+        transfer: "Transferencia Bancaria",
+        cash: "Pago en Efectivo",
+      };
 
-    btn.textContent = `Confirmar Pago con ${paymentNames[method]}`;
-    btn.onclick = () => this.processPayment();
+      buttonContainer.innerHTML = `
+        <button 
+          id="btn-confirm-payment" 
+          class="btn-continue-payment"
+          onclick="checkout.processPayment()"
+        >
+          Confirmar Pago con ${paymentNames[method]}
+        </button>
+      `;
+    }
 
     console.log("💳 Método de pago seleccionado:", method);
   },
 
   // ========================================
-  // STEP 3: Procesar pago simulado
+  // PAYPAL: Renderizar botones LIVE
+  // ========================================
+  renderPayPalButtons() {
+    const buttonContainer = document.getElementById("payment-button-container");
+
+    if (!buttonContainer) {
+      console.error("❌ payment-button-container no encontrado");
+      return;
+    }
+
+    // Limpiar container
+    buttonContainer.innerHTML = '<div id="paypal-button-container"></div>';
+
+    // ✅ OBTENER CLIENT ID desde CONFIG
+    const clientId = window.CONFIG?.paypal?.clientId || window.mawewe?.CONFIG?.paypal?.clientId;
+
+    if (!clientId) {
+      console.error("❌ PayPal Client ID no configurado");
+      buttonContainer.innerHTML = `
+        <div style="padding: 2rem; background: #fee; border: 1px solid #fcc; border-radius: 8px; text-align: center;">
+          <p style="color: #c00; font-weight: 600;">Error de configuración PayPal</p>
+          <p style="color: #666;">Por favor contacta al administrador</p>
+        </div>
+      `;
+      return;
+    }
+
+    console.log("💳 Cargando PayPal SDK con Client ID:", clientId.substring(0, 20) + "...");
+
+    // Cargar PayPal SDK dinámicamente
+    const script = document.createElement('script');
+    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD`;
+    script.addEventListener('load', () => {
+      this.initPayPalButtons();
+    });
+    script.addEventListener('error', () => {
+      console.error("❌ Error cargando PayPal SDK");
+      buttonContainer.innerHTML = `
+        <div style="padding: 2rem; background: #fee; border: 1px solid #fcc; border-radius: 8px; text-align: center;">
+          <p style="color: #c00; font-weight: 600;">Error al cargar PayPal</p>
+          <p style="color: #666;">Por favor intenta más tarde</p>
+        </div>
+      `;
+    });
+
+    document.body.appendChild(script);
+  },
+
+  // ========================================
+  // PAYPAL: Inicializar botones
+  // ========================================
+  initPayPalButtons() {
+    const cart = this.getCart();
+    const { total } = cart.calculateTotals();
+
+    console.log("💳 Inicializando botones PayPal (LIVE)...");
+
+    paypal.Buttons({
+      style: {
+        layout: 'vertical',
+        color: 'gold',
+        shape: 'rect',
+        label: 'paypal'
+      },
+
+      // Crear orden
+      createOrder: (data, actions) => {
+        console.log("💳 Creando orden PayPal...");
+        
+        return actions.order.create({
+          purchase_units: [{
+            amount: {
+              value: total.toFixed(2),
+              currency_code: 'USD'
+            },
+            description: `Pedido Mawewe - ${this.getCartItems().length} items`
+          }]
+        });
+      },
+
+      // Aprobar pago
+      onApprove: async (data, actions) => {
+        console.log("✅ Pago aprobado por PayPal:", data);
+
+        const mawewe = window.mawewe;
+        if (mawewe && mawewe.ui) {
+          mawewe.ui.showLoading(true);
+        }
+
+        try {
+          // Capturar el pago
+          const details = await actions.order.capture();
+          console.log("✅ Pago capturado:", details);
+
+          this.state.paypalOrderId = data.orderID;
+
+          // Guardar orden en base de datos
+          await this.saveOrderToDatabase();
+
+          if (mawewe && mawewe.ui) {
+            mawewe.ui.showLoading(false);
+          }
+
+          // Mostrar confirmación
+          this.showConfirmation({
+            paypal_details: details
+          });
+
+        } catch (error) {
+          console.error("❌ Error procesando pago PayPal:", error);
+
+          if (mawewe && mawewe.ui) {
+            mawewe.ui.showLoading(false);
+            mawewe.ui.showNotification("Error al procesar el pago", "error");
+          }
+
+          alert("Error al procesar el pago. Por favor contacta al soporte.");
+        }
+      },
+
+      // Cancelar
+      onCancel: (data) => {
+        console.log("⚠️ Pago cancelado por el usuario");
+        const mawewe = window.mawewe;
+        if (mawewe && mawewe.ui) {
+          mawewe.ui.showNotification("Pago cancelado", "error");
+        }
+      },
+
+      // Error
+      onError: (err) => {
+        console.error("❌ Error PayPal:", err);
+        const mawewe = window.mawewe;
+        if (mawewe && mawewe.ui) {
+          mawewe.ui.showNotification("Error en PayPal", "error");
+        }
+        alert("Error al procesar con PayPal. Por favor intenta otro método de pago.");
+      }
+
+    }).render('#paypal-button-container');
+
+    console.log("✅ Botones PayPal renderizados");
+  },
+
+  // ========================================
+  // STEP 3: Procesar pago manual (Transferencia/Efectivo)
   // ========================================
   async processPayment() {
     const btn = document.getElementById("btn-confirm-payment");
     btn.disabled = true;
-    btn.textContent = "Procesando pago...";
+    btn.textContent = "Procesando...";
 
     const mawewe = window.mawewe;
     if (mawewe && mawewe.ui) {
@@ -506,83 +633,14 @@ const checkout = {
     }
 
     try {
-      const cart = this.getCart();
-      const cartItems = this.getCartItems();
-
-      if (!cart) {
-        throw new Error("Sistema de carrito no disponible");
-      }
-
-      const totals = cart.calculateTotals();
-
-      // Preparar datos de la orden
-      const orderData = {
-        email: this.state.customerData.email,
-        firstName: this.state.customerData.firstName,
-        lastName: this.state.customerData.lastName,
-        address: this.state.customerData.address || "",
-        apartment: this.state.customerData.apartment || "",
-        city: this.state.customerData.city || "",
-        postalCode: this.state.customerData.postalCode || "",
-        phone: this.state.customerData.phone || "",
-        shippingMethod: "standard",
-        paymentMethod: this.state.paymentMethod,
-        items: cartItems.map((item) => ({
-          productId: item.productId,
-          name: item.name,
-          sku: item.sku,
-          price: item.price,
-          quantity: item.quantity,
-        })),
-        totals: totals,
-      };
-
-      console.log("📤 Enviando orden al servidor:", orderData);
-
-      // Simular delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // Guardar orden
-      const result = await this.saveOrder(orderData);
+      await this.saveOrderToDatabase();
 
       if (mawewe && mawewe.ui) {
         mawewe.ui.showLoading(false);
       }
 
-      if (result.success) {
-        console.log("✅ Orden guardada exitosamente:", result);
+      this.showConfirmation();
 
-        this.state.orderId = result.orderId;
-        this.state.orderNumber = result.orderNumber;
-
-        // Mostrar confirmación
-        this.showConfirmation(orderData, result);
-
-        // Limpiar carrito
-        if (cart && typeof cart.clear === "function") {
-          cart.clear();
-        }
-
-        // Marcar que compró
-        localStorage.setItem("has_purchased", "true");
-
-        // Google Analytics
-        if (typeof gtag !== "undefined") {
-          gtag("event", "purchase", {
-            transaction_id: result.orderNumber,
-            value: totals.total,
-            currency: "USD",
-            items: orderData.items.map((item) => ({
-              item_id: item.sku,
-              item_name: item.name,
-              price: item.price,
-              quantity: item.quantity,
-            })),
-          });
-        }
-      } else {
-        throw new Error(result.message || "Error al guardar la orden");
-      }
     } catch (error) {
       const mawewe = window.mawewe;
       if (mawewe && mawewe.ui) {
@@ -613,10 +671,40 @@ const checkout = {
   // ========================================
   // Guardar orden en el backend
   // ========================================
-  async saveOrder(orderData) {
-    try {
-      console.log("💾 Guardando orden en servidor...");
+  async saveOrderToDatabase() {
+    const cart = this.getCart();
+    const cartItems = this.getCartItems();
 
+    if (!cart) {
+      throw new Error("Sistema de carrito no disponible");
+    }
+
+    const totals = cart.calculateTotals();
+
+    const orderData = {
+      email: this.state.customerData.email,
+      firstName: this.state.customerData.firstName,
+      lastName: this.state.customerData.lastName,
+      address: this.state.customerData.address || "",
+      apartment: this.state.customerData.apartment || "",
+      city: this.state.customerData.city || "",
+      postalCode: this.state.customerData.postalCode || "",
+      phone: this.state.customerData.phone || "",
+      shippingMethod: "standard",
+      paymentMethod: this.state.paymentMethod,
+      items: cartItems.map((item) => ({
+        productId: item.productId,
+        name: item.name,
+        sku: item.sku,
+        price: item.price,
+        quantity: item.quantity,
+      })),
+      totals: totals,
+    };
+
+    console.log("📤 Enviando orden al servidor:", orderData);
+
+    try {
       const apiBase =
         window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl
           ? window.CONFIG.api.baseUrl
@@ -655,29 +743,39 @@ const checkout = {
         throw new Error(result.message || `Error HTTP ${response.status}`);
       }
 
-      console.log("✅ Respuesta del servidor:", result);
+      console.log("✅ Orden guardada:", result);
+
+      this.state.orderId = result.orderId;
+      this.state.orderNumber = result.orderNumber;
+
+      // Limpiar carrito
+      if (cart && typeof cart.clear === "function") {
+        cart.clear();
+      }
+
+      // Marcar que compró
+      localStorage.setItem("has_purchased", "true");
 
       return result;
-    } catch (error) {
-      console.error("❌ Error en saveOrder:", error);
 
-      return {
-        success: false,
-        message: error.message || "Error de conexión",
-        error: error.toString(),
-      };
+    } catch (error) {
+      console.error("❌ Error guardando orden:", error);
+      throw error;
     }
   },
 
   // ========================================
-  // STEP 4: Mostrar confirmación - SIN PDF
+  // STEP 4: Mostrar confirmación
   // ========================================
-  showConfirmation(orderData, serverResponse = {}) {
+  showConfirmation(serverResponse = {}) {
     const container = document.getElementById("checkout-form-container");
 
     const orderId = serverResponse.orderId || this.state.orderId || "N/A";
     const orderNumber =
       serverResponse.orderNumber || this.state.orderNumber || "N/A";
+
+    const cart = this.getCart();
+    const { total } = cart.calculateTotals();
 
     const paymentMethodsInfo = {
       transfer: {
@@ -691,26 +789,13 @@ const checkout = {
             <p><strong>Número de Cuenta:</strong> 2100123456</p>
             <p><strong>Beneficiario:</strong> Mawewe E-commerce</p>
             <p><strong>RUC:</strong> 1234567890001</p>
-            <p><strong>Monto:</strong> <span style="color: var(--primary-800); font-size: 1.2rem;">$${orderData.totals.total.toFixed(2)}</span></p>
+            <p><strong>Monto:</strong> <span style="color: var(--primary-800); font-size: 1.2rem;">$${total.toFixed(2)}</span></p>
             <p><strong>Referencia:</strong> <span style="color: var(--primary-800); font-weight: 700;">${orderNumber}</span></p>
           </div>
           <div style="background: #f39c12; padding: 1rem; border-radius: 8px; margin-top: 1rem; color: white;">
             <p style="margin: 0; font-weight: 600;">
               ⚠️ Envía el comprobante a: <strong>pagos@mawewe.com.ec</strong>
             </p>
-          </div>
-        `,
-      },
-      card: {
-        icon: "💳",
-        title: "Tarjeta de Crédito/Débito",
-        instructions: `
-          <div style="text-align: center; padding: 2rem;">
-            <div style="font-size: 4rem; margin-bottom: 1rem;">✅</div>
-            <p style="color: var(--success); font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem;">
-              ¡Pago Procesado Exitosamente!
-            </p>
-            <p>Tu tarjeta ha sido cargada por <strong>$${orderData.totals.total.toFixed(2)}</strong></p>
           </div>
         `,
       },
@@ -725,7 +810,7 @@ const checkout = {
             </p>
             <div style="background: var(--primary-50); padding: 1.5rem; border-radius: 12px;">
               <p style="font-size: 2rem; font-weight: 700; color: var(--primary-800);">
-                $${orderData.totals.total.toFixed(2)}
+                $${total.toFixed(2)}
               </p>
             </div>
           </div>
@@ -740,7 +825,8 @@ const checkout = {
             <p style="color: var(--success); font-size: 1.2rem; font-weight: 600;">
               ¡Pago Procesado vía PayPal!
             </p>
-            <p>Debitado: <strong>$${orderData.totals.total.toFixed(2)}</strong></p>
+            <p>Debitado: <strong>$${total.toFixed(2)}</strong></p>
+            ${this.state.paypalOrderId ? `<p style="font-size: 0.8rem; color: var(--gray-600); margin-top: 0.5rem;">ID PayPal: ${this.state.paypalOrderId}</p>` : ''}
           </div>
         `,
       },
@@ -787,7 +873,7 @@ const checkout = {
             ✓ Cerrar
           </button>
           <a 
-            href="https://wa.me/593981832313?text=Hola,%20mi%20orden%20es%20${orderNumber}%20por%20$${orderData.totals.total.toFixed(2)}" 
+            href="https://wa.me/593981832313?text=Hola,%20mi%20orden%20es%20${orderNumber}%20por%20$${total.toFixed(2)}" 
             target="_blank"
             class="btn-continue-payment" 
             style="flex: 1; min-width: 200px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); text-decoration: none; display: flex; align-items: center; justify-content: center;"
@@ -826,6 +912,7 @@ const checkout = {
       paymentMethod: null,
       orderNumber: null,
       orderId: null,
+      paypalOrderId: null,
     };
 
     console.log("🔙 Checkout cerrado");
@@ -839,4 +926,4 @@ if (window.mawewe) {
   window.mawewe.checkout = checkout;
 }
 
-console.log("✅ Checkout cargado (sin PDF, sin paypal_order_id)")
+console.log("✅ Checkout cargado (PayPal LIVE + Transferencia + Efectivo)");

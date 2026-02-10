@@ -1,9 +1,7 @@
 /**
- * MAWEWE E-COMMERCE - VERSIÓN CORREGIDA
- * ✅ FIX: Búsqueda funcionando correctamente
- * ✅ FIX: Filtros de categoría funcionando
- * ✅ FIX: Routing integrado para URLs compartibles
- * ✅ FIX: Categorías ordenadas por cantidad de productos
+ * MAWEWE E-COMMERCE - VERSIÓN CORREGIDA V2
+ * ✅ FIX: Orden por categoría en "Todos" (mayor a menor productos)
+ * ✅ FIX: Credenciales PayPal LIVE actualizadas
  */
 
 // =============================================================================
@@ -20,9 +18,10 @@ const CONFIG = {
   },
 
   paypal: {
-    clientId:
-      "AeKUZVm_-yxZRjygolPx21RgDuy3_K24uOrKWf3MpLAG8xErNCyu4S2GcIu27tJclkpabpv0HXAeBgrg",
+    // ✅ CREDENCIALES LIVE ACTUALIZADAS
+    clientId: "Ack7D-Wa-nhgUcL0ijOQHSQZUNJHy3GCX4tBKxrAyDYF6K-laohRj0ke49AAeg6NcUjSXHCBJNLhFGJt",
     currency: "USD",
+    mode: "production", // ✅ MODO PRODUCCIÓN
   },
 
   shipping: {
@@ -39,6 +38,7 @@ const CONFIG = {
 
 console.log("🚀 Mawewe iniciando...");
 console.log("📡 API URL:", CONFIG.api.baseUrl);
+console.log("💳 PayPal Mode:", CONFIG.paypal.mode);
 
 // =============================================================================
 // STATE MANAGEMENT
@@ -69,19 +69,16 @@ const api = {
 
       const params = new URLSearchParams();
 
-      // Solo agregar categoría si no es 'all'
       if (filters.category && filters.category !== "all") {
         params.append("category", filters.category.toLowerCase().trim());
         console.log("📂 Filtrando categoría:", filters.category);
       }
 
-      // Agregar subcategoría si existe
       if (filters.subcategory && filters.subcategory !== "") {
         params.append("subcategory", filters.subcategory.toLowerCase().trim());
         console.log("📁 Filtrando subcategoría:", filters.subcategory);
       }
 
-      // Agregar búsqueda si cumple requisitos
       if (
         filters.search &&
         filters.search.trim().length >= CONFIG.search.minChars
@@ -128,7 +125,6 @@ const api = {
       console.log("✅ Data received:", data);
 
       if (data.success && data.products && Array.isArray(data.products)) {
-        data.products.sort((a, b) => a.id - b.id);
         console.log(`✅ ${data.products.length} productos activos cargados`);
       }
 
@@ -331,7 +327,6 @@ const ui = {
       overlay.classList.remove("active");
       document.body.style.overflow = "";
 
-      // Refrescar productos
       filters.apply();
     } else {
       modal.classList.add("open");
@@ -370,8 +365,6 @@ const ui = {
       document.body.style.cursor = "";
     }
   },
-
-  // Actualiza la función updateSearchPlaceholder:
 
   updateSearchPlaceholder(count) {
     const searchInput = document.getElementById("search-input");
@@ -537,7 +530,6 @@ const productModal = {
       }
     });
 
-    // Actualizar URL con routing
     if (window.routing) {
       window.routing.updateURL({ product: productId });
     }
@@ -552,7 +544,6 @@ const productModal = {
     this.currentProduct = null;
     this.currentImageIndex = 0;
 
-    // Limpiar parámetro de producto de la URL
     if (window.routing) {
       window.routing.updateURL({
         category: state.currentFilter !== "all" ? state.currentFilter : null,
@@ -664,7 +655,37 @@ const render = {
       return;
     }
 
-    const sortedProducts = [...products].sort((a, b) => a.id - b.id);
+    // ✅ ORDENAR PRODUCTOS
+    let sortedProducts;
+    
+    if (state.currentFilter === 'all') {
+      // En "Todos": ordenar por categoría con más productos
+      const categoryCount = {};
+      
+      // Contar productos por categoría
+      products.forEach(p => {
+        const cat = p.category || 'sin_categoria';
+        categoryCount[cat] = (categoryCount[cat] || 0) + 1;
+      });
+      
+      // Ordenar productos agrupando por categoría (de mayor a menor cantidad)
+      sortedProducts = [...products].sort((a, b) => {
+        const catA = a.category || 'sin_categoria';
+        const catB = b.category || 'sin_categoria';
+        
+        // Primero por cantidad de productos en la categoría
+        const countDiff = (categoryCount[catB] || 0) - (categoryCount[catA] || 0);
+        if (countDiff !== 0) return countDiff;
+        
+        // Si están en la misma categoría, por ID
+        return a.id - b.id;
+      });
+      
+      console.log(`✅ Productos ordenados por categoría (mayor a menor):`, categoryCount);
+    } else {
+      // En categorías específicas: ordenar solo por ID
+      sortedProducts = [...products].sort((a, b) => a.id - b.id);
+    }
 
     grid.innerHTML = sortedProducts
       .map((product) => {
@@ -731,13 +752,9 @@ const render = {
 
     if (!container || !categories) return;
 
-    // ✅ ORDENAR CATEGORÍAS POR CANTIDAD DE PRODUCTOS (descendente)
     const sortedCategories = [...categories].sort((a, b) => {
-      // "Todos" siempre primero
       if (a.id === "all") return -1;
       if (b.id === "all") return 1;
-
-      // Luego por cantidad de productos
       return (b.count || 0) - (a.count || 0);
     });
 
@@ -896,7 +913,7 @@ const render = {
 };
 
 // =============================================================================
-// FILTERS - CORREGIDO
+// FILTERS
 // =============================================================================
 
 const filters = {
@@ -904,12 +921,10 @@ const filters = {
     state.currentFilter = category;
     state.currentSubcategory = null;
 
-    // Actualizar botones activos
     document.querySelectorAll(".filter-button").forEach((btn) => {
       btn.classList.remove("active");
     });
 
-    // Encontrar y activar el botón correcto
     document.querySelectorAll(".filter-button").forEach((btn) => {
       const btnText = btn.textContent.toLowerCase();
       const categoryName =
@@ -926,7 +941,6 @@ const filters = {
     render.subcategories();
     this.apply();
 
-    // Actualizar URL
     if (window.routing) {
       window.routing.updateURL({
         category: category !== "all" ? category : null,
@@ -945,7 +959,6 @@ const filters = {
     render.subcategories();
     this.apply();
 
-    // Actualizar URL
     if (window.routing) {
       window.routing.updateURL({
         category: state.currentFilter !== "all" ? state.currentFilter : null,
@@ -960,12 +973,10 @@ const filters = {
     state.searchQuery = trimmedQuery;
     console.log("🔍 Búsqueda GLOBAL:", state.searchQuery || "(vacía)");
 
-    // Si hay búsqueda activa, resetear filtros de categoría
     if (trimmedQuery && trimmedQuery.length >= CONFIG.search.minChars) {
       state.currentFilter = "all";
       state.currentSubcategory = null;
 
-      // Actualizar UI de filtros
       document.querySelectorAll(".filter-button").forEach((btn) => {
         btn.classList.remove("active");
       });
@@ -978,7 +989,6 @@ const filters = {
 
     this.apply();
 
-    // Actualizar URL
     if (window.routing && trimmedQuery) {
       window.routing.updateURL({ search: trimmedQuery });
     } else if (window.routing && !trimmedQuery) {
@@ -997,7 +1007,6 @@ const filters = {
     state.searchQuery = "";
     this.apply();
 
-    // Limpiar URL
     if (window.routing) {
       window.routing.updateURL({
         category: state.currentFilter !== "all" ? state.currentFilter : null,
@@ -1015,20 +1024,16 @@ const filters = {
     state.isSearching = true;
     ui.showLoading(true);
 
-    // Construir filtros
     const filterParams = {};
 
-    // Solo agregar categoría si no es 'all'
     if (state.currentFilter && state.currentFilter !== "all") {
       filterParams.category = state.currentFilter;
     }
 
-    // Agregar subcategoría si existe
     if (state.currentSubcategory) {
       filterParams.subcategory = state.currentSubcategory;
     }
 
-    // Agregar búsqueda si existe y cumple requisitos
     if (
       state.searchQuery &&
       state.searchQuery.length >= CONFIG.search.minChars
@@ -1109,7 +1114,6 @@ async function init() {
 
       cart.load();
 
-      // Procesar URL inicial si hay routing
       if (window.routing) {
         window.routing.handleInitialURL();
       }
@@ -1214,6 +1218,4 @@ window.mawewe = {
 
 window.productModal = productModal;
 
-console.log(
-  "✅ Mawewe cargado (búsqueda + filtros + routing + categorías ordenadas)",
-);
+console.log("✅ Mawewe cargado - V2 (orden por categoría + PayPal LIVE)");
