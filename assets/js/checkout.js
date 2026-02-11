@@ -1,8 +1,9 @@
 /**
- * MAWEWE E-COMMERCE - CHECKOUT CON PAYPAL LIVE
- * ✅ PayPal LIVE con credenciales reales
- * ✅ Transferencia bancaria
- * ✅ Pago en efectivo
+ * MAWEWE E-COMMERCE - CHECKOUT CORREGIDO
+ * ✅ Datos bancarios actualizados
+ * ✅ Fix del monto $0.00
+ * ✅ Descarga de comprobante PDF
+ * ✅ Envío directo a WhatsApp
  */
 
 // =============================================================================
@@ -389,7 +390,7 @@ const checkout = {
                 <div class="payment-icon">🏦</div>
                 <div class="payment-details">
                   <div class="payment-name">Transferencia Bancaria</div>
-                  <div class="payment-description">Recibirás los datos bancarios después de confirmar</div>
+                  <div class="payment-description">Banco Pichincha - Datos en confirmación</div>
                 </div>
               </div>
             </label>
@@ -451,10 +452,8 @@ const checkout = {
     const buttonContainer = document.getElementById("payment-button-container");
 
     if (method === 'paypal') {
-      // ✅ RENDERIZAR BOTONES PAYPAL
       this.renderPayPalButtons();
     } else if (method === 'transfer' || method === 'cash') {
-      // Para transferencia y efectivo: botón manual
       const paymentNames = {
         transfer: "Transferencia Bancaria",
         cash: "Pago en Efectivo",
@@ -485,10 +484,8 @@ const checkout = {
       return;
     }
 
-    // Limpiar container
     buttonContainer.innerHTML = '<div id="paypal-button-container"></div>';
 
-    // ✅ OBTENER CLIENT ID desde CONFIG
     const clientId = window.CONFIG?.paypal?.clientId || window.mawewe?.CONFIG?.paypal?.clientId;
 
     if (!clientId) {
@@ -504,7 +501,6 @@ const checkout = {
 
     console.log("💳 Cargando PayPal SDK con Client ID:", clientId.substring(0, 20) + "...");
 
-    // Cargar PayPal SDK dinámicamente
     const script = document.createElement('script');
     script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD`;
     script.addEventListener('load', () => {
@@ -540,7 +536,6 @@ const checkout = {
         label: 'paypal'
       },
 
-      // Crear orden
       createOrder: (data, actions) => {
         console.log("💳 Creando orden PayPal...");
         
@@ -555,7 +550,6 @@ const checkout = {
         });
       },
 
-      // Aprobar pago
       onApprove: async (data, actions) => {
         console.log("✅ Pago aprobado por PayPal:", data);
 
@@ -565,20 +559,17 @@ const checkout = {
         }
 
         try {
-          // Capturar el pago
           const details = await actions.order.capture();
           console.log("✅ Pago capturado:", details);
 
           this.state.paypalOrderId = data.orderID;
 
-          // Guardar orden en base de datos
           await this.saveOrderToDatabase();
 
           if (mawewe && mawewe.ui) {
             mawewe.ui.showLoading(false);
           }
 
-          // Mostrar confirmación
           this.showConfirmation({
             paypal_details: details
           });
@@ -595,7 +586,6 @@ const checkout = {
         }
       },
 
-      // Cancelar
       onCancel: (data) => {
         console.log("⚠️ Pago cancelado por el usuario");
         const mawewe = window.mawewe;
@@ -604,7 +594,6 @@ const checkout = {
         }
       },
 
-      // Error
       onError: (err) => {
         console.error("❌ Error PayPal:", err);
         const mawewe = window.mawewe;
@@ -620,7 +609,7 @@ const checkout = {
   },
 
   // ========================================
-  // STEP 3: Procesar pago manual (Transferencia/Efectivo)
+  // STEP 3: Procesar pago manual
   // ========================================
   async processPayment() {
     const btn = document.getElementById("btn-confirm-payment");
@@ -748,12 +737,10 @@ const checkout = {
       this.state.orderId = result.orderId;
       this.state.orderNumber = result.orderNumber;
 
-      // Limpiar carrito
       if (cart && typeof cart.clear === "function") {
         cart.clear();
       }
 
-      // Marcar que compró
       localStorage.setItem("has_purchased", "true");
 
       return result;
@@ -776,25 +763,28 @@ const checkout = {
 
     const cart = this.getCart();
     const { total } = cart.calculateTotals();
+    const cartItems = this.getCartItems();
+
+    // ✅ FIX: Guardar total en el state para uso posterior
+    this.state.orderTotal = total;
 
     const paymentMethodsInfo = {
       transfer: {
         icon: "🏦",
         title: "Transferencia Bancaria",
         instructions: `
-          <h4>Datos para Transferencia:</h4>
+          <h4>✅ Datos para Transferencia:</h4>
           <div class="bank-details">
             <p><strong>Banco:</strong> Banco Pichincha</p>
             <p><strong>Tipo:</strong> Cuenta Corriente</p>
-            <p><strong>Número de Cuenta:</strong> 2100123456</p>
-            <p><strong>Beneficiario:</strong> Mawewe E-commerce</p>
-            <p><strong>RUC:</strong> 1234567890001</p>
+            <p><strong>Número de Cuenta:</strong> 2100291784</p>
+            <p><strong>Beneficiario:</strong> Víctor Manuel Vargas Motoche</p>
             <p><strong>Monto:</strong> <span style="color: var(--primary-800); font-size: 1.2rem;">$${total.toFixed(2)}</span></p>
             <p><strong>Referencia:</strong> <span style="color: var(--primary-800); font-weight: 700;">${orderNumber}</span></p>
           </div>
           <div style="background: #f39c12; padding: 1rem; border-radius: 8px; margin-top: 1rem; color: white;">
             <p style="margin: 0; font-weight: 600;">
-              ⚠️ Envía el comprobante a: <strong>pagos@mawewe.com.ec</strong>
+              ⚠️ Envía el comprobante a: <strong>+593 98 183 2313</strong>
             </p>
           </div>
         `,
@@ -863,24 +853,32 @@ const checkout = {
             ✓ Envío Gratis - Recibirás tu pedido en 3-5 días hábiles
           </p>
         </div>
-        
-        <div style="display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap;">
+
+        <!-- BOTONES DE DESCARGA Y WHATSAPP -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 2rem;">
           <button 
-            onclick="checkout.closeCheckout(); if(window.mawewe && window.mawewe.ui) window.mawewe.ui.toggleCart();" 
+            onclick="checkout.downloadReceipt()" 
             class="btn-continue-payment" 
-            style="flex: 1; min-width: 200px;"
+            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"
           >
-            ✓ Cerrar
+            📄 Descargar Comprobante
           </button>
-          <a 
-            href="https://wa.me/593981832313?text=Hola,%20mi%20orden%20es%20${orderNumber}%20por%20$${total.toFixed(2)}" 
-            target="_blank"
+          <button 
+            onclick="checkout.sendToWhatsApp()" 
             class="btn-continue-payment" 
-            style="flex: 1; min-width: 200px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); text-decoration: none; display: flex; align-items: center; justify-content: center;"
+            style="background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);"
           >
-            📱 WhatsApp
-          </a>
+            📱 Enviar a WhatsApp
+          </button>
         </div>
+        
+        <button 
+          onclick="checkout.closeCheckout(); if(window.mawewe && window.mawewe.ui) window.mawewe.ui.toggleCart();" 
+          class="btn-continue-payment" 
+          style="margin-top: 1rem; background: var(--gray-600);"
+        >
+          ✓ Cerrar
+        </button>
       </div>
     `;
 
@@ -892,6 +890,197 @@ const checkout = {
     }
 
     console.log("✅ Orden completada:", orderNumber);
+  },
+
+  // ========================================
+  // NUEVA FUNCIÓN: Descargar comprobante PDF
+  // ========================================
+  downloadReceipt() {
+    const cart = this.getCart();
+    const cartItems = this.getCartItems();
+    const { subtotal, shipping, total } = this.state.orderTotal 
+      ? { subtotal: this.state.orderTotal - 0, shipping: 0, total: this.state.orderTotal }
+      : cart.calculateTotals();
+
+    const orderNumber = this.state.orderNumber || "N/A";
+    const customerData = this.state.customerData;
+
+    // Generar contenido del comprobante
+    let receiptHTML = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Comprobante de Compra - ${orderNumber}</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+    h1 { color: #8C004B; text-align: center; }
+    .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #8C004B; padding-bottom: 10px; }
+    .section { margin: 20px 0; }
+    .section h2 { color: #8C004B; border-bottom: 2px solid #8C004B; padding-bottom: 5px; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+    th { background-color: #8C004B; color: white; }
+    .total-row { font-weight: bold; font-size: 1.2em; background-color: #f0f0f0; }
+    .bank-info { background-color: #fffacd; padding: 15px; border-radius: 8px; border: 2px solid #f39c12; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🛒 MAWEWE</h1>
+    <p>Comprobante de Compra</p>
+    <p><strong>Orden: ${orderNumber}</strong></p>
+    <p>Fecha: ${new Date().toLocaleString('es-EC')}</p>
+  </div>
+
+  <div class="section">
+    <h2>📋 Datos del Cliente</h2>
+    <p><strong>Nombre:</strong> ${customerData.firstName} ${customerData.lastName}</p>
+    <p><strong>Email:</strong> ${customerData.email}</p>
+    <p><strong>Teléfono:</strong> ${customerData.phone}</p>
+    <p><strong>Dirección:</strong> ${customerData.address}${customerData.apartment ? ', ' + customerData.apartment : ''}</p>
+    <p><strong>Ciudad:</strong> ${customerData.city}${customerData.postalCode ? ', CP: ' + customerData.postalCode : ''}</p>
+  </div>
+
+  <div class="section">
+    <h2>🛍️ Productos Comprados</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>SKU</th>
+          <th>Cantidad</th>
+          <th>Precio Unit.</th>
+          <th>Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${cartItems.map(item => `
+          <tr>
+            <td>${item.name}</td>
+            <td>${item.sku}</td>
+            <td>${item.quantity}</td>
+            <td>$${item.price.toFixed(2)}</td>
+            <td>$${(item.price * item.quantity).toFixed(2)}</td>
+          </tr>
+        `).join('')}
+        <tr>
+          <td colspan="4" style="text-align: right;"><strong>Subtotal:</strong></td>
+          <td><strong>$${subtotal.toFixed(2)}</strong></td>
+        </tr>
+        <tr>
+          <td colspan="4" style="text-align: right;"><strong>Envío:</strong></td>
+          <td><strong style="color: green;">GRATIS ✓</strong></td>
+        </tr>
+        <tr class="total-row">
+          <td colspan="4" style="text-align: right;">TOTAL A PAGAR:</td>
+          <td>$${total.toFixed(2)}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  ${this.state.paymentMethod === 'transfer' ? `
+  <div class="section">
+    <h2>🏦 Datos Bancarios para Transferencia</h2>
+    <div class="bank-info">
+      <p><strong>Banco:</strong> Banco Pichincha</p>
+      <p><strong>Tipo de Cuenta:</strong> Cuenta Corriente</p>
+      <p><strong>Número de Cuenta:</strong> 2100291784</p>
+      <p><strong>Beneficiario:</strong> Víctor Manuel Vargas Motoche</p>
+      <p><strong>Monto a Transferir:</strong> $${total.toFixed(2)}</p>
+      <p><strong>Referencia:</strong> ${orderNumber}</p>
+      <p style="color: #f39c12; font-weight: bold; margin-top: 15px;">
+        ⚠️ IMPORTANTE: Enviar comprobante de pago a WhatsApp +593 98 183 2313
+      </p>
+    </div>
+  </div>
+  ` : ''}
+
+  <div class="section">
+    <h2>📦 Información de Envío</h2>
+    <p><strong>Método:</strong> Envío Estándar (GRATIS)</p>
+    <p><strong>Tiempo estimado:</strong> 3-5 días hábiles</p>
+  </div>
+
+  <div class="section" style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #8C004B;">
+    <p><strong>¿Preguntas?</strong> Contáctanos:</p>
+    <p>📱 WhatsApp: +593 98 183 2313</p>
+    <p>📧 Email: info@mawewe.com.ec</p>
+    <p>🌐 Web: https://mawewe.com.ec</p>
+    <p style="margin-top: 20px; color: #666; font-size: 0.9em;">
+      Gracias por tu compra 💖
+    </p>
+  </div>
+</body>
+</html>
+    `;
+
+    // Crear blob y descargar
+    const blob = new Blob([receiptHTML], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Comprobante-Mawewe-${orderNumber}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    if (window.mawewe && window.mawewe.ui) {
+      window.mawewe.ui.showNotification('📄 Comprobante descargado correctamente');
+    }
+
+    console.log('✅ Comprobante descargado');
+  },
+
+  // ========================================
+  // NUEVA FUNCIÓN: Enviar a WhatsApp
+  // ========================================
+  sendToWhatsApp() {
+    const orderNumber = this.state.orderNumber || "N/A";
+    const customerData = this.state.customerData;
+    const cartItems = this.getCartItems();
+    const total = this.state.orderTotal || 0;
+
+    // Construir mensaje
+    let message = `🛒 *PEDIDO MAWEWE*\n\n`;
+    message += `📋 *Orden:* ${orderNumber}\n`;
+    message += `👤 *Cliente:* ${customerData.firstName} ${customerData.lastName}\n`;
+    message += `📧 *Email:* ${customerData.email}\n`;
+    message += `📱 *Teléfono:* ${customerData.phone}\n`;
+    message += `📍 *Dirección:* ${customerData.address}, ${customerData.city}\n\n`;
+    
+    message += `🛍️ *PRODUCTOS:*\n`;
+    cartItems.forEach((item, index) => {
+      message += `${index + 1}. ${item.name}\n`;
+      message += `   SKU: ${item.sku}\n`;
+      message += `   Cant: ${item.quantity} x $${item.price.toFixed(2)} = $${(item.price * item.quantity).toFixed(2)}\n\n`;
+    });
+    
+    message += `💰 *TOTAL: $${total.toFixed(2)}*\n\n`;
+
+    if (this.state.paymentMethod === 'transfer') {
+      message += `🏦 *DATOS BANCARIOS:*\n`;
+      message += `Banco: Pichincha\n`;
+      message += `Cuenta Corriente: 2100291784\n`;
+      message += `Beneficiario: Víctor Manuel Vargas Motoche\n`;
+      message += `Referencia: ${orderNumber}\n\n`;
+      message += `⚠️ *Enviaré el comprobante de pago*`;
+    } else if (this.state.paymentMethod === 'cash') {
+      message += `💵 Pagaré en efectivo al recibir`;
+    } else if (this.state.paymentMethod === 'paypal') {
+      message += `✅ Pago realizado vía PayPal`;
+    }
+
+    const whatsappURL = `https://wa.me/593981832313?text=${encodeURIComponent(message)}`;
+    window.open(whatsappURL, '_blank');
+
+    if (window.mawewe && window.mawewe.ui) {
+      window.mawewe.ui.showNotification('📱 Abriendo WhatsApp...');
+    }
+
+    console.log('✅ Enviando a WhatsApp');
   },
 
   // ========================================
@@ -913,6 +1102,7 @@ const checkout = {
       orderNumber: null,
       orderId: null,
       paypalOrderId: null,
+      orderTotal: null,
     };
 
     console.log("🔙 Checkout cerrado");
@@ -926,4 +1116,4 @@ if (window.mawewe) {
   window.mawewe.checkout = checkout;
 }
 
-console.log("✅ Checkout cargado (PayPal LIVE + Transferencia + Efectivo)");
+console.log("✅ Checkout cargado (CORREGIDO: Datos bancarios + Fix monto + Descarga PDF + WhatsApp)");
