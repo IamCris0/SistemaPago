@@ -1,13 +1,19 @@
 <?php
 /**
- * API de Órdenes - Mawewe CRM
- * CRUD completo para gestión de órdenes
+ * API DE ÓRDENES - SISTEMA MAWEWE
+ * ✅ Corregida para carga correcta de órdenes
+ * ✅ Incluye información completa de productos y clientes
+ * ✅ Optimizada para presentación
  */
 
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+header('Access-Control-Allow-Methods: GET, POST, PUT, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, cache-control');
 header('Content-Type: application/json; charset=UTF-8');
+
+// Headers para evitar caché
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
@@ -15,9 +21,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once __DIR__ . '/config/database.php';
-
-$method = $_SERVER['REQUEST_METHOD'];
-$action = $_GET['action'] ?? '';
 
 try {
     $database = new Database();
@@ -27,247 +30,291 @@ try {
         throw new Exception('Error de conexión a BD');
     }
     
+    $method = $_SERVER['REQUEST_METHOD'];
+    
     // ========================================
-    // LISTAR ÓRDENES
+    // GET: LISTAR ÓRDENES
     // ========================================
-    if ($method === 'GET' && $action === 'list') {
-        $page = (int)($_GET['page'] ?? 1);
-        $limit = (int)($_GET['limit'] ?? 50);
-        $offset = ($page - 1) * $limit;
-        $status = $_GET['status'] ?? 'all';
+    if ($method === 'GET') {
         
+        // Parámetros de filtrado
+        $status = isset($_GET['status']) && $_GET['status'] !== 'all' && $_GET['status'] !== '' 
+            ? trim($_GET['status']) 
+            : null;
+        
+        $search = isset($_GET['search']) && $_GET['search'] !== '' 
+            ? trim($_GET['search']) 
+            : null;
+        
+        $date_from = isset($_GET['date_from']) && $_GET['date_from'] !== '' 
+            ? trim($_GET['date_from']) 
+            : null;
+        
+        $date_to = isset($_GET['date_to']) && $_GET['date_to'] !== '' 
+            ? trim($_GET['date_to']) 
+            : null;
+        
+        // Construir query SQL
         $sql = "SELECT 
                     o.id,
                     o.order_number,
-                    o.email,
-                    o.first_name,
-                    o.last_name,
-                    o.phone,
-                    o.city,
-                    o.payment_method,
-                    o.subtotal,
+                    o.customer_name,
+                    o.customer_email,
+                    o.customer_phone,
+                    o.customer_address,
+                    o.customer_cedula,
+                    o.shipping_method,
                     o.shipping_cost,
+                    o.subtotal,
+                    o.tax,
                     o.total,
                     o.status,
+                    o.payment_method,
+                    o.payment_status,
+                    o.notes,
+                    o.tracking_number,
                     o.created_at,
-                    COUNT(oi.id) as item_count
+                    o.updated_at,
+                    o.items,
+                    COUNT(*) OVER() as total_count
                 FROM orders o
-                LEFT JOIN order_items oi ON o.id = oi.order_id";
+                WHERE 1=1";
         
         $params = [];
         
-        if ($status !== 'all') {
-            $sql .= " WHERE o.status = :status";
+        // Filtro por estado
+        if ($status !== null) {
+            $sql .= " AND o.status = :status";
             $params[':status'] = $status;
         }
         
-        $sql .= " GROUP BY o.id ORDER BY o.created_at DESC LIMIT :limit OFFSET :offset";
+        // Filtro por búsqueda (número de orden, nombre cliente, email, teléfono)
+        if ($search !== null) {
+            $sql .= " AND (
+                o.order_number LIKE :search 
+                OR o.customer_name LIKE :search 
+                OR o.customer_email LIKE :search 
+                OR o.customer_phone LIKE :search
+                OR o.customer_cedula LIKE :search
+            )";
+            $params[':search'] = '%' . $search . '%';
+        }
         
+        // Filtro por fecha desde
+        if ($date_from !== null) {
+            $sql .= " AND DATE(o.created_at) >= :date_from";
+            $params[':date_from'] = $date_from;
+        }
+        
+        // Filtro por fecha hasta
+        if ($date_to !== null) {
+            $sql .= " AND DATE(o.created_at) <= :date_to";
+            $params[':date_to'] = $date_to;
+        }
+        
+        // Ordenar por más recientes primero
+        $sql .= " ORDER BY o.created_at DESC";
+        
+        // Preparar y ejecutar query
         $stmt = $db->prepare($sql);
-        foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value);
-        }
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-        $stmt->execute();
+        $stmt->execute($params);
+        $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        $orders = $stmt->fetchAll();
-        
-        // Contar total
-        $sqlCount = "SELECT COUNT(*) as total FROM orders";
-        if ($status !== 'all') {
-            $sqlCount .= " WHERE status = :status";
-        }
-        $stmtCount = $db->prepare($sqlCount);
-        if ($status !== 'all') {
-            $stmtCount->execute([':status' => $status]);
-        } else {
-            $stmtCount->execute();
-        }
-        $total = $stmtCount->fetch()['total'];
-        
+        // Procesar cada orden
         foreach ($orders as &$order) {
+            // Decodificar items JSON
+            if (isset($order['items']) && is_string($order['items'])) {
+                $order['items'] = json_decode($order['items'], true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    $order['items'] = [];
+                }
+            } else {
+                $order['items'] = [];
+            }
+            
+            // Convertir valores numéricos
             $order['id'] = (int)$order['id'];
-            $order['subtotal'] = (float)$order['subtotal'];
             $order['shipping_cost'] = (float)$order['shipping_cost'];
+            $order['subtotal'] = (float)$order['subtotal'];
+            $order['tax'] = (float)$order['tax'];
             $order['total'] = (float)$order['total'];
-            $order['item_count'] = (int)$order['item_count'];
+            $order['total_count'] = (int)$order['total_count'];
+            
+            // Calcular cantidad de items
+            $order['items_count'] = count($order['items']);
+        }
+        
+        // Total de registros
+        $total_count = count($orders) > 0 ? (int)$orders[0]['total_count'] : 0;
+        
+        // Eliminar total_count de cada orden
+        foreach ($orders as &$order) {
+            unset($order['total_count']);
         }
         
         echo json_encode([
             'success' => true,
-            'orders' => $orders,
-            'total' => (int)$total,
-            'page' => $page,
-            'pages' => ceil($total / $limit),
-            'limit' => $limit
-        ]);
-        exit();
+            'data' => $orders,
+            'total' => $total_count,
+            'message' => count($orders) > 0 ? 'Órdenes obtenidas correctamente' : 'No se encontraron órdenes'
+        ], JSON_UNESCAPED_UNICODE);
+        
     }
     
     // ========================================
-    // OBTENER UNA ORDEN
+    // POST: CREAR NUEVA ORDEN
     // ========================================
-    if ($method === 'GET' && $action === 'get') {
-        $id = (int)($_GET['id'] ?? 0);
+    else if ($method === 'POST') {
         
-        if (!$id) {
-            throw new Exception('ID de orden requerido');
-        }
-        
-        // Obtener orden
-        $sql = "SELECT * FROM orders WHERE id = :id";
-        $stmt = $db->prepare($sql);
-        $stmt->execute([':id' => $id]);
-        $order = $stmt->fetch();
-        
-        if (!$order) {
-            http_response_code(404);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Orden no encontrada'
-            ]);
-            exit();
-        }
-        
-        // Obtener items de la orden
-        $sqlItems = "SELECT 
-                        oi.*,
-                        p.image
-                    FROM order_items oi
-                    LEFT JOIN products p ON oi.product_id = p.id
-                    WHERE oi.order_id = :order_id";
-        
-        $stmtItems = $db->prepare($sqlItems);
-        $stmtItems->execute([':order_id' => $id]);
-        $items = $stmtItems->fetchAll();
-        
-        $order['id'] = (int)$order['id'];
-        $order['subtotal'] = (float)$order['subtotal'];
-        $order['shipping_cost'] = (float)$order['shipping_cost'];
-        $order['total'] = (float)$order['total'];
-        $order['items'] = $items;
-        
-        echo json_encode([
-            'success' => true,
-            'order' => $order
-        ]);
-        exit();
-    }
-    
-    // ========================================
-    // ACTUALIZAR ESTADO DE ORDEN
-    // ========================================
-    if ($method === 'PUT' && $action === 'update-status') {
         $input = json_decode(file_get_contents('php://input'), true);
-        $id = (int)($input['id'] ?? 0);
-        $newStatus = $input['status'] ?? '';
         
-        if (!$id || !$newStatus) {
-            throw new Exception('ID y estado requeridos');
+        if (!$input) {
+            throw new Exception('Datos inválidos');
         }
         
-        $validStatuses = ['pending_payment', 'processing', 'completed', 'cancelled'];
-        if (!in_array($newStatus, $validStatuses)) {
-            throw new Exception('Estado inválido');
+        // Validar campos requeridos
+        $required = ['customer_name', 'customer_email', 'customer_phone', 'customer_address', 
+                     'items', 'subtotal', 'total', 'shipping_method', 'payment_method'];
+        
+        foreach ($required as $field) {
+            if (!isset($input[$field]) || $input[$field] === '') {
+                throw new Exception("Campo requerido: $field");
+            }
         }
         
-        $sql = "UPDATE orders SET status = :status, updated_at = NOW() WHERE id = :id";
+        // Validar que items sea un array con al menos 1 producto
+        if (!is_array($input['items']) || count($input['items']) === 0) {
+            throw new Exception('Debe incluir al menos un producto');
+        }
+        
+        // Generar número de orden único
+        $order_number = 'ORD-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
+        
+        // Preparar datos
+        $customer_name = trim($input['customer_name']);
+        $customer_email = trim($input['customer_email']);
+        $customer_phone = trim($input['customer_phone']);
+        $customer_address = trim($input['customer_address']);
+        $customer_cedula = isset($input['customer_cedula']) ? trim($input['customer_cedula']) : null;
+        $shipping_method = trim($input['shipping_method']);
+        $shipping_cost = isset($input['shipping_cost']) ? (float)$input['shipping_cost'] : 0.0;
+        $subtotal = (float)$input['subtotal'];
+        $tax = isset($input['tax']) ? (float)$input['tax'] : 0.0;
+        $total = (float)$input['total'];
+        $payment_method = trim($input['payment_method']);
+        $payment_status = isset($input['payment_status']) ? trim($input['payment_status']) : 'pending';
+        $notes = isset($input['notes']) ? trim($input['notes']) : null;
+        $items_json = json_encode($input['items'], JSON_UNESCAPED_UNICODE);
+        
+        // Insertar orden
+        $sql = "INSERT INTO orders (
+                    order_number, customer_name, customer_email, customer_phone, 
+                    customer_address, customer_cedula, shipping_method, shipping_cost,
+                    subtotal, tax, total, status, payment_method, payment_status,
+                    notes, items, created_at, updated_at
+                ) VALUES (
+                    :order_number, :customer_name, :customer_email, :customer_phone,
+                    :customer_address, :customer_cedula, :shipping_method, :shipping_cost,
+                    :subtotal, :tax, :total, 'pending', :payment_method, :payment_status,
+                    :notes, :items, NOW(), NOW()
+                )";
+        
         $stmt = $db->prepare($sql);
         $stmt->execute([
-            ':status' => $newStatus,
-            ':id' => $id
+            ':order_number' => $order_number,
+            ':customer_name' => $customer_name,
+            ':customer_email' => $customer_email,
+            ':customer_phone' => $customer_phone,
+            ':customer_address' => $customer_address,
+            ':customer_cedula' => $customer_cedula,
+            ':shipping_method' => $shipping_method,
+            ':shipping_cost' => $shipping_cost,
+            ':subtotal' => $subtotal,
+            ':tax' => $tax,
+            ':total' => $total,
+            ':payment_method' => $payment_method,
+            ':payment_status' => $payment_status,
+            ':notes' => $notes,
+            ':items' => $items_json
         ]);
+        
+        $order_id = $db->lastInsertId();
         
         echo json_encode([
             'success' => true,
-            'message' => 'Estado actualizado correctamente'
-        ]);
-        exit();
+            'data' => [
+                'id' => (int)$order_id,
+                'order_number' => $order_number
+            ],
+            'message' => 'Orden creada exitosamente'
+        ], JSON_UNESCAPED_UNICODE);
+        
     }
     
     // ========================================
-    // ELIMINAR ORDEN
+    // PUT: ACTUALIZAR ORDEN
     // ========================================
-    if ($method === 'DELETE' && $action === 'delete') {
-        $id = (int)($_GET['id'] ?? 0);
+    else if ($method === 'PUT') {
         
-        if (!$id) {
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        if (!$input || !isset($input['id'])) {
             throw new Exception('ID de orden requerido');
         }
         
-        // Eliminar items primero (CASCADE debería hacerlo automáticamente)
-        $sql = "DELETE FROM orders WHERE id = :id";
+        $order_id = (int)$input['id'];
+        
+        // Verificar que la orden existe
+        $stmt = $db->prepare("SELECT id FROM orders WHERE id = :id");
+        $stmt->execute([':id' => $order_id]);
+        if (!$stmt->fetch()) {
+            throw new Exception('Orden no encontrada');
+        }
+        
+        // Construir query de actualización dinámicamente
+        $updates = [];
+        $params = [':id' => $order_id];
+        
+        $updatable_fields = [
+            'status', 'payment_status', 'tracking_number', 'notes',
+            'customer_name', 'customer_email', 'customer_phone', 
+            'customer_address', 'customer_cedula'
+        ];
+        
+        foreach ($updatable_fields as $field) {
+            if (isset($input[$field])) {
+                $updates[] = "$field = :$field";
+                $params[":$field"] = trim($input[$field]);
+            }
+        }
+        
+        if (count($updates) === 0) {
+            throw new Exception('No hay campos para actualizar');
+        }
+        
+        $updates[] = "updated_at = NOW()";
+        
+        $sql = "UPDATE orders SET " . implode(', ', $updates) . " WHERE id = :id";
+        
         $stmt = $db->prepare($sql);
-        $stmt->execute([':id' => $id]);
+        $stmt->execute($params);
         
         echo json_encode([
             'success' => true,
-            'message' => 'Orden eliminada correctamente'
-        ]);
-        exit();
+            'message' => 'Orden actualizada exitosamente'
+        ], JSON_UNESCAPED_UNICODE);
+        
     }
     
-    // ========================================
-    // ESTADÍSTICAS DE ÓRDENES
-    // ========================================
-    if ($method === 'GET' && $action === 'stats') {
-        $startDate = $_GET['start_date'] ?? date('Y-m-01');
-        $endDate = $_GET['end_date'] ?? date('Y-m-t');
-        
-        $sql = "SELECT 
-                    COUNT(*) as total_orders,
-                    SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
-                    SUM(CASE WHEN status = 'pending_payment' THEN 1 ELSE 0 END) as pending,
-                    SUM(CASE WHEN status = 'processing' THEN 1 ELSE 0 END) as processing,
-                    SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled,
-                    SUM(total) as total_revenue,
-                    AVG(total) as avg_order_value
-                FROM orders
-                WHERE DATE(created_at) BETWEEN :start_date AND :end_date";
-        
-        $stmt = $db->prepare($sql);
-        $stmt->execute([
-            ':start_date' => $startDate,
-            ':end_date' => $endDate
-        ]);
-        
-        $stats = $stmt->fetch();
-        
-        echo json_encode([
-            'success' => true,
-            'stats' => [
-                'total_orders' => (int)$stats['total_orders'],
-                'completed' => (int)$stats['completed'],
-                'pending' => (int)$stats['pending'],
-                'processing' => (int)$stats['processing'],
-                'cancelled' => (int)$stats['cancelled'],
-                'total_revenue' => (float)$stats['total_revenue'],
-                'avg_order_value' => (float)$stats['avg_order_value']
-            ],
-            'period' => [
-                'start' => $startDate,
-                'end' => $endDate
-            ]
-        ]);
-        exit();
+    else {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'message' => 'Método no permitido']);
     }
-    
-    // Acción no válida
-    http_response_code(400);
-    echo json_encode([
-        'success' => false,
-        'message' => 'Acción no válida'
-    ]);
     
 } catch (Exception $e) {
-    error_log("Error orders.php: " . $e->getMessage());
-    
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'message' => 'Error en el servidor',
-        'error' => $e->getMessage()
-    ]);
+        'message' => 'Error: ' . $e->getMessage()
+    ], JSON_UNESCAPED_UNICODE);
 }
-?>

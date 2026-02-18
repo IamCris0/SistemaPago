@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost:3306
--- Tiempo de generación: 10-02-2026 a las 19:09:20
+-- Tiempo de generación: 18-02-2026 a las 13:50:46
 -- Versión del servidor: 10.6.20-MariaDB-cll-lve
 -- Versión de PHP: 8.1.34
 
@@ -170,7 +170,32 @@ INSERT INTO `audit_log` (`id`, `user_id`, `action`, `entity_type`, `entity_id`, 
 (76, NULL, 'UPDATE', 'PRODUCT', 1, NULL, NULL, 'Producto modificado: POLO LINEA COLOR BLANCO PURO CLARO', NULL, '2026-02-10 22:36:00'),
 (77, NULL, 'UPDATE', 'PRODUCT', 1, NULL, NULL, 'Producto modificado: POLO LINEA COLOR BLANCO PURO CLARO', NULL, '2026-02-10 22:40:01'),
 (78, NULL, 'UPDATE', 'PRODUCT', 1, NULL, NULL, 'Producto modificado: POLO LINEA COLOR BLANCO PURO CLARO', NULL, '2026-02-11 00:06:40'),
-(79, NULL, 'UPDATE', 'PRODUCT', 1, NULL, NULL, 'Producto modificado: POLO LINEA COLOR BLANCO PURO CLARO', NULL, '2026-02-11 00:07:09');
+(79, NULL, 'UPDATE', 'PRODUCT', 1, NULL, NULL, 'Producto modificado: POLO LINEA COLOR BLANCO PURO CLARO', NULL, '2026-02-11 00:07:09'),
+(80, NULL, 'UPDATE', 'PRODUCT', 1, NULL, NULL, 'Producto modificado: POLO LINEA COLOR BLANCO PURO CLARO', NULL, '2026-02-11 00:12:40'),
+(81, NULL, 'UPDATE', 'PRODUCT', 1, NULL, NULL, 'Producto modificado: POLO LINEA COLOR BLANCO PURO CLARO', NULL, '2026-02-11 00:24:15'),
+(82, NULL, 'UPDATE', 'PRODUCT', 1, NULL, NULL, 'Producto modificado: POLO LINEA COLOR BLANCO PURO CLARO', NULL, '2026-02-11 00:25:15'),
+(83, NULL, 'UPDATE', 'PRODUCT', 1, NULL, NULL, 'Producto modificado: POLO LINEA COLOR BLANCO PURO CLARO', NULL, '2026-02-11 00:44:22'),
+(84, NULL, 'UPDATE', 'PRODUCT', 1, NULL, NULL, 'Producto modificado: POLO LINEA COLOR BLANCO PURO CLARO', NULL, '2026-02-11 00:47:16'),
+(85, NULL, 'UPDATE', 'PRODUCT', 1, NULL, NULL, 'Producto modificado: POLO LINEA COLOR BLANCO PURO CLARO', NULL, '2026-02-11 00:49:40'),
+(86, NULL, 'UPDATE', 'PRODUCT', 1, NULL, NULL, 'Producto modificado: POLO LINEA COLOR BLANCO PURO CLARO', NULL, '2026-02-14 13:36:43'),
+(87, NULL, 'UPDATE', 'PRODUCT', 1, NULL, NULL, 'Producto modificado: POLO LINEA COLOR BLANCO PURO CLARO', NULL, '2026-02-14 13:37:15'),
+(88, NULL, 'UPDATE', 'PRODUCT', 1, NULL, NULL, 'Producto modificado: POLO LINEA COLOR BLANCO PURO CLARO', NULL, '2026-02-14 13:37:31'),
+(89, NULL, 'UPDATE', 'PRODUCT', 1, NULL, NULL, 'Producto modificado: POLO LINEA COLOR BLANCO PURO CLARO', NULL, '2026-02-14 13:37:48'),
+(90, NULL, 'UPDATE', 'PRODUCT', 1, NULL, NULL, 'Producto modificado: POLO LINEA COLOR BLANCO PURO CLARO', NULL, '2026-02-14 13:51:33'),
+(91, NULL, 'UPDATE', 'PRODUCT', 2, NULL, NULL, 'Producto modificado: POLO LINEA COLOR AZUL PUREZA CLARO', NULL, '2026-02-14 13:51:33'),
+(92, NULL, 'UPDATE', 'PRODUCT', 3, NULL, NULL, 'Producto modificado: POLO LINEA COLOR MORADO PETALO CLARO', NULL, '2026-02-14 13:51:33'),
+(93, NULL, 'UPDATE', 'PRODUCT', 2, NULL, NULL, 'Producto modificado: POLO LINEA COLOR AZUL PUREZA CLARO', NULL, '2026-02-14 20:25:07'),
+(94, NULL, 'UPDATE', 'PRODUCT', 3, NULL, NULL, 'Producto modificado: POLO LINEA COLOR MORADO PETALO CLARO', NULL, '2026-02-14 20:25:07'),
+(95, NULL, 'UPDATE', 'PRODUCT', 1, NULL, NULL, 'Producto modificado: POLO LINEA COLOR BLANCO PURO CLARO', NULL, '2026-02-15 00:32:06'),
+(96, NULL, 'UPDATE', 'PRODUCT', 2, NULL, NULL, 'Producto modificado: POLO LINEA COLOR AZUL PUREZA CLARO', NULL, '2026-02-15 00:32:06'),
+(97, NULL, 'UPDATE', 'PRODUCT', 3, NULL, NULL, 'Producto modificado: POLO LINEA COLOR MORADO PETALO CLARO', NULL, '2026-02-15 00:32:06'),
+(98, NULL, 'UPDATE', 'PRODUCT', 6, NULL, NULL, 'Producto modificado: POLO MC SLIM NERU LINEA NEGRO SOMBRÍO ULTRAOSCURO', NULL, '2026-02-15 00:32:07'),
+(99, NULL, 'UPDATE', 'PRODUCT', 1, NULL, NULL, 'Producto modificado: POLO LINEA COLOR BLANCO PURO CLARO', NULL, '2026-02-15 00:46:15'),
+(100, NULL, 'UPDATE', 'PRODUCT', 1, NULL, NULL, 'Producto modificado: POLO LINEA COLOR BLANCO PURO CLARO', NULL, '2026-02-15 00:47:51'),
+(101, NULL, 'UPDATE', 'PRODUCT', 2, NULL, NULL, 'Producto modificado: POLO LINEA COLOR AZUL PUREZA CLARO', NULL, '2026-02-15 00:47:51'),
+(102, NULL, 'UPDATE', 'PRODUCT', 3, NULL, NULL, 'Producto modificado: POLO LINEA COLOR MORADO PETALO CLARO', NULL, '2026-02-15 00:47:51'),
+(103, NULL, 'UPDATE', 'PRODUCT', 5, NULL, NULL, 'Producto modificado: POLO LINEA COLOR VERDE AMBIENTE MEDIO', NULL, '2026-02-15 00:47:51'),
+(104, NULL, 'UPDATE', 'PRODUCT', 1, NULL, NULL, 'Producto modificado: POLO LINEA COLOR BLANCO PURO CLARO', NULL, '2026-02-15 00:49:15');
 
 -- --------------------------------------------------------
 
@@ -244,7 +269,16 @@ CREATE TABLE `orders` (
 --
 
 INSERT INTO `orders` (`id`, `customer_id`, `assigned_employee_id`, `order_number`, `email`, `first_name`, `last_name`, `address`, `apartment`, `city`, `postal_code`, `phone`, `shipping_method`, `payment_method`, `subtotal`, `shipping_cost`, `total`, `status`, `created_at`, `updated_at`) VALUES
-(52, NULL, NULL, 'MW20260211-0001', 'gcristopher417@gmail.com', 'Cris', 'Gonza', 'Bellavista', '', 'Santa Rosa', '071116', '0990446914', 'standard', 'transfer', 0.01, 0.00, 0.01, 'pending_payment', '2026-02-11 00:07:09', '2026-02-11 00:07:09');
+(54, NULL, NULL, 'MW20260211-0001', 'gcristopher417@gmail.com', 'Cris', 'Gonza', 'Bellavista', '', 'Santa Rosa', '071116', '0990446914', 'standard', 'paypal', 0.01, 0.00, 0.01, 'completed', '2026-02-11 00:24:15', '2026-02-11 00:24:15'),
+(55, NULL, NULL, 'MW20260211-0002', 'gcristopher417@gmail.com', 'Cris', 'Gonza', 'Bellavista', '', 'Santa Rosa', '071116', '0990446914', 'standard', 'paypal', 1.21, 0.00, 1.21, 'completed', '2026-02-11 00:47:16', '2026-02-11 00:47:16'),
+(56, NULL, NULL, 'MW20260211-0003', 'gcristopher417@gmail.com', 'Cris', 'Gonza', 'Bellavista', '', 'Santa Rosa', '071116', '0990446914', 'standard', 'transfer', 1.21, 0.00, 1.21, 'pending_payment', '2026-02-11 00:49:40', '2026-02-11 00:49:40'),
+(57, NULL, NULL, 'MW20260214-0001', 'gcristopher417@gmail.com', 'Cris', 'Gonza', 'Bellavista', '', 'Santa Rosa', '071116', '0990446914', 'standard', 'transfer', 34.99, 0.00, 34.99, 'pending_payment', '2026-02-14 13:37:15', '2026-02-14 13:37:15'),
+(58, NULL, NULL, 'MW20260214-0002', 'gcristopher417@gmail.com', 'Cris', 'Gonza', 'Bellavista', '', 'Santa Rosa', '071116', '0990446914', 'standard', 'transfer', 34.99, 0.00, 34.99, 'pending_payment', '2026-02-14 13:37:48', '2026-02-14 13:37:48'),
+(59, NULL, NULL, 'MW20260214-0003', 'gcristopher417@gmail.com', 'Cris', 'Gonza', 'Bellavista', '', 'Santa Rosa', '071116', '0990446914', 'standard', 'transfer', 83.98, 0.00, 83.98, 'pending_payment', '2026-02-14 13:51:33', '2026-02-14 13:51:33'),
+(60, NULL, NULL, 'MW20260214-0004', 'gcristopher417@gmail.com', 'Cristopher Agustin', 'Gonzalez Castillo', '6947 NW 82nd Avenue. Miami, FL 33166', 'Geomil Group', 'Miami', '33166', '0962709953', 'standard', 'transfer', 83.98, 0.00, 83.98, 'pending_payment', '2026-02-14 20:25:07', '2026-02-14 20:25:07'),
+(61, NULL, NULL, 'MW20260215-0001', 'gcristopher417@gmail.com', 'Cris', 'Gonza', 'Bellavista', '', 'Santa Rosa', '071116', '0990446914', 'standard', 'transfer', 27.99, 5.00, 32.99, 'pending_payment', '2026-02-15 00:46:15', '2026-02-15 00:46:15'),
+(62, NULL, NULL, 'MW20260215-0002', 'gcristopher417@gmail.com', 'Cris', 'Gonza', 'Bellavista', '', 'Santa Rosa', '071116', '0990446914', 'standard', 'cash', 111.97, 0.00, 111.97, 'pending_payment', '2026-02-15 00:47:51', '2026-02-15 00:47:51'),
+(63, NULL, NULL, 'MW20260215-0003', 'gcristopher417@gmail.com', 'Cris', 'Gonza', 'Bellavista', '', 'Santa Rosa', '071116', '0990446914', 'standard', 'transfer', 27.99, 5.00, 32.99, 'pending_payment', '2026-02-15 00:49:15', '2026-02-15 00:49:15');
 
 -- --------------------------------------------------------
 
@@ -269,7 +303,22 @@ CREATE TABLE `order_items` (
 --
 
 INSERT INTO `order_items` (`id`, `order_id`, `product_id`, `product_name`, `product_sku`, `price`, `quantity`, `subtotal`, `created_at`) VALUES
-(48, 52, 1, 'POLO LINEA COLOR BLANCO PURO CLARO', 'ROP-AME-001', 0.01, 1, 0.01, '2026-02-11 00:07:09');
+(50, 54, 1, 'POLO LINEA COLOR BLANCO PURO CLARO', 'ROP-AME-001', 0.01, 1, 0.01, '2026-02-11 00:24:15'),
+(51, 55, 1, 'POLO LINEA COLOR BLANCO PURO CLARO', 'ROP-AME-001', 1.21, 1, 1.21, '2026-02-11 00:47:16'),
+(52, 56, 1, 'POLO LINEA COLOR BLANCO PURO CLARO', 'ROP-AME-001', 1.21, 1, 1.21, '2026-02-11 00:49:40'),
+(53, 57, 1, 'POLO LINEA COLOR BLANCO PURO CLARO', 'ROP-AME-001', 34.99, 1, 34.99, '2026-02-14 13:37:15'),
+(54, 58, 1, 'POLO LINEA COLOR BLANCO PURO CLARO', 'ROP-AME-001', 34.99, 1, 34.99, '2026-02-14 13:37:48'),
+(55, 59, 1, 'POLO LINEA COLOR BLANCO PURO CLARO', 'ROP-AME-001', 27.99, 1, 27.99, '2026-02-14 13:51:33'),
+(56, 59, 2, 'POLO LINEA COLOR AZUL PUREZA CLARO', 'ROP-AME-002', 27.99, 1, 27.99, '2026-02-14 13:51:33'),
+(57, 59, 3, 'POLO LINEA COLOR MORADO PETALO CLARO', 'ROP-AME-003', 27.99, 1, 27.99, '2026-02-14 13:51:33'),
+(58, 60, 2, 'POLO LINEA COLOR AZUL PUREZA CLARO', 'ROP-AME-002', 27.99, 2, 55.98, '2026-02-14 20:25:07'),
+(59, 60, 3, 'POLO LINEA COLOR MORADO PETALO CLARO', 'ROP-AME-003', 27.99, 1, 27.99, '2026-02-14 20:25:07'),
+(60, 61, 1, 'POLO LINEA COLOR BLANCO PURO CLARO', 'ROP-AME-001', 27.99, 1, 27.99, '2026-02-15 00:46:15'),
+(61, 62, 1, 'POLO LINEA COLOR BLANCO PURO CLARO', 'ROP-AME-001', 27.99, 1, 27.99, '2026-02-15 00:47:51'),
+(62, 62, 2, 'POLO LINEA COLOR AZUL PUREZA CLARO', 'ROP-AME-002', 27.99, 1, 27.99, '2026-02-15 00:47:51'),
+(63, 62, 3, 'POLO LINEA COLOR MORADO PETALO CLARO', 'ROP-AME-003', 27.99, 1, 27.99, '2026-02-15 00:47:51'),
+(64, 62, 5, 'POLO LINEA COLOR VERDE AMBIENTE MEDIO', 'ROP-AME-004', 27.99, 1, 27.99, '2026-02-15 00:47:51'),
+(65, 63, 1, 'POLO LINEA COLOR BLANCO PURO CLARO', 'ROP-AME-001', 27.99, 1, 27.99, '2026-02-15 00:49:15');
 
 -- --------------------------------------------------------
 
@@ -298,11 +347,11 @@ CREATE TABLE `products` (
 --
 
 INSERT INTO `products` (`id`, `sku`, `name`, `category`, `subcategory`, `price`, `description`, `image`, `images`, `stock`, `active`, `created_at`, `updated_at`) VALUES
-(1, 'ROP-AME-001', 'POLO LINEA COLOR BLANCO PURO CLARO', 'ropa', 'americanino', 0.01, 'Camiseta polo para mujer, cuello camisero, manga corta, botones en frente, estampado. Confeccionada con mezcla de algodón que te brindan suavidad. Perfecta para crear un outfit clásico, casual y juvenil con tu mejor estilo cualquier día de la semana. Su diseño te brinda la comodidad y frescura que necesitas para lucir siempre increíble. Combínala con jean tono medio y tenis. PRENDA: 96% ALGODON 4% ELASTOMERO', 'assets/img/ropa/AMERICANINO/ROP-AME-001-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-001-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-001-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-001-3.jpeg\"]', 2, 1, '2026-01-29 16:50:51', '2026-02-11 00:07:09'),
-(2, 'ROP-AME-002', 'POLO LINEA COLOR AZUL PUREZA CLARO', 'ropa', 'americanino', 34.99, 'Camiseta polo para mujer, cuello camisero, manga corta, botones en frente, estampado. Confeccionada con mezcla de algodón que te brindan suavidad. Perfecta para crear un outfit clásico, casual y juvenil con tu mejor estilo cualquier día de la semana. Su diseño te brinda la comodidad y frescura que necesitas para lucir siempre increíble. Combínala con jean tono medio y tenis. PRENDA: 96% ALGODON 4% ELASTOMERO', 'assets/img/ropa/AMERICANINO/ROP-AME-002-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-002-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-002-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-002-3.jpeg\"]', 3, 1, '2026-01-29 16:50:51', '2026-01-31 15:23:55'),
-(3, 'ROP-AME-003', 'POLO LINEA COLOR MORADO PETALO CLARO', 'ropa', 'americanino', 34.99, 'Camiseta polo para mujer, cuello camisero, manga corta, botones en frente, estampado. Confeccionada con mezcla de algodón que te brindan suavidad. Perfecta para crear un outfit clásico, casual y juvenil con tu mejor estilo cualquier día de la semana. Su diseño te brinda la comodidad y frescura que necesitas para lucir siempre increíble. Combínala con jean tono medio y tenis. PRENDA: 96% ALGODON 4% ELASTOMERO', 'assets/img/ropa/AMERICANINO/ROP-AME-003-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-003-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-003-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-003-3.jpeg\"]', 4, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
-(5, 'ROP-AME-004', 'POLO LINEA COLOR VERDE AMBIENTE MEDIO', 'ropa', 'americanino', 34.99, 'Camiseta polo para mujer, cuello camisero, manga corta, botones en frente, estampado. Confeccionada con mezcla de algodón que te brindan suavidad. Perfecta para crear un outfit clásico, casual y juvenil con tu mejor estilo cualquier día de la semana. Su diseño te brinda la comodidad y frescura que necesitas para lucir siempre increíble. Combínala con jean tono medio y tenis. PRENDA: 96% ALGODON 4% ELASTOMERO', 'assets/img/ropa/AMERICANINO/ROP-AME-004-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-004-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-004-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-004-3.jpeg\"]', 4, 1, '2026-01-29 16:50:51', '2026-01-29 16:50:51'),
-(6, 'ROP-AME-005', 'POLO MC SLIM NERU LINEA NEGRO SOMBRÍO ULTRAOSCURO', 'ropa', 'americanino', 34.99, 'Camiseta polo para hombre de corte slim con cuello tipo Neru, diseñada para un estilo moderno y elegante. Confeccionada en tejido suave y resistente que aporta comodidad y libertad de movimiento. Su color negro sombrío ultraoscuro ofrece versatilidad para combinar con jeans, pantalones casuales o incluso atuendos más formales. Ideal para quienes buscan una prenda fresca, ligera y con un toque sofisticado. Detalles minimalistas en costuras y acabado premium que realzan la silueta masculina. PRENDA:96% algodón, 4% elastómero', 'assets/img/ropa/AMERICANINO/ROP-AME-005-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-005-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-005-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-005-3.jpeg\"]', 1, 1, '2026-01-29 16:50:51', '2026-01-31 15:22:49'),
+(1, 'ROP-AME-001', 'POLO LINEA COLOR BLANCO PURO CLARO', 'ropa', 'americanino', 34.99, 'Camiseta polo para mujer, cuello camisero, manga corta, botones en frente, estampado. Confeccionada con mezcla de algodón que te brindan suavidad. Perfecta para crear un outfit clásico, casual y juvenil con tu mejor estilo cualquier día de la semana. Su diseño te brinda la comodidad y frescura que necesitas para lucir siempre increíble. Combínala con jean tono medio y tenis. PRENDA: 96% ALGODON 4% ELASTOMERO', 'assets/img/ropa/AMERICANINO/ROP-AME-001-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-001-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-001-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-001-3.jpeg\"]', 1, 1, '2026-01-29 16:50:51', '2026-02-15 00:49:15'),
+(2, 'ROP-AME-002', 'POLO LINEA COLOR AZUL PUREZA CLARO', 'ropa', 'americanino', 34.99, 'Camiseta polo para mujer, cuello camisero, manga corta, botones en frente, estampado. Confeccionada con mezcla de algodón que te brindan suavidad. Perfecta para crear un outfit clásico, casual y juvenil con tu mejor estilo cualquier día de la semana. Su diseño te brinda la comodidad y frescura que necesitas para lucir siempre increíble. Combínala con jean tono medio y tenis. PRENDA: 96% ALGODON 4% ELASTOMERO', 'assets/img/ropa/AMERICANINO/ROP-AME-002-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-002-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-002-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-002-3.jpeg\"]', 3, 1, '2026-01-29 16:50:51', '2026-02-15 00:47:51'),
+(3, 'ROP-AME-003', 'POLO LINEA COLOR MORADO PETALO CLARO', 'ropa', 'americanino', 34.99, 'Camiseta polo para mujer, cuello camisero, manga corta, botones en frente, estampado. Confeccionada con mezcla de algodón que te brindan suavidad. Perfecta para crear un outfit clásico, casual y juvenil con tu mejor estilo cualquier día de la semana. Su diseño te brinda la comodidad y frescura que necesitas para lucir siempre increíble. Combínala con jean tono medio y tenis. PRENDA: 96% ALGODON 4% ELASTOMERO', 'assets/img/ropa/AMERICANINO/ROP-AME-003-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-003-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-003-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-003-3.jpeg\"]', 3, 1, '2026-01-29 16:50:51', '2026-02-15 00:47:51'),
+(5, 'ROP-AME-004', 'POLO LINEA COLOR VERDE AMBIENTE MEDIO', 'ropa', 'americanino', 34.99, 'Camiseta polo para mujer, cuello camisero, manga corta, botones en frente, estampado. Confeccionada con mezcla de algodón que te brindan suavidad. Perfecta para crear un outfit clásico, casual y juvenil con tu mejor estilo cualquier día de la semana. Su diseño te brinda la comodidad y frescura que necesitas para lucir siempre increíble. Combínala con jean tono medio y tenis. PRENDA: 96% ALGODON 4% ELASTOMERO', 'assets/img/ropa/AMERICANINO/ROP-AME-004-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-004-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-004-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-004-3.jpeg\"]', 3, 1, '2026-01-29 16:50:51', '2026-02-15 00:47:51'),
+(6, 'ROP-AME-005', 'POLO MC SLIM NERU LINEA NEGRO SOMBRÍO ULTRAOSCURO', 'ropa', 'americanino', 34.99, 'Camiseta polo para hombre de corte slim con cuello tipo Neru, diseñada para un estilo moderno y elegante. Confeccionada en tejido suave y resistente que aporta comodidad y libertad de movimiento. Su color negro sombrío ultraoscuro ofrece versatilidad para combinar con jeans, pantalones casuales o incluso atuendos más formales. Ideal para quienes buscan una prenda fresca, ligera y con un toque sofisticado. Detalles minimalistas en costuras y acabado premium que realzan la silueta masculina. PRENDA:96% algodón, 4% elastómero', 'assets/img/ropa/AMERICANINO/ROP-AME-005-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-005-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-005-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-005-3.jpeg\"]', 4, 1, '2026-01-29 16:50:51', '2026-02-15 00:32:07'),
 (7, 'ROP-AME-008', 'JEGGING TONO MEDIO TIRO MEDIO AZUL', 'ropa', 'americanino', 78.99, 'Jegging tono medio tiro medio azul Americanino para mujer, confeccionado en mezclilla stretch que brinda comodidad y ajuste perfecto. Ideal para un look casual y moderno.', 'assets/img/ropa/AMERICANINO/ROP-AME-008-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-008-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-008-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-008-3.jpeg\"]', 2, 1, '2026-01-29 16:50:51', '2026-01-29 19:44:41'),
 (8, 'ROP-AME-009', 'SKINNY TONO OSCURO TIRO BAJO AZUL', 'ropa', 'americanino', 78.99, 'Jean Skinny Tono Oscuro Ajuste Perfecto Hombre Este jean skinny en tono oscuro representa la perfecta fusión entre tradición denim y modernidad urbana. Diseñado para quien valora la libertad de expresión y la calidad auténtica que solo Americanino puede ofrecer. Super versátil para expresar tu libertad de autoexpresión en cada aventura urbana.', 'assets/img/ropa/AMERICANINO/ROP-AME-009-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-009-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-009-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-009-3.jpeg\"]', 1, 1, '2026-01-29 16:50:51', '2026-01-31 15:22:49'),
 (9, 'ROP-AME-010', 'SKINNY TONO MEDIO TIRO BAJO', 'ropa', 'americanino', 78.99, 'Jean Skinny Tiro Bajo Ajuste Perfecto Hombre Este jean skinny conecta la herencia denim de Americanino con la libertad total de movimiento. Diseñado para quien valora la calidad técnica y busca expresar su estilo auténtico. Super versátil para tu evolución continua de estilo, te va a encantar cómo se adapta a cada momento de tu día.', 'assets/img/ropa/AMERICANINO/ROP-AME-010-1.jpeg', '[\"assets/img/ropa/AMERICANINO/ROP-AME-010-1.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-010-2.jpeg\",\"assets/img/ropa/AMERICANINO/ROP-AME-010-3.jpeg\"]', 2, 1, '2026-01-29 16:50:51', '2026-01-29 19:44:41'),
@@ -513,7 +562,7 @@ ALTER TABLE `attendance`
 -- AUTO_INCREMENT de la tabla `audit_log`
 --
 ALTER TABLE `audit_log`
-  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=80;
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=105;
 
 --
 -- AUTO_INCREMENT de la tabla `employees`
@@ -525,13 +574,13 @@ ALTER TABLE `employees`
 -- AUTO_INCREMENT de la tabla `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
 
 --
 -- AUTO_INCREMENT de la tabla `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
 
 --
 -- AUTO_INCREMENT de la tabla `products`

@@ -1,203 +1,160 @@
 <?php
-/**
- * DIAGNÓSTICO COMPLETO - products.php
- * Verifica la estructura de la tabla y sugiere correcciones
- */
+// ===================================================================
+// DIAGNÓSTICO COMPLETO - Detectar problema 415
+// ===================================================================
 
 header('Content-Type: text/html; charset=UTF-8');
 
-echo "<h1>🔬 Diagnóstico Completo - Tabla Products</h1>";
-echo "<style>
-body { font-family: monospace; padding: 20px; background: #f5f5f5; }
-.success { color: green; font-weight: bold; }
-.error { color: red; font-weight: bold; }
-.warning { color: orange; font-weight: bold; }
-pre { background: white; padding: 15px; border-radius: 5px; }
-table { width: 100%; border-collapse: collapse; background: white; margin: 20px 0; }
-th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-th { background-color: #8C004B; color: white; }
-tr:nth-child(even) { background-color: #f9f9f9; }
-</style>";
+echo "<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Diagnóstico API</title>";
+echo "<style>body{font-family:monospace;padding:20px;background:#f5f5f5;}";
+echo ".ok{color:green;font-weight:bold;}.error{color:red;font-weight:bold;}";
+echo ".warning{color:orange;font-weight:bold;}pre{background:white;padding:15px;border-radius:5px;}</style>";
+echo "</head><body><h1>🔍 Diagnóstico API Mawewe</h1>";
 
-require_once __DIR__ . '/config/database.php';
+// Test 1: PHP está funcionando
+echo "<h2>✅ Test 1: PHP Funciona</h2>";
+echo "<p class='ok'>✓ PHP versión: " . phpversion() . "</p>";
 
+// Test 2: Verificar módulos Apache
+echo "<h2>Test 2: Módulos Apache</h2>";
+if (function_exists('apache_get_modules')) {
+    $modules = apache_get_modules();
+    echo in_array('mod_headers', $modules) 
+        ? "<p class='ok'>✓ mod_headers habilitado</p>" 
+        : "<p class='error'>✗ mod_headers NO habilitado</p>";
+    echo in_array('mod_rewrite', $modules) 
+        ? "<p class='ok'>✓ mod_rewrite habilitado</p>" 
+        : "<p class='warning'>⚠ mod_rewrite NO habilitado</p>";
+} else {
+    echo "<p class='warning'>⚠ No se puede verificar (apache_get_modules no disponible)</p>";
+}
+
+// Test 3: Headers CORS
+echo "<h2>Test 3: Headers CORS</h2>";
+$headers = headers_list();
+echo "<pre>";
+foreach ($headers as $header) {
+    if (stripos($header, 'Access-Control') !== false) {
+        echo "<span class='ok'>✓ $header</span>\n";
+    }
+}
+echo "</pre>";
+
+// Test 4: Conexión a Base de Datos
+echo "<h2>Test 4: Conexión Base de Datos</h2>";
 try {
+    require_once __DIR__ . '/config/database.php';
     $database = new Database();
     $db = $database->getConnection();
     
-    if (!$db) {
-        throw new Exception('Error de conexión a BD');
-    }
-    
-    echo "<p class='success'>✅ Conexión exitosa a la base de datos</p>";
-    
-    // ========================================
-    // 1. VERIFICAR ESTRUCTURA ACTUAL
-    // ========================================
-    echo "<h2>📋 Estructura Actual de la Tabla</h2>";
-    
-    $stmt = $db->query("DESCRIBE products");
-    $currentColumns = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    echo "<table>";
-    echo "<tr><th>Columna</th><th>Tipo</th><th>Null</th><th>Key</th><th>Default</th></tr>";
-    
-    $existingColumns = [];
-    foreach ($currentColumns as $col) {
-        echo "<tr>";
-        echo "<td><strong>{$col['Field']}</strong></td>";
-        echo "<td>{$col['Type']}</td>";
-        echo "<td>{$col['Null']}</td>";
-        echo "<td>{$col['Key']}</td>";
-        echo "<td>" . ($col['Default'] ?? 'NULL') . "</td>";
-        echo "</tr>";
+    if ($db) {
+        echo "<p class='ok'>✓ Conexión exitosa</p>";
         
-        $existingColumns[] = $col['Field'];
-    }
-    
-    echo "</table>";
-    
-    // ========================================
-    // 2. VERIFICAR COLUMNAS REQUERIDAS
-    // ========================================
-    echo "<h2>🔍 Verificación de Columnas</h2>";
-    
-    $requiredColumns = [
-        'id' => 'INT(11) AUTO_INCREMENT PRIMARY KEY',
-        'name' => 'VARCHAR(255) NOT NULL',
-        'price' => 'DECIMAL(10,2) NOT NULL DEFAULT 0.00',
-        'active' => 'TINYINT(1) DEFAULT 1'
-    ];
-    
-    $recommendedColumns = [
-        'sku' => 'VARCHAR(100)',
-        'category' => 'VARCHAR(100)',
-        'subcategory' => 'VARCHAR(100)',
-        'description' => 'TEXT',
-        'image' => 'TEXT',
-        'images' => 'TEXT',
-        'stock' => 'INT(11) DEFAULT 0',
-        'featured' => 'TINYINT(1) DEFAULT 0',
-        'rating' => 'DECIMAL(3,2) DEFAULT 0.00',
-        'review_count' => 'INT(11) DEFAULT 0',
-        'created_at' => 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP',
-        'updated_at' => 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'
-    ];
-    
-    echo "<h3>Columnas Requeridas:</h3>";
-    echo "<table>";
-    echo "<tr><th>Columna</th><th>Estado</th><th>Tipo Esperado</th></tr>";
-    
-    $missingRequired = [];
-    foreach ($requiredColumns as $col => $type) {
-        $exists = in_array($col, $existingColumns);
-        echo "<tr>";
-        echo "<td><strong>$col</strong></td>";
-        echo "<td>" . ($exists ? "<span class='success'>✅ Existe</span>" : "<span class='error'>❌ Falta</span>") . "</td>";
-        echo "<td>$type</td>";
-        echo "</tr>";
+        // Test columnas
+        $stmt = $db->query("DESCRIBE products");
+        $columns = $stmt->fetchAll(PDO::FETCH_COLUMN);
         
-        if (!$exists) {
-            $missingRequired[] = $col;
-        }
-    }
-    echo "</table>";
-    
-    echo "<h3>Columnas Recomendadas:</h3>";
-    echo "<table>";
-    echo "<tr><th>Columna</th><th>Estado</th><th>Tipo Esperado</th></tr>";
-    
-    $missingRecommended = [];
-    foreach ($recommendedColumns as $col => $type) {
-        $exists = in_array($col, $existingColumns);
-        echo "<tr>";
-        echo "<td><strong>$col</strong></td>";
-        echo "<td>" . ($exists ? "<span class='success'>✅ Existe</span>" : "<span class='warning'>⚠️ Falta</span>") . "</td>";
-        echo "<td>$type</td>";
-        echo "</tr>";
+        echo "<p class='ok'>✓ Columnas disponibles: " . implode(', ', $columns) . "</p>";
         
-        if (!$exists) {
-            $missingRecommended[] = $col;
-        }
-    }
-    echo "</table>";
-    
-    // ========================================
-    // 3. GENERAR SQL PARA ARREGLAR
-    // ========================================
-    
-    if (!empty($missingRequired) || !empty($missingRecommended)) {
-        echo "<h2>🔧 Scripts SQL para Arreglar</h2>";
+        // Test count
+        $stmt = $db->query("SELECT COUNT(*) FROM products WHERE active = 1");
+        $count = $stmt->fetchColumn();
+        echo "<p class='ok'>✓ Productos activos: $count</p>";
         
-        echo "<h3>Opción 1: Agregar solo las columnas faltantes</h3>";
-        echo "<pre>";
-        
-        foreach ($missingRequired as $col) {
-            echo "ALTER TABLE products ADD COLUMN $col {$requiredColumns[$col]};\n";
-        }
-        
-        foreach ($missingRecommended as $col) {
-            echo "ALTER TABLE products ADD COLUMN $col {$recommendedColumns[$col]};\n";
-        }
-        
-        echo "</pre>";
-        
-        echo "<h3>Opción 2: Recrear tabla completa (⚠️ BORRA TODOS LOS DATOS)</h3>";
-        echo "<pre>";
-        echo "DROP TABLE IF EXISTS products;
-
-CREATE TABLE products (
-    id INT(11) AUTO_INCREMENT PRIMARY KEY,
-    sku VARCHAR(100) DEFAULT NULL,
-    name VARCHAR(255) NOT NULL,
-    category VARCHAR(100) DEFAULT NULL,
-    subcategory VARCHAR(100) DEFAULT NULL,
-    price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    description TEXT,
-    image TEXT,
-    images TEXT,
-    stock INT(11) DEFAULT 0,
-    featured TINYINT(1) DEFAULT 0,
-    rating DECIMAL(3,2) DEFAULT 0.00,
-    review_count INT(11) DEFAULT 0,
-    active TINYINT(1) DEFAULT 1,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    KEY idx_category (category),
-    KEY idx_active (active),
-    KEY idx_featured (featured)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-";
-        echo "</pre>";
     } else {
-        echo "<p class='success'>✅ ¡Todas las columnas están presentes!</p>";
+        echo "<p class='error'>✗ No se pudo conectar</p>";
     }
+} catch (Exception $e) {
+    echo "<p class='error'>✗ Error: " . $e->getMessage() . "</p>";
+}
+
+// Test 5: Simular petición API
+echo "<h2>Test 5: Simular Respuesta API</h2>";
+try {
+    ob_start();
     
-    // ========================================
-    // 4. CONTAR PRODUCTOS
-    // ========================================
-    echo "<h2>📊 Resumen de Datos</h2>";
+    $stmt = $db->prepare("SELECT id, name, price FROM products WHERE active = 1 LIMIT 3");
+    $stmt->execute();
+    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    $total = $db->query("SELECT COUNT(*) FROM products")->fetchColumn();
-    $active = $db->query("SELECT COUNT(*) FROM products WHERE active = 1")->fetchColumn();
+    $response = [
+        'success' => true,
+        'products' => $products,
+        'test' => true
+    ];
     
-    echo "<table>";
-    echo "<tr><th>Total de productos</th><td>$total</td></tr>";
-    echo "<tr><th>Productos activos</th><td>$active</td></tr>";
-    echo "</table>";
+    $json = json_encode($response, JSON_UNESCAPED_UNICODE);
     
-    if ($total > 0) {
-        echo "<h3>Primeros 3 productos:</h3>";
-        $stmt = $db->query("SELECT * FROM products LIMIT 3");
-        $samples = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        echo "<pre>";
-        print_r($samples);
-        echo "</pre>";
-    }
+    ob_end_clean();
+    
+    echo "<p class='ok'>✓ JSON generado correctamente</p>";
+    echo "<pre>" . htmlspecialchars(substr($json, 0, 500)) . "...</pre>";
     
 } catch (Exception $e) {
-    echo "<p class='error'>❌ Error: " . $e->getMessage() . "</p>";
-    echo "<pre>" . $e->getTraceAsString() . "</pre>";
+    ob_end_clean();
+    echo "<p class='error'>✗ Error generando JSON: " . $e->getMessage() . "</p>";
 }
-?>
+
+// Test 6: Verificar archivo products.php
+echo "<h2>Test 6: Archivo products.php</h2>";
+$productsFile = __DIR__ . '/products.php';
+if (file_exists($productsFile)) {
+    echo "<p class='ok'>✓ Archivo existe</p>";
+    
+    $content = file_get_contents($productsFile);
+    
+    // Verificar BOM
+    $bom = substr($content, 0, 3);
+    if ($bom === "\xEF\xBB\xBF") {
+        echo "<p class='error'>✗ PROBLEMA: Archivo tiene BOM (Byte Order Mark)</p>";
+        echo "<p>Solución: Guarda el archivo como UTF-8 sin BOM</p>";
+    } else {
+        echo "<p class='ok'>✓ Sin BOM</p>";
+    }
+    
+    // Verificar <?php al inicio
+    if (substr(ltrim($content), 0, 5) !== '<?php') {
+        echo "<p class='error'>✗ PROBLEMA: El archivo no empieza con &lt;?php</p>";
+    } else {
+        echo "<p class='ok'>✓ Empieza correctamente con &lt;?php</p>";
+    }
+    
+    // Verificar espacios antes de <?php
+    if ($content[0] !== '<') {
+        echo "<p class='error'>✗ PROBLEMA: Hay espacios o caracteres antes de &lt;?php</p>";
+    } else {
+        echo "<p class='ok'>✓ Sin espacios antes de &lt;?php</p>";
+    }
+    
+    echo "<p>Tamaño: " . filesize($productsFile) . " bytes</p>";
+    echo "<p>Permisos: " . substr(sprintf('%o', fileperms($productsFile)), -4) . "</p>";
+} else {
+    echo "<p class='error'>✗ Archivo products.php NO EXISTE</p>";
+}
+
+// Test 7: Verificar .htaccess
+echo "<h2>Test 7: Archivo .htaccess</h2>";
+$htaccess = __DIR__ . '/.htaccess';
+if (file_exists($htaccess)) {
+    echo "<p class='ok'>✓ Archivo .htaccess existe</p>";
+    $content = file_get_contents($htaccess);
+    
+    if (stripos($content, 'Access-Control-Allow-Origin') !== false) {
+        echo "<p class='ok'>✓ Contiene configuración CORS</p>";
+    } else {
+        echo "<p class='error'>✗ NO contiene configuración CORS</p>";
+    }
+    
+    echo "<p>Tamaño: " . filesize($htaccess) . " bytes</p>";
+} else {
+    echo "<p class='error'>✗ Archivo .htaccess NO EXISTE</p>";
+}
+
+// Test 8: Request Method
+echo "<h2>Test 8: HTTP Request Info</h2>";
+echo "<p>REQUEST_METHOD: " . ($_SERVER['REQUEST_METHOD'] ?? 'N/A') . "</p>";
+echo "<p>HTTP_ORIGIN: " . ($_SERVER['HTTP_ORIGIN'] ?? 'N/A') . "</p>";
+echo "<p>HTTP_HOST: " . ($_SERVER['HTTP_HOST'] ?? 'N/A') . "</p>";
+
+echo "<hr><p style='color:#666;'>Diagnóstico completado " . date('Y-m-d H:i:s') . "</p>";
+echo "</body></html>";
