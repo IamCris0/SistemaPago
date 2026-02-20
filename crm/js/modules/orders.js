@@ -1,622 +1,590 @@
 /**
- * MÓDULO DE ÓRDENES - SISTEMA MAWEWE
- * ✅ Visualización completa de órdenes
- * ✅ Filtros por estado, búsqueda y fechas
- * ✅ Actualización de estado y seguimiento
- * ✅ Vista detallada de orden
- * ✅ Estadísticas en tiempo real
+ * MÓDULO DE ÓRDENES - MAWEWE CRM
+ * Sin Bootstrap. Usa CSS del sistema (modules.css / crm-main.css).
+ * Renderiza dentro de #ordersContainer.
  */
 
 const OrdersModule = {
-    
-    API_URL: 'api/orders.php',
-    currentOrders: [],
-    filteredOrders: [],
-    
-    // Estados disponibles
-    statuses: {
-        'pending': { label: 'Pendiente', color: 'warning', icon: 'clock' },
-        'confirmed': { label: 'Confirmado', color: 'info', icon: 'check-circle' },
-        'processing': { label: 'Procesando', color: 'primary', icon: 'cog' },
-        'shipped': { label: 'Enviado', color: 'success', icon: 'truck' },
-        'delivered': { label: 'Entregado', color: 'success', icon: 'check-double' },
-        'cancelled': { label: 'Cancelado', color: 'danger', icon: 'times-circle' }
-    },
-    
-    // Estados de pago
-    paymentStatuses: {
-        'pending': { label: 'Pendiente', color: 'warning' },
-        'paid': { label: 'Pagado', color: 'success' },
-        'refunded': { label: 'Reembolsado', color: 'info' },
-        'failed': { label: 'Fallido', color: 'danger' }
-    },
-    
-    /**
-     * Inicializar módulo
-     */
-    init() {
+
+    orders: [],
+    filters: { status: '', search: '', dateFrom: '', dateTo: '' },
+
+    // ─── Punto de entrada ───────────────────────────────────────────────────
+
+    async init() {
         console.log('🚀 Inicializando módulo de órdenes...');
-        this.attachEventListeners();
-        this.loadOrders();
-    },
-    
-    /**
-     * Adjuntar event listeners
-     */
-    attachEventListeners() {
-        // Filtro de estado
-        const statusFilter = document.getElementById('orderStatusFilter');
-        if (statusFilter) {
-            statusFilter.addEventListener('change', () => this.applyFilters());
-        }
-        
-        // Búsqueda
-        const searchInput = document.getElementById('orderSearch');
-        if (searchInput) {
-            searchInput.addEventListener('input', (e) => {
-                clearTimeout(this.searchTimeout);
-                this.searchTimeout = setTimeout(() => this.applyFilters(), 300);
-            });
-        }
-        
-        // Filtros de fecha
-        const dateFrom = document.getElementById('orderDateFrom');
-        const dateTo = document.getElementById('orderDateTo');
-        if (dateFrom) dateFrom.addEventListener('change', () => this.applyFilters());
-        if (dateTo) dateTo.addEventListener('change', () => this.applyFilters());
-        
-        // Botón refrescar
-        const refreshBtn = document.getElementById('refreshOrders');
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', () => this.loadOrders());
-        }
-    },
-    
-    /**
-     * Cargar órdenes desde la API
-     */
-    async loadOrders() {
-        const container = document.getElementById('ordersTableBody');
-        const statsContainer = document.getElementById('ordersStats');
-        
+
+        const container = document.getElementById('ordersContainer');
         if (!container) {
-            console.error('Container de órdenes no encontrado');
+            console.error('❌ #ordersContainer no encontrado');
             return;
         }
-        
+
+        container.innerHTML = this._loadingHTML('Cargando órdenes...');
+
+        await this._fetchOrders();
+        this._render();
+    },
+
+    // ─── Carga de datos ─────────────────────────────────────────────────────
+
+    async _fetchOrders() {
         try {
-            // Mostrar loading
-            container.innerHTML = `
-                <tr>
-                    <td colspan="8" class="text-center py-4">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Cargando...</span>
-                        </div>
-                        <p class="mt-2 mb-0">Cargando órdenes...</p>
-                    </td>
-                </tr>
-            `;
-            
-            // Obtener filtros actuales
             const params = new URLSearchParams();
-            
-            const statusFilter = document.getElementById('orderStatusFilter');
-            if (statusFilter && statusFilter.value !== 'all') {
-                params.append('status', statusFilter.value);
+            if (this.filters.status)   params.append('status',    this.filters.status);
+            if (this.filters.search)   params.append('search',    this.filters.search);
+            if (this.filters.dateFrom) params.append('date_from', this.filters.dateFrom);
+            if (this.filters.dateTo)   params.append('date_to',   this.filters.dateTo);
+
+            const qs  = params.toString();
+            const url = `${CONFIG.API_URL}/orders.php${qs ? '?' + qs : ''}`;
+
+            const resp = await fetch(url);
+            const data = await resp.json();
+
+            if (data.success) {
+                this.orders = data.data || [];
+                // Actualizar badge del sidebar
+                const badge = document.getElementById('orderCount');
+                if (badge) badge.textContent = this.orders.length;
+            } else {
+                throw new Error(data.message || 'Error al cargar órdenes');
             }
-            
-            const searchInput = document.getElementById('orderSearch');
-            if (searchInput && searchInput.value.trim()) {
-                params.append('search', searchInput.value.trim());
-            }
-            
-            const dateFrom = document.getElementById('orderDateFrom');
-            if (dateFrom && dateFrom.value) {
-                params.append('date_from', dateFrom.value);
-            }
-            
-            const dateTo = document.getElementById('orderDateTo');
-            if (dateTo && dateTo.value) {
-                params.append('date_to', dateTo.value);
-            }
-            
-            const url = params.toString() ? `${this.API_URL}?${params.toString()}` : this.API_URL;
-            
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            const result = await response.json();
-            
-            if (!result.success) {
-                throw new Error(result.message || 'Error al cargar órdenes');
-            }
-            
-            this.currentOrders = result.data || [];
-            this.filteredOrders = this.currentOrders;
-            
-            console.log(`✅ ${this.currentOrders.length} órdenes cargadas`);
-            
-            // Renderizar
-            this.renderOrders();
-            this.updateStats();
-            
-        } catch (error) {
-            console.error('❌ Error al cargar órdenes:', error);
-            container.innerHTML = `
-                <tr>
-                    <td colspan="8" class="text-center py-4 text-danger">
-                        <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
-                        <p class="mb-0">Error al cargar órdenes: ${error.message}</p>
-                        <button class="btn btn-sm btn-primary mt-2" onclick="OrdersModule.loadOrders()">
-                            <i class="fas fa-redo"></i> Reintentar
-                        </button>
-                    </td>
-                </tr>
-            `;
+        } catch (err) {
+            console.error('Error cargando órdenes:', err);
+            this.orders = [];
         }
     },
-    
-    /**
-     * Aplicar filtros locales
-     */
-    applyFilters() {
-        // Reload desde API con filtros
-        this.loadOrders();
-    },
-    
-    /**
-     * Renderizar órdenes en la tabla
-     */
-    renderOrders() {
-        const container = document.getElementById('ordersTableBody');
-        
+
+    // ─── Render principal ───────────────────────────────────────────────────
+
+    _render() {
+        const container = document.getElementById('ordersContainer');
         if (!container) return;
-        
-        if (this.filteredOrders.length === 0) {
-            container.innerHTML = `
+
+        container.innerHTML = `
+            ${this._renderHeader()}
+            ${this._renderStats()}
+            ${this._renderFilters()}
+            ${this._renderTable()}
+        `;
+
+        this._attachEvents();
+    },
+
+    // ─── Header ─────────────────────────────────────────────────────────────
+
+    _renderHeader() {
+        return `
+        <div style="display:flex;justify-content:space-between;align-items:center;
+                    margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #e5e7eb;">
+            <div>
+                <h2 style="font-size:28px;font-weight:700;color:#003d82;margin:0 0 4px 0;">
+                    Gestión de Órdenes
+                </h2>
+                <p style="font-size:14px;color:#6b7280;margin:0;">
+                    ${this.orders.length} orden${this.orders.length !== 1 ? 'es' : ''} encontrada${this.orders.length !== 1 ? 's' : ''}
+                </p>
+            </div>
+            <button class="btn btn-outline" id="btnRefreshOrders">🔄 Actualizar</button>
+        </div>`;
+    },
+
+    // ─── Estadísticas ───────────────────────────────────────────────────────
+
+    _renderStats() {
+        const total     = this.orders.length;
+        const pending   = this.orders.filter(o => o.status === 'pending').length;
+        const inProcess = this.orders.filter(o => ['confirmed','processing','shipped'].includes(o.status)).length;
+        const delivered = this.orders.filter(o => o.status === 'delivered').length;
+        const cancelled = this.orders.filter(o => o.status === 'cancelled').length;
+
+        return `
+        <div class="stats-row" style="margin-bottom:24px;">
+            ${this._statBox('primary','📦','Total',total)}
+            ${this._statBox('warning','⏳','Pendientes',pending)}
+            ${this._statBox('info','⚙️','En proceso',inProcess)}
+            ${this._statBox('success','✅','Entregadas',delivered)}
+            ${this._statBox('danger','❌','Canceladas',cancelled)}
+        </div>`;
+    },
+
+    _statBox(color, icon, label, value) {
+        return `
+        <div class="stat-box ${color}">
+            <div class="stat-box-header">
+                <div class="stat-box-icon">${icon}</div>
+            </div>
+            <div class="stat-box-label">${label}</div>
+            <div class="stat-box-value">${value}</div>
+        </div>`;
+    },
+
+    // ─── Filtros ────────────────────────────────────────────────────────────
+
+    _renderFilters() {
+        const statusOptions = [
+            { value: '',          label: 'Todos los estados' },
+            { value: 'pending',   label: '⏳ Pendiente' },
+            { value: 'confirmed', label: '✔ Confirmado' },
+            { value: 'processing',label: '⚙️ Procesando' },
+            { value: 'shipped',   label: '🚚 Enviado' },
+            { value: 'delivered', label: '✅ Entregado' },
+            { value: 'cancelled', label: '❌ Cancelado' },
+        ];
+
+        return `
+        <div style="background:white;padding:20px;border-radius:12px;border:2px solid #e5e7eb;
+                    margin-bottom:24px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+            <div style="flex:2;min-width:200px;">
+                <input type="text" id="ordersSearch" placeholder="🔍 Buscar por orden, cliente, email…"
+                       value="${this._esc(this.filters.search)}"
+                       style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px;">
+            </div>
+            <div style="flex:1;min-width:180px;">
+                <select id="ordersStatusFilter"
+                        style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px;cursor:pointer;">
+                    ${statusOptions.map(o => `
+                        <option value="${o.value}" ${this.filters.status === o.value ? 'selected' : ''}>${o.label}</option>
+                    `).join('')}
+                </select>
+            </div>
+            <div style="flex:1;min-width:150px;">
+                <input type="date" id="ordersDateFrom" value="${this.filters.dateFrom}"
+                       style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px;">
+            </div>
+            <div style="flex:1;min-width:150px;">
+                <input type="date" id="ordersDateTo" value="${this.filters.dateTo}"
+                       style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px;">
+            </div>
+            <button class="btn btn-secondary" id="btnClearOrderFilters">🔄 Limpiar</button>
+        </div>`;
+    },
+
+    // ─── Tabla ──────────────────────────────────────────────────────────────
+
+    _renderTable() {
+        if (this.orders.length === 0) {
+            return `
+            <div style="text-align:center;padding:80px 40px;background:white;
+                        border-radius:12px;border:2px solid #e5e7eb;">
+                <div style="font-size:80px;margin-bottom:20px;">📭</div>
+                <h3 style="font-size:24px;color:#1f2937;margin-bottom:12px;">No hay órdenes</h3>
+                <p style="font-size:16px;color:#6b7280;">
+                    ${this.filters.search || this.filters.status
+                        ? 'No se encontraron órdenes con esos filtros.'
+                        : 'Aún no se han registrado órdenes en el sistema.'}
+                </p>
+            </div>`;
+        }
+
+        const rows = this.orders.map(o => `
+        <tr>
+            <td><strong style="color:#003d82;">${this._esc(o.order_number)}</strong></td>
+            <td>
+                <div style="font-weight:600;">${this._esc(o.customer_name)}</div>
+                <div style="font-size:12px;color:#6b7280;">${this._esc(o.customer_email)}</div>
+                <div style="font-size:12px;color:#6b7280;">${this._esc(o.customer_phone || '')}</div>
+            </td>
+            <td style="text-align:center;">${o.items_count || 0}</td>
+            <td><strong>$${parseFloat(o.total || 0).toFixed(2)}</strong></td>
+            <td>${this._statusBadge(o.status)}</td>
+            <td>${this._paymentBadge(o.payment_status)}</td>
+            <td style="font-size:12px;">${this._formatDate(o.created_at)}</td>
+            <td>
+                <div style="display:flex;gap:6px;justify-content:center;">
+                    <button class="btn-icon btn-icon-view" onclick="OrdersModule.viewOrder(${o.id})" title="Ver detalle">👁</button>
+                    <button class="btn-icon btn-icon-edit" onclick="OrdersModule.openStatusModal(${o.id})" title="Actualizar estado">✏️</button>
+                </div>
+            </td>
+        </tr>`).join('');
+
+        return `
+        <div class="data-table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>N° Orden</th>
+                        <th>Cliente</th>
+                        <th style="text-align:center;">Items</th>
+                        <th>Total</th>
+                        <th>Estado</th>
+                        <th>Pago</th>
+                        <th>Fecha</th>
+                        <th style="text-align:center;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>`;
+    },
+
+    // ─── Modal: ver detalle ──────────────────────────────────────────────────
+
+    viewOrder(orderId) {
+        const order = this.orders.find(o => o.id === orderId);
+        if (!order) return;
+
+        const items = Array.isArray(order.items) ? order.items : [];
+
+        const itemRows = items.length
+            ? items.map(item => `
                 <tr>
-                    <td colspan="8" class="text-center py-4 text-muted">
-                        <i class="fas fa-inbox fa-3x mb-3 opacity-50"></i>
-                        <p class="mb-0">No se encontraron órdenes</p>
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-        
-        container.innerHTML = this.filteredOrders.map(order => `
-            <tr>
-                <td>
-                    <strong class="text-primary">${this.escapeHtml(order.order_number)}</strong>
-                </td>
-                <td>
-                    <div>${this.escapeHtml(order.customer_name)}</div>
-                    <small class="text-muted">${this.escapeHtml(order.customer_email)}</small>
-                </td>
-                <td class="text-center">
-                    <span class="badge bg-secondary">${order.items_count || 0}</span>
-                </td>
-                <td class="text-end">
-                    <strong>$${this.formatMoney(order.total)}</strong>
-                </td>
-                <td class="text-center">
-                    ${this.renderStatusBadge(order.status)}
-                </td>
-                <td class="text-center">
-                    ${this.renderPaymentStatusBadge(order.payment_status)}
-                </td>
-                <td>
-                    <small>${this.formatDate(order.created_at)}</small>
-                </td>
-                <td class="text-center">
-                    <div class="btn-group btn-group-sm" role="group">
-                        <button class="btn btn-outline-primary" onclick="OrdersModule.viewOrder(${order.id})" title="Ver detalles">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="btn btn-outline-success" onclick="OrdersModule.updateOrderStatus(${order.id})" title="Actualizar estado">
-                            <i class="fas fa-edit"></i>
-                        </button>
+                    <td>${this._esc(item.name || 'Producto')}</td>
+                    <td style="text-align:center;">${item.quantity || 1}</td>
+                    <td style="text-align:right;">$${parseFloat(item.price || 0).toFixed(2)}</td>
+                    <td style="text-align:right;">$${(parseFloat(item.price || 0) * parseInt(item.quantity || 1)).toFixed(2)}</td>
+                </tr>`).join('')
+            : `<tr><td colspan="4" style="text-align:center;color:#6b7280;">Sin productos</td></tr>`;
+
+        const html = `
+        <div id="orderDetailOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.55);
+                backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;">
+            <div style="background:white;border-radius:16px;max-width:720px;width:100%;
+                        max-height:90vh;overflow:hidden;display:flex;flex-direction:column;
+                        box-shadow:0 25px 50px rgba(0,0,0,0.3);">
+                <!-- header -->
+                <div style="padding:24px 28px;background:linear-gradient(135deg,#003d82,#002952);
+                            color:white;display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                        <h3 style="margin:0;font-size:20px;font-weight:700;">Detalle de Orden</h3>
+                        <div style="font-size:14px;opacity:0.85;margin-top:4px;">${this._esc(order.order_number)}</div>
                     </div>
-                </td>
-            </tr>
-        `).join('');
-    },
-    
-    /**
-     * Actualizar estadísticas
-     */
-    updateStats() {
-        const statsContainer = document.getElementById('ordersStats');
-        if (!statsContainer) return;
-        
-        const total = this.currentOrders.length;
-        const pending = this.currentOrders.filter(o => o.status === 'pending').length;
-        const processing = this.currentOrders.filter(o => o.status === 'processing').length;
-        const shipped = this.currentOrders.filter(o => o.status === 'shipped').length;
-        const delivered = this.currentOrders.filter(o => o.status === 'delivered').length;
-        
-        const totalRevenue = this.currentOrders
-            .filter(o => o.payment_status === 'paid')
-            .reduce((sum, o) => sum + parseFloat(o.total || 0), 0);
-        
-        statsContainer.innerHTML = `
-            <div class="row g-3">
-                <div class="col-md-2">
-                    <div class="card border-0 bg-primary bg-opacity-10">
-                        <div class="card-body text-center">
-                            <i class="fas fa-shopping-cart fa-2x text-primary mb-2"></i>
-                            <h3 class="mb-0">${total}</h3>
-                            <small class="text-muted">Total Órdenes</small>
-                        </div>
-                    </div>
+                    <button onclick="document.getElementById('orderDetailOverlay').remove()"
+                            style="background:rgba(255,255,255,0.2);border:none;color:white;
+                                   font-size:24px;width:36px;height:36px;border-radius:50%;cursor:pointer;">×</button>
                 </div>
-                <div class="col-md-2">
-                    <div class="card border-0 bg-warning bg-opacity-10">
-                        <div class="card-body text-center">
-                            <i class="fas fa-clock fa-2x text-warning mb-2"></i>
-                            <h3 class="mb-0">${pending}</h3>
-                            <small class="text-muted">Pendientes</small>
+                <!-- body -->
+                <div style="padding:28px;overflow-y:auto;flex:1;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
+                        <div>
+                            <h4 style="font-size:14px;font-weight:700;color:#6b7280;text-transform:uppercase;
+                                       letter-spacing:.5px;margin:0 0 12px 0;padding-bottom:8px;border-bottom:2px solid #e5e7eb;">
+                                Cliente
+                            </h4>
+                            <p style="margin:0 0 6px;"><strong>${this._esc(order.customer_name)}</strong></p>
+                            <p style="margin:0 0 6px;font-size:13px;color:#6b7280;">${this._esc(order.customer_email)}</p>
+                            <p style="margin:0 0 6px;font-size:13px;color:#6b7280;">${this._esc(order.customer_phone || '—')}</p>
+                            ${order.customer_cedula ? `<p style="margin:0;font-size:13px;color:#6b7280;">CI: ${this._esc(order.customer_cedula)}</p>` : ''}
+                            <p style="margin:6px 0 0;font-size:13px;color:#6b7280;">${this._esc(order.customer_address || '—')}</p>
+                        </div>
+                        <div>
+                            <h4 style="font-size:14px;font-weight:700;color:#6b7280;text-transform:uppercase;
+                                       letter-spacing:.5px;margin:0 0 12px 0;padding-bottom:8px;border-bottom:2px solid #e5e7eb;">
+                                Envío y Pago
+                            </h4>
+                            <p style="margin:0 0 6px;font-size:13px;"><strong>Envío:</strong> ${this._esc(order.shipping_method || '—')}</p>
+                            <p style="margin:0 0 6px;font-size:13px;"><strong>Costo envío:</strong> $${parseFloat(order.shipping_cost || 0).toFixed(2)}</p>
+                            <p style="margin:0 0 6px;font-size:13px;"><strong>Pago:</strong> ${this._esc(order.payment_method || '—')}</p>
+                            <p style="margin:0 0 6px;font-size:13px;"><strong>Estado:</strong> ${this._statusBadge(order.status)}</p>
+                            <p style="margin:0 0 6px;font-size:13px;"><strong>Pago:</strong> ${this._paymentBadge(order.payment_status)}</p>
+                            ${order.tracking_number ? `<p style="margin:6px 0 0;font-size:13px;"><strong>Tracking:</strong> ${this._esc(order.tracking_number)}</p>` : ''}
                         </div>
                     </div>
+
+                    <h4 style="font-size:14px;font-weight:700;color:#6b7280;text-transform:uppercase;
+                               letter-spacing:.5px;margin:0 0 12px 0;padding-bottom:8px;border-bottom:2px solid #e5e7eb;">
+                        Productos
+                    </h4>
+                    <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
+                        <thead>
+                            <tr style="background:#f9fafb;">
+                                <th style="padding:10px 12px;text-align:left;font-size:12px;color:#6b7280;text-transform:uppercase;">Producto</th>
+                                <th style="padding:10px 12px;text-align:center;font-size:12px;color:#6b7280;text-transform:uppercase;">Cant.</th>
+                                <th style="padding:10px 12px;text-align:right;font-size:12px;color:#6b7280;text-transform:uppercase;">Precio</th>
+                                <th style="padding:10px 12px;text-align:right;font-size:12px;color:#6b7280;text-transform:uppercase;">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>${itemRows}</tbody>
+                        <tfoot>
+                            <tr><td colspan="3" style="padding:8px 12px;text-align:right;font-weight:600;">Subtotal</td>
+                                <td style="padding:8px 12px;text-align:right;">$${parseFloat(order.subtotal||0).toFixed(2)}</td></tr>
+                            <tr><td colspan="3" style="padding:8px 12px;text-align:right;font-weight:600;">Envío</td>
+                                <td style="padding:8px 12px;text-align:right;">$${parseFloat(order.shipping_cost||0).toFixed(2)}</td></tr>
+                            ${parseFloat(order.tax||0) > 0 ? `<tr><td colspan="3" style="padding:8px 12px;text-align:right;font-weight:600;">IVA</td>
+                                <td style="padding:8px 12px;text-align:right;">$${parseFloat(order.tax||0).toFixed(2)}</td></tr>` : ''}
+                            <tr style="background:#f0f7ff;">
+                                <td colspan="3" style="padding:12px;text-align:right;font-weight:700;font-size:16px;">TOTAL</td>
+                                <td style="padding:12px;text-align:right;font-weight:700;font-size:16px;color:#003d82;">
+                                    $${parseFloat(order.total||0).toFixed(2)}
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    ${order.notes ? `
+                    <div style="background:#fef9e7;padding:14px 16px;border-radius:8px;border-left:4px solid #f59e0b;">
+                        <strong style="font-size:13px;">Notas:</strong>
+                        <p style="margin:4px 0 0;font-size:13px;color:#6b7280;">${this._esc(order.notes)}</p>
+                    </div>` : ''}
+
+                    <p style="font-size:12px;color:#9ca3af;margin-top:16px;">
+                        Creado: ${this._formatDate(order.created_at)} &nbsp;|&nbsp;
+                        Actualizado: ${this._formatDate(order.updated_at)}
+                    </p>
                 </div>
-                <div class="col-md-2">
-                    <div class="card border-0 bg-info bg-opacity-10">
-                        <div class="card-body text-center">
-                            <i class="fas fa-cog fa-2x text-info mb-2"></i>
-                            <h3 class="mb-0">${processing}</h3>
-                            <small class="text-muted">Procesando</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="card border-0 bg-primary bg-opacity-10">
-                        <div class="card-body text-center">
-                            <i class="fas fa-truck fa-2x text-primary mb-2"></i>
-                            <h3 class="mb-0">${shipped}</h3>
-                            <small class="text-muted">Enviados</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="card border-0 bg-success bg-opacity-10">
-                        <div class="card-body text-center">
-                            <i class="fas fa-check-double fa-2x text-success mb-2"></i>
-                            <h3 class="mb-0">${delivered}</h3>
-                            <small class="text-muted">Entregados</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="card border-0 bg-success bg-opacity-10">
-                        <div class="card-body text-center">
-                            <i class="fas fa-dollar-sign fa-2x text-success mb-2"></i>
-                            <h3 class="mb-0">$${this.formatMoney(totalRevenue)}</h3>
-                            <small class="text-muted">Ingresos</small>
-                        </div>
-                    </div>
+                <!-- footer -->
+                <div style="padding:20px 28px;background:#f9fafb;border-top:2px solid #e5e7eb;
+                            display:flex;justify-content:flex-end;gap:12px;">
+                    <button class="btn btn-secondary"
+                            onclick="document.getElementById('orderDetailOverlay').remove()">Cerrar</button>
+                    <button class="btn btn-primary"
+                            onclick="document.getElementById('orderDetailOverlay').remove(); OrdersModule.openStatusModal(${order.id})">
+                        ✏️ Actualizar Estado
+                    </button>
                 </div>
             </div>
-        `;
+        </div>`;
+
+        // Eliminar overlay previo si existe
+        const prev = document.getElementById('orderDetailOverlay');
+        if (prev) prev.remove();
+        document.body.insertAdjacentHTML('beforeend', html);
     },
-    
-    /**
-     * Ver detalles de una orden
-     */
-    async viewOrder(orderId) {
-        const order = this.currentOrders.find(o => o.id === orderId);
-        if (!order) {
-            alert('Orden no encontrada');
-            return;
-        }
-        
-        const modalHtml = `
-            <div class="modal fade" id="orderDetailModal" tabindex="-1">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">
-                                <i class="fas fa-file-invoice"></i> Detalles de Orden ${this.escapeHtml(order.order_number)}
-                            </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="row mb-4">
-                                <div class="col-md-6">
-                                    <h6 class="border-bottom pb-2 mb-3">Información del Cliente</h6>
-                                    <p><strong>Nombre:</strong> ${this.escapeHtml(order.customer_name)}</p>
-                                    <p><strong>Email:</strong> ${this.escapeHtml(order.customer_email)}</p>
-                                    <p><strong>Teléfono:</strong> ${this.escapeHtml(order.customer_phone)}</p>
-                                    ${order.customer_cedula ? `<p><strong>Cédula:</strong> ${this.escapeHtml(order.customer_cedula)}</p>` : ''}
-                                    <p><strong>Dirección:</strong><br>${this.escapeHtml(order.customer_address)}</p>
-                                </div>
-                                <div class="col-md-6">
-                                    <h6 class="border-bottom pb-2 mb-3">Información de Envío y Pago</h6>
-                                    <p><strong>Método de envío:</strong> ${this.escapeHtml(order.shipping_method)}</p>
-                                    <p><strong>Costo de envío:</strong> $${this.formatMoney(order.shipping_cost)}</p>
-                                    <p><strong>Método de pago:</strong> ${this.escapeHtml(order.payment_method)}</p>
-                                    <p><strong>Estado:</strong> ${this.renderStatusBadge(order.status)}</p>
-                                    <p><strong>Pago:</strong> ${this.renderPaymentStatusBadge(order.payment_status)}</p>
-                                    ${order.tracking_number ? `<p><strong>Tracking:</strong> ${this.escapeHtml(order.tracking_number)}</p>` : ''}
-                                </div>
-                            </div>
-                            
-                            <h6 class="border-bottom pb-2 mb-3">Productos</h6>
-                            <div class="table-responsive">
-                                <table class="table table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th>Producto</th>
-                                            <th class="text-center">Cantidad</th>
-                                            <th class="text-end">Precio Unit.</th>
-                                            <th class="text-end">Subtotal</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        ${this.renderOrderItems(order.items)}
-                                    </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
-                                            <td class="text-end">$${this.formatMoney(order.subtotal)}</td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="3" class="text-end"><strong>Envío:</strong></td>
-                                            <td class="text-end">$${this.formatMoney(order.shipping_cost)}</td>
-                                        </tr>
-                                        ${order.tax > 0 ? `
-                                        <tr>
-                                            <td colspan="3" class="text-end"><strong>IVA:</strong></td>
-                                            <td class="text-end">$${this.formatMoney(order.tax)}</td>
-                                        </tr>
-                                        ` : ''}
-                                        <tr class="fw-bold">
-                                            <td colspan="3" class="text-end"><strong>TOTAL:</strong></td>
-                                            <td class="text-end text-primary">$${this.formatMoney(order.total)}</td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                            
-                            ${order.notes ? `
-                            <div class="mt-3">
-                                <h6>Notas:</h6>
-                                <p class="text-muted">${this.escapeHtml(order.notes)}</p>
-                            </div>
-                            ` : ''}
-                            
-                            <div class="mt-3">
-                                <small class="text-muted">
-                                    <strong>Creado:</strong> ${this.formatDate(order.created_at)} | 
-                                    <strong>Actualizado:</strong> ${this.formatDate(order.updated_at)}
-                                </small>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                            <button type="button" class="btn btn-primary" onclick="OrdersModule.updateOrderStatus(${order.id})">
-                                <i class="fas fa-edit"></i> Actualizar Estado
-                            </button>
-                        </div>
+
+    // ─── Modal: actualizar estado ────────────────────────────────────────────
+
+    openStatusModal(orderId) {
+        const order = this.orders.find(o => o.id === orderId);
+        if (!order) return;
+
+        const statusOpts = [
+            { value: 'pending',    label: '⏳ Pendiente' },
+            { value: 'confirmed',  label: '✔ Confirmado' },
+            { value: 'processing', label: '⚙️ Procesando' },
+            { value: 'shipped',    label: '🚚 Enviado' },
+            { value: 'delivered',  label: '✅ Entregado' },
+            { value: 'cancelled',  label: '❌ Cancelado' },
+        ];
+
+        const payOpts = [
+            { value: 'pending',  label: '⏳ Pendiente' },
+            { value: 'paid',     label: '✅ Pagado' },
+            { value: 'refunded', label: '↩ Reembolsado' },
+            { value: 'failed',   label: '❌ Fallido' },
+        ];
+
+        const html = `
+        <div id="orderStatusOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.55);
+                backdrop-filter:blur(4px);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;">
+            <div style="background:white;border-radius:16px;max-width:480px;width:100%;
+                        box-shadow:0 25px 50px rgba(0,0,0,0.3);">
+                <div style="padding:24px 28px;background:linear-gradient(135deg,#003d82,#002952);
+                            color:white;display:flex;justify-content:space-between;align-items:center;
+                            border-radius:16px 16px 0 0;">
+                    <h3 style="margin:0;font-size:18px;font-weight:700;">Actualizar Estado</h3>
+                    <button onclick="document.getElementById('orderStatusOverlay').remove()"
+                            style="background:rgba(255,255,255,0.2);border:none;color:white;
+                                   font-size:22px;width:32px;height:32px;border-radius:50%;cursor:pointer;">×</button>
+                </div>
+                <div style="padding:28px;">
+                    <p style="margin:0 0 20px;font-size:13px;color:#6b7280;">
+                        Orden: <strong style="color:#003d82;">${this._esc(order.order_number)}</strong>
+                        — ${this._esc(order.customer_name)}
+                    </p>
+
+                    <div style="margin-bottom:16px;">
+                        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Estado de la Orden</label>
+                        <select id="newOrderStatus"
+                                style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px;cursor:pointer;">
+                            ${statusOpts.map(o => `<option value="${o.value}" ${order.status===o.value?'selected':''}>${o.label}</option>`).join('')}
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom:16px;">
+                        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Estado de Pago</label>
+                        <select id="newPaymentStatus"
+                                style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px;cursor:pointer;">
+                            ${payOpts.map(o => `<option value="${o.value}" ${order.payment_status===o.value?'selected':''}>${o.label}</option>`).join('')}
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom:16px;">
+                        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">N° Seguimiento (opcional)</label>
+                        <input type="text" id="newTrackingNumber" value="${this._esc(order.tracking_number||'')}"
+                               placeholder="Ej: ABC123456789"
+                               style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px;">
+                    </div>
+
+                    <div style="margin-bottom:8px;">
+                        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Notas (opcional)</label>
+                        <textarea id="newOrderNotes" rows="3"
+                                  style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:8px;font-size:14px;resize:vertical;"
+                                  >${this._esc(order.notes||'')}</textarea>
                     </div>
                 </div>
-            </div>
-        `;
-        
-        // Eliminar modal previo si existe
-        const existingModal = document.getElementById('orderDetailModal');
-        if (existingModal) existingModal.remove();
-        
-        // Insertar y mostrar modal
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-        const modal = new bootstrap.Modal(document.getElementById('orderDetailModal'));
-        modal.show();
-    },
-    
-    /**
-     * Actualizar estado de orden
-     */
-    async updateOrderStatus(orderId) {
-        const order = this.currentOrders.find(o => o.id === orderId);
-        if (!order) {
-            alert('Orden no encontrada');
-            return;
-        }
-        
-        const modalHtml = `
-            <div class="modal fade" id="updateStatusModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Actualizar Estado - ${this.escapeHtml(order.order_number)}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="updateStatusForm">
-                                <div class="mb-3">
-                                    <label class="form-label">Estado de la Orden</label>
-                                    <select class="form-select" id="orderStatus" required>
-                                        ${Object.entries(this.statuses).map(([value, config]) => `
-                                            <option value="${value}" ${order.status === value ? 'selected' : ''}>
-                                                ${config.label}
-                                            </option>
-                                        `).join('')}
-                                    </select>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label class="form-label">Estado de Pago</label>
-                                    <select class="form-select" id="paymentStatus" required>
-                                        ${Object.entries(this.paymentStatuses).map(([value, config]) => `
-                                            <option value="${value}" ${order.payment_status === value ? 'selected' : ''}>
-                                                ${config.label}
-                                            </option>
-                                        `).join('')}
-                                    </select>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label class="form-label">Número de Seguimiento (Opcional)</label>
-                                    <input type="text" class="form-control" id="trackingNumber" 
-                                           value="${order.tracking_number || ''}" 
-                                           placeholder="Ej: ABC123456789">
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label class="form-label">Notas (Opcional)</label>
-                                    <textarea class="form-control" id="orderNotes" rows="3">${order.notes || ''}</textarea>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="button" class="btn btn-primary" onclick="OrdersModule.saveStatusUpdate(${orderId})">
-                                <i class="fas fa-save"></i> Guardar Cambios
-                            </button>
-                        </div>
-                    </div>
+                <div style="padding:16px 28px 24px;display:flex;justify-content:flex-end;gap:12px;">
+                    <button class="btn btn-secondary"
+                            onclick="document.getElementById('orderStatusOverlay').remove()">Cancelar</button>
+                    <button class="btn btn-primary"
+                            onclick="OrdersModule._saveStatus(${order.id})">💾 Guardar Cambios</button>
                 </div>
             </div>
-        `;
-        
-        // Eliminar modal previo si existe
-        const existingModal = document.getElementById('updateStatusModal');
-        if (existingModal) existingModal.remove();
-        
-        // Insertar y mostrar modal
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-        const modal = new bootstrap.Modal(document.getElementById('updateStatusModal'));
-        modal.show();
+        </div>`;
+
+        const prev = document.getElementById('orderStatusOverlay');
+        if (prev) prev.remove();
+        document.body.insertAdjacentHTML('beforeend', html);
     },
-    
-    /**
-     * Guardar actualización de estado
-     */
-    async saveStatusUpdate(orderId) {
-        const statusInput = document.getElementById('orderStatus');
-        const paymentInput = document.getElementById('paymentStatus');
-        const trackingInput = document.getElementById('trackingNumber');
-        const notesInput = document.getElementById('orderNotes');
-        
-        if (!statusInput || !paymentInput) {
-            alert('Error: campos no encontrados');
-            return;
-        }
-        
+
+    async _saveStatus(orderId) {
+        const status         = document.getElementById('newOrderStatus')?.value;
+        const paymentStatus  = document.getElementById('newPaymentStatus')?.value;
+        const trackingNumber = document.getElementById('newTrackingNumber')?.value?.trim();
+        const notes          = document.getElementById('newOrderNotes')?.value?.trim();
+
+        if (!status) return;
+
         try {
-            const data = {
-                id: orderId,
-                status: statusInput.value,
-                payment_status: paymentInput.value,
-                tracking_number: trackingInput ? trackingInput.value.trim() : null,
-                notes: notesInput ? notesInput.value.trim() : null
-            };
-            
-            const response = await fetch(this.API_URL, {
+            showLoading && showLoading();
+
+            const resp = await fetch(`${CONFIG.API_URL}/orders.php`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: orderId, status, payment_status: paymentStatus, tracking_number: trackingNumber, notes })
             });
-            
-            const result = await response.json();
-            
-            if (!result.success) {
-                throw new Error(result.message || 'Error al actualizar');
+
+            const data = await resp.json();
+
+            if (data.success) {
+                document.getElementById('orderStatusOverlay')?.remove();
+                showToast && showToast('Éxito', 'Estado de la orden actualizado', 'success');
+                await this._fetchOrders();
+                this._render();
+            } else {
+                throw new Error(data.message || 'Error al actualizar');
             }
-            
-            // Cerrar modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('updateStatusModal'));
-            if (modal) modal.hide();
-            
-            // Recargar órdenes
-            await this.loadOrders();
-            
-            // Mostrar mensaje
-            alert('✅ Estado actualizado correctamente');
-            
-        } catch (error) {
-            console.error('Error:', error);
-            alert('❌ Error al actualizar: ' + error.message);
+        } catch (err) {
+            console.error('Error actualizando estado:', err);
+            showToast && showToast('Error', err.message, 'error');
+        } finally {
+            hideLoading && hideLoading();
         }
     },
-    
-    /**
-     * Renderizar items de orden
-     */
-    renderOrderItems(items) {
-        if (!Array.isArray(items) || items.length === 0) {
-            return '<tr><td colspan="4" class="text-center text-muted">Sin productos</td></tr>';
+
+    // ─── Eventos ────────────────────────────────────────────────────────────
+
+    _attachEvents() {
+        const searchInput = document.getElementById('ordersSearch');
+        const statusSel   = document.getElementById('ordersStatusFilter');
+        const dateFrom    = document.getElementById('ordersDateFrom');
+        const dateTo      = document.getElementById('ordersDateTo');
+        const btnRefresh  = document.getElementById('btnRefreshOrders');
+        const btnClear    = document.getElementById('btnClearOrderFilters');
+
+        let searchTimer;
+        if (searchInput) {
+            searchInput.addEventListener('input', e => {
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(() => {
+                    this.filters.search = e.target.value.trim();
+                    this._applyFilters();
+                }, 350);
+            });
         }
-        
-        return items.map(item => `
-            <tr>
-                <td>${this.escapeHtml(item.name || 'Producto')}</td>
-                <td class="text-center">${item.quantity || 1}</td>
-                <td class="text-end">$${this.formatMoney(item.price || 0)}</td>
-                <td class="text-end">$${this.formatMoney((item.price || 0) * (item.quantity || 1))}</td>
-            </tr>
-        `).join('');
+
+        if (statusSel) {
+            statusSel.addEventListener('change', e => {
+                this.filters.status = e.target.value;
+                this._applyFilters();
+            });
+        }
+
+        if (dateFrom) {
+            dateFrom.addEventListener('change', e => {
+                this.filters.dateFrom = e.target.value;
+                this._applyFilters();
+            });
+        }
+
+        if (dateTo) {
+            dateTo.addEventListener('change', e => {
+                this.filters.dateTo = e.target.value;
+                this._applyFilters();
+            });
+        }
+
+        if (btnRefresh) {
+            btnRefresh.addEventListener('click', async () => {
+                btnRefresh.disabled = true;
+                btnRefresh.textContent = '⏳ Actualizando...';
+                await this._fetchOrders();
+                this._render();
+            });
+        }
+
+        if (btnClear) {
+            btnClear.addEventListener('click', () => {
+                this.filters = { status: '', search: '', dateFrom: '', dateTo: '' };
+                this._applyFilters();
+            });
+        }
     },
-    
-    /**
-     * Renderizar badge de estado
-     */
-    renderStatusBadge(status) {
-        const config = this.statuses[status] || { label: status, color: 'secondary', icon: 'question' };
-        return `<span class="badge bg-${config.color}">
-            <i class="fas fa-${config.icon}"></i> ${config.label}
-        </span>`;
+
+    async _applyFilters() {
+        const container = document.getElementById('ordersContainer');
+        if (container) {
+            // Solo actualizar la tabla, no todo (para preservar el estado de los filtros en el DOM)
+            await this._fetchOrders();
+            this._render();
+        }
     },
-    
-    /**
-     * Renderizar badge de estado de pago
-     */
-    renderPaymentStatusBadge(status) {
-        const config = this.paymentStatuses[status] || { label: status, color: 'secondary' };
-        return `<span class="badge bg-${config.color}">${config.label}</span>`;
+
+    // ─── Helpers ────────────────────────────────────────────────────────────
+
+    _statusBadge(status) {
+        const map = {
+            pending:    { label: 'Pendiente',   cls: 'badge-warning'   },
+            confirmed:  { label: 'Confirmado',  cls: 'badge-info'      },
+            processing: { label: 'Procesando',  cls: 'badge-primary'   },
+            shipped:    { label: 'Enviado',      cls: 'badge-success'   },
+            delivered:  { label: 'Entregado',   cls: 'badge-success'   },
+            cancelled:  { label: 'Cancelado',   cls: 'badge-danger'    },
+        };
+        const s = map[status] || { label: status || '—', cls: 'badge-secondary' };
+        return `<span class="badge ${s.cls}">${s.label}</span>`;
     },
-    
-    /**
-     * Formatear dinero
-     */
-    formatMoney(amount) {
-        return parseFloat(amount || 0).toFixed(2);
+
+    _paymentBadge(status) {
+        const map = {
+            pending:  { label: 'Pendiente',     cls: 'badge-warning'  },
+            paid:     { label: 'Pagado',        cls: 'badge-success'  },
+            refunded: { label: 'Reembolsado',   cls: 'badge-info'     },
+            failed:   { label: 'Fallido',       cls: 'badge-danger'   },
+        };
+        const s = map[status] || { label: status || '—', cls: 'badge-secondary' };
+        return `<span class="badge ${s.cls}">${s.label}</span>`;
     },
-    
-    /**
-     * Formatear fecha
-     */
-    formatDate(dateString) {
-        if (!dateString) return 'N/A';
-        const date = new Date(dateString);
-        return date.toLocaleString('es-EC', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
+
+    _formatDate(str) {
+        if (!str) return '—';
+        return new Date(str).toLocaleString('es-EC', {
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit'
         });
     },
-    
-    /**
-     * Escapar HTML
-     */
-    escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
+
+    _esc(text) {
+        if (text === null || text === undefined) return '';
+        const d = document.createElement('div');
+        d.textContent = String(text);
+        return d.innerHTML;
+    },
+
+    _loadingHTML(msg) {
+        return `
+        <div style="text-align:center;padding:80px 40px;">
+            <div style="width:60px;height:60px;border:6px solid #e5e7eb;border-top-color:#003d82;
+                        border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;"></div>
+            <p style="font-size:16px;color:#6b7280;">${msg}</p>
+        </div>`;
+    },
 };
 
-// Inicializar cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('ordersTableBody')) {
-        OrdersModule.init();
-    }
-});
+// Registrar en Router cuando esté disponible
+if (typeof Router !== 'undefined') {
+    Router.register('orders', () => OrdersModule.init());
+}
+
+window.OrdersModule = OrdersModule;
+console.log('✅ Módulo Orders cargado (sin Bootstrap)');

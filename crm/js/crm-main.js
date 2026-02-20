@@ -1,11 +1,3 @@
-/**
- * SISTEMA SEGUIMIENTO MAWEWE/ELPALACIO - CRM v4.0
- * Con cierre automático de sesión al cerrar pestaña
- */
-
-// ========================================
-// ESTADO GLOBAL
-// ========================================
 const CRMState = {
     currentUser: null,
     currentModule: 'dashboard',
