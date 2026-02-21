@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Seguimiento - Productos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/variables.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+<body>
+<div class="app-layout" id="appLayout"></div>
+
+<!-- MODAL: Crear / Editar Producto -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title" id="productModalTitle">Nuevo Producto</div>
+      <button class="modal-close" data-modal-close>
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form id="productForm">
+        <input type="hidden" id="prodId" name="id">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label required" for="prodSku">SKU</label>
+            <input type="text" id="prodSku" name="sku" class="form-control" placeholder="Ej: ROP-AME-001" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label required" for="prodPrice">Precio (USD)</label>
+            <input type="number" id="prodPrice" name="price" class="form-control" placeholder="0.00" step="0.01" min="0" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label required" for="prodName">Nombre del Producto</label>
+          <input type="text" id="prodName" name="name" class="form-control" placeholder="Nombre completo del producto" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label required" for="prodCategory">Categoria</label>
+            <input type="text" id="prodCategory" name="category" class="form-control" list="categoriesList" placeholder="ropa, peluches, juguetes...">
+            <datalist id="categoriesList"></datalist>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="prodSubcategory">Subcategoria</label>
+            <input type="text" id="prodSubcategory" name="subcategory" class="form-control" placeholder="americanino, chevignon...">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="prodStock">Stock</label>
+            <input type="number" id="prodStock" name="stock" class="form-control" placeholder="0" min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="prodActive">Estado</label>
+            <select id="prodActive" name="active" class="form-control">
+              <option value="1">Activo</option>
+              <option value="0">Inactivo</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="prodImage">URL Imagen Principal</label>
+          <input type="text" id="prodImage" name="image" class="form-control" placeholder="assets/img/...">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="prodDescription">Descripcion</label>
+          <textarea id="prodDescription" name="description" class="form-control" rows="3" placeholder="Descripcion detallada del producto..."></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-modal-close>Cancelar</button>
+      <button class="btn btn-primary" id="saveProductBtn">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+        </svg>
+        Guardar Producto
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Ver producto -->
+<div class="modal-overlay" id="productViewModal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title">Detalle del Producto</div>
+      <button class="modal-close" data-modal-close>
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="productViewBody"></div>
+  </div>
+</div>
+
+<script src="assets/js/core.js"></script>
+<script src="assets/js/sidebar.js"></script>
+<script>
+(function() {
+  const user = Auth.guard();
+  if (!user) return;
+
+  document.getElementById('appLayout').innerHTML = `
+    ${SidebarHTML.render('products.html')}
+    <div class="main-content" id="mainContent">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">Productos</div>
+          <div class="topbar-subtitle">Catalogo e inventario</div>
+        </div>
+        <div class="topbar-actions">
+          <div class="view-toggle">
+            <button class="view-btn active" id="viewTable" title="Vista tabla">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+                <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+              </svg>
+            </button>
+            <button class="view-btn" id="viewGrid" title="Vista cuadricula">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+              </svg>
+            </button>
+          </div>
+          ${user.is_admin ? `
+          <button class="btn btn-primary" id="newProductBtn">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Nuevo Producto
+          </button>` : ''}
+        </div>
+      </header>
+      <main class="page-content">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Inventario de Productos</div>
+            <div class="page-subtitle" id="prodSubtitle">Cargando...</div>
+          </div>
+        </div>
+
+        <!-- FILTROS -->
+        <div class="filters-bar" style="flex-wrap:wrap;">
+          <div class="search-box">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" class="form-control" id="prodSearch" placeholder="Buscar nombre, SKU..." style="padding-left:38px;min-width:260px;">
+          </div>
+          <select class="form-control" id="prodCategoryFilter" style="width:auto;min-width:150px;">
+            <option value="">Todas las categorias</option>
+          </select>
+          <select class="form-control" id="prodStockFilter" style="width:auto;min-width:150px;">
+            <option value="">Todo el stock</option>
+            <option value="out">Sin stock</option>
+            <option value="low">Stock bajo (&lt;5)</option>
+            <option value="ok">Stock normal</option>
+          </select>
+          <select class="form-control" id="prodActiveFilter" style="width:auto;min-width:130px;">
+            <option value="1">Activos</option>
+            <option value="0">Inactivos</option>
+            <option value="">Todos</option>
+          </select>
+        </div>
+
+        <!-- CONTENEDOR TABLA / GRID -->
+        <div id="productTableView">
+          <div class="card">
+            <div class="table-wrapper">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th>SKU</th>
+                    <th>Categoria</th>
+                    <th>Precio</th>
+                    <th>Stock</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="productTableBody">
+                  <tr><td colspan="7" style="text-align:center;padding:32px;">
+                    <div class="spinner spinner-dark" style="margin:auto;"></div>
+                  </td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div id="productGridView" class="products-grid hidden"></div>
+
+        <!-- PAGINACION -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:var(--spacing-lg);">
+          <div style="font-size:13px;color:var(--text-muted);" id="prodPaginationInfo"></div>
+          <div class="pagination" id="prodPagination"></div>
+        </div>
+      </main>
+    </div>
+  `;
+
+  Sidebar.init();
+
+  let products  = [];
+  let filtered  = [];
+  let currentPage = 1;
+  const perPage = 15;
+  let viewMode  = 'table';
+
+  async function load() {
+    try {
+      const params = {};
+      const active = document.getElementById('prodActiveFilter').value;
+      if (active !== '') params.active = active;
+
+      const data = await API.get('products_crud.php', { action: 'list', limit: 500, ...params });
+      products = data.products || [];
+
+      // Poblar categorias
+      const cats = [...new Set(products.map(p => p.category).filter(Boolean))];
+      const catSel = document.getElementById('prodCategoryFilter');
+      const currentCat = catSel.value;
+      catSel.innerHTML = '<option value="">Todas las categorias</option>' +
+        cats.map(c => `<option value="${c}" ${c === currentCat ? 'selected' : ''}>${c}</option>`).join('');
+
+      // Datalist para modal
+      document.getElementById('categoriesList').innerHTML =
+        cats.map(c => `<option value="${c}">`).join('');
+
+      applyFilters();
+    } catch(e) {
+      Toast.error('Error al cargar productos');
+    }
+  }
+
+  function applyFilters() {
+    const q     = document.getElementById('prodSearch').value.toLowerCase();
+    const cat   = document.getElementById('prodCategoryFilter').value;
+    const stock = document.getElementById('prodStockFilter').value;
+
+    filtered = products.filter(p => {
+      const matchQ = !q || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q) ||
+        (p.description || '').toLowerCase().includes(q);
+      const matchC = !cat || p.category === cat;
+      const matchS = !stock ? true
+        : stock === 'out' ? p.stock === 0
+        : stock === 'low' ? (p.stock > 0 && p.stock < 5)
+        : p.stock >= 5;
+      return matchQ && matchC && matchS;
+    });
+
+    document.getElementById('prodSubtitle').textContent = `${filtered.length} producto${filtered.length !== 1 ? 's' : ''}`;
+    currentPage = 1;
+    renderProducts();
+  }
+
+  function renderProducts() {
+    const start = (currentPage - 1) * perPage;
+    const page  = filtered.slice(start, start + perPage);
+    const total = Math.ceil(filtered.length / perPage);
+
+    document.getElementById('prodPaginationInfo').textContent =
+      `Mostrando ${start + 1}-${Math.min(start + perPage, filtered.length)} de ${filtered.length}`;
+
+    renderPagination('prodPagination', currentPage, total, p => {
+      currentPage = p;
+      renderProducts();
+    });
+
+    if (viewMode === 'table') renderTable(page);
+    else renderGrid(page);
+  }
+
+  function renderTable(page) {
+    const tbody = document.getElementById('productTableBody');
+
+    if (!page.length) {
+      tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">
+        <div class="empty-state-icon"><svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/></svg></div>
+        <div class="empty-state-title">Sin productos</div>
+        <div class="empty-state-desc">Prueba otros filtros o agrega un nuevo producto</div>
+      </div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = page.map(p => `
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            ${p.image
+              ? `<img src="https://mawewe.com.ec/${p.image}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;background:var(--bg);" onerror="this.style.display='none'">`
+              : `<div style="width:40px;height:40px;border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center;color:var(--text-muted);">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2"/></svg>
+                </div>`}
+            <div>
+              <div style="font-weight:600;font-size:13px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</div>
+              <div style="font-size:11px;color:var(--text-muted);">${p.subcategory || ''}</div>
+            </div>
+          </div>
+        </td>
+        <td><span style="font-family:var(--font-mono);font-size:12px;">${p.sku}</span></td>
+        <td><span class="badge badge-neutral">${p.category}</span></td>
+        <td style="font-weight:700;color:var(--accent);">${Fmt.money(p.price)}</td>
+        <td>${Fmt.stockBadge(p.stock)}</td>
+        <td>
+          <span class="badge ${p.active ? 'badge-success' : 'badge-danger'}">
+            ${p.active ? 'Activo' : 'Inactivo'}
+          </span>
+        </td>
+        <td>
+          <div style="display:flex;gap:4px;">
+            <button class="btn btn-secondary btn-sm btn-icon" onclick="viewProduct(${p.id})" title="Ver">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            ${user.is_admin ? `
+            <button class="btn btn-secondary btn-sm btn-icon" onclick="editProduct(${p.id})" title="Editar">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="btn btn-secondary btn-sm btn-icon" onclick="updateStock(${p.id}, '${p.name.replace(/'/g,"\\'")}', ${p.stock})" title="Stock">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </button>
+            <button class="btn btn-danger btn-sm btn-icon" onclick="deleteProduct(${p.id}, '${p.name.replace(/'/g,"\\'")}', ${p.active})" title="${p.active ? 'Desactivar' : 'Activar'}">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>
+            </button>` : ''}
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function renderGrid(page) {
+    const container = document.getElementById('productGridView');
+
+    if (!page.length) {
+      container.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+        <div class="empty-state-title">Sin productos</div>
+      </div>`;
+      return;
+    }
+
+    container.innerHTML = page.map(p => `
+      <div class="product-card">
+        <div class="product-card-img">
+          ${p.image
+            ? `<img src="https://mawewe.com.ec/${p.image}" alt="${p.name}" loading="lazy">`
+            : `<div style="color:var(--text-muted);"><svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`}
+        </div>
+        <div class="product-card-body">
+          <div class="product-name">${p.name}</div>
+          <div class="product-sku">${p.sku}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+            <div class="product-price">${Fmt.money(p.price)}</div>
+            ${Fmt.stockBadge(p.stock)}
+          </div>
+        </div>
+        <div class="product-card-actions">
+          <button class="btn btn-secondary btn-sm" style="flex:1;" onclick="viewProduct(${p.id})">Ver</button>
+          ${user.is_admin ? `<button class="btn btn-primary btn-sm" style="flex:1;" onclick="editProduct(${p.id})">Editar</button>` : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // View toggle
+  document.getElementById('viewTable').addEventListener('click', () => {
+    viewMode = 'table';
+    document.getElementById('viewTable').classList.add('active');
+    document.getElementById('viewGrid').classList.remove('active');
+    document.getElementById('productTableView').classList.remove('hidden');
+    document.getElementById('productGridView').classList.add('hidden');
+    renderProducts();
+  });
+
+  document.getElementById('viewGrid').addEventListener('click', () => {
+    viewMode = 'grid';
+    document.getElementById('viewGrid').classList.add('active');
+    document.getElementById('viewTable').classList.remove('active');
+    document.getElementById('productGridView').classList.remove('hidden');
+    document.getElementById('productTableView').classList.add('hidden');
+    renderProducts();
+  });
+
+  // Nuevo producto
+  if (user.is_admin) {
+    document.getElementById('newProductBtn')?.addEventListener('click', () => {
+      document.getElementById('productModalTitle').textContent = 'Nuevo Producto';
+      document.getElementById('productForm').reset();
+      document.getElementById('prodId').value = '';
+      Modal.open('productModal');
+    });
+  }
+
+  // Guardar
+  document.getElementById('saveProductBtn').addEventListener('click', async () => {
+    const id   = document.getElementById('prodId').value;
+    const name = document.getElementById('prodName').value.trim();
+    const sku  = document.getElementById('prodSku').value.trim();
+
+    if (!name || !sku || !document.getElementById('prodPrice').value ||
+        !document.getElementById('prodCategory').value.trim()) {
+      Toast.warning('Completa los campos requeridos');
+      return;
+    }
+
+    const body = {
+      id:          id ? parseInt(id) : undefined,
+      sku,
+      name,
+      category:    document.getElementById('prodCategory').value.trim(),
+      subcategory: document.getElementById('prodSubcategory').value.trim(),
+      price:       parseFloat(document.getElementById('prodPrice').value),
+      stock:       parseInt(document.getElementById('prodStock').value || 0),
+      active:      parseInt(document.getElementById('prodActive').value),
+      image:       document.getElementById('prodImage').value.trim(),
+      description: document.getElementById('prodDescription').value.trim()
+    };
+
+    try {
+      const data = id
+        ? await API.put('products_crud.php?action=update', body)
+        : await API.post('products_crud.php?action=create', body);
+
+      if (data.success) {
+        Toast.success(id ? 'Producto actualizado' : 'Producto creado');
+        Modal.closeAll();
+        load();
+      } else {
+        Toast.error(data.message || 'Error al guardar');
+      }
+    } catch(e) { Toast.error('Error de conexion'); }
+  });
+
+  // Editar
+  window.editProduct = async function(id) {
+    try {
+      const data = await API.get(`products_crud.php?action=get&id=${id}`);
+      if (!data.success) return;
+      const p = data.product;
+      document.getElementById('productModalTitle').textContent = 'Editar Producto';
+      document.getElementById('prodId').value          = p.id;
+      document.getElementById('prodSku').value         = p.sku;
+      document.getElementById('prodName').value        = p.name;
+      document.getElementById('prodCategory').value    = p.category;
+      document.getElementById('prodSubcategory').value = p.subcategory || '';
+      document.getElementById('prodPrice').value       = p.price;
+      document.getElementById('prodStock').value       = p.stock;
+      document.getElementById('prodActive').value      = p.active ? '1' : '0';
+      document.getElementById('prodImage').value       = p.image || '';
+      document.getElementById('prodDescription').value = p.description || '';
+      Modal.open('productModal');
+    } catch(e) { Toast.error('Error al cargar producto'); }
+  };
+
+  // Ver
+  window.viewProduct = async function(id) {
+    try {
+      const data = await API.get(`products_crud.php?action=get&id=${id}`);
+      if (!data.success) return;
+      const p = data.product;
+      document.getElementById('productViewBody').innerHTML = `
+        <div style="display:grid;grid-template-columns:200px 1fr;gap:24px;align-items:start;">
+          <div style="background:var(--bg);border-radius:12px;overflow:hidden;aspect-ratio:1;">
+            ${p.image ? `<img src="https://mawewe.com.ec/${p.image}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.innerHTML='<div style=height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-muted)>Sin imagen</div>'">` : `<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--text-muted);">Sin imagen</div>`}
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:1px;margin-bottom:4px;">${p.category} / ${p.subcategory || '-'}</div>
+            <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:var(--text-primary);margin-bottom:8px;">${p.name}</div>
+            <div style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);margin-bottom:16px;">${p.sku}</div>
+            <div style="font-size:28px;font-weight:800;color:var(--accent);margin-bottom:16px;">${Fmt.money(p.price)}</div>
+            <div style="display:flex;gap:8px;margin-bottom:20px;">
+              ${Fmt.stockBadge(p.stock)}
+              <span class="badge ${p.active ? 'badge-success' : 'badge-danger'}">${p.active ? 'Activo' : 'Inactivo'}</span>
+            </div>
+            ${p.description ? `<div style="font-size:13px;color:var(--text-secondary);line-height:1.7;">${p.description}</div>` : ''}
+          </div>
+        </div>
+      `;
+      Modal.open('productViewModal');
+    } catch(e) { Toast.error('Error'); }
+  };
+
+  // Stock rapido
+  window.updateStock = function(id, name, currentStock) {
+    const newStock = prompt(`Nuevo stock para "${name}":`, currentStock);
+    if (newStock === null) return;
+    const n = parseInt(newStock);
+    if (isNaN(n) || n < 0) { Toast.warning('Valor de stock no valido'); return; }
+    API.put('products_crud.php?action=update-stock', { id, stock: n }).then(data => {
+      if (data.success) { Toast.success('Stock actualizado'); load(); }
+      else Toast.error(data.message);
+    });
+  };
+
+  // Eliminar / toggle
+  window.deleteProduct = function(id, name, isActive) {
+    if (isActive) {
+      Modal.confirm(
+        'Desactivar producto',
+        `"${name}" sera desactivado y no aparecera en la tienda.`,
+        async () => {
+          const data = await API.put('products_crud.php?action=toggle-status', { id });
+          if (data.success) { Toast.success('Producto desactivado'); load(); }
+        }
+      );
+    } else {
+      Modal.confirm(
+        'Activar producto',
+        `"${name}" volvera a estar disponible en la tienda.`,
+        async () => {
+          const data = await API.put('products_crud.php?action=toggle-status', { id });
+          if (data.success) { Toast.success('Producto activado'); load(); }
+        },
+        false
+      );
+    }
+  };
+
+  // Filtros
+  document.getElementById('prodSearch').addEventListener('input', debounce(applyFilters, 250));
+  document.getElementById('prodCategoryFilter').addEventListener('change', applyFilters);
+  document.getElementById('prodStockFilter').addEventListener('change', applyFilters);
+  document.getElementById('prodActiveFilter').addEventListener('change', load);
+
+  load();
+})();
+</script>
+</body>
+</html>

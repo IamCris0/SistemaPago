@@ -1,409 +1,380 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sistema Seguimiento - MAWEWE/ELPALACIO</title>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Seguimiento - Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/variables.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+<body>
+<div class="app-layout" id="appLayout"></div>
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
+<script src="assets/js/core.js"></script>
+<script src="assets/js/sidebar.js"></script>
+<script>
+(function() {
+  const user = Auth.guard();
+  if (!user) return;
 
-    <!-- Estilos Actualizados -->
-    <link rel="stylesheet" href="css/crm-main.css" />
-    <link rel="stylesheet" href="css/modules.css" />
-    <link rel="stylesheet" href="css/employees.css" />
-    <link rel="stylesheet" href="css/products.css" />
+  // Render layout
+  const layout = document.getElementById('appLayout');
+  layout.innerHTML = `
+    ${SidebarHTML.render('dashboard.html')}
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/jpeg" href="img/logos.jpeg" />
-  </head>
-  <body>
-    <div class="crm-container">
-      <!-- ========================================
-             SIDEBAR CON LOGO
-             ======================================== -->
-      <aside class="sidebar" id="sidebar">
-        <!-- Header del Sidebar con Logo Real -->
-        <div class="sidebar-header">
-          <div class="sidebar-logo">
-            <div class="sidebar-logo-icon">
-              <img
-                src="img/logos.jpeg"
-                alt="MAWEWE Logo"
-                onerror="this.style.display = 'none'"
-              />
-            </div>
-            <div class="sidebar-logo-text">
-              <h1>MAWEWE</h1>
-              <div class="subtitle">Sistema Seguimiento</div>
-            </div>
-          </div>
-
-          <div class="sidebar-user">
-            <div class="sidebar-user-name" id="userName">Administrador</div>
-            <div class="sidebar-user-role" id="userRole">Gerente General</div>
-          </div>
+    <div class="main-content" id="mainContent">
+      <!-- TOPBAR -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">Dashboard</div>
+          <div class="topbar-subtitle">Resumen general del sistema</div>
         </div>
-
-        <!-- Navegación del Sidebar -->
-        <nav class="sidebar-nav">
-          <div class="nav-section">
-            <div class="nav-section-title">Principal</div>
-            <a
-              href="#dashboard"
-              class="nav-item active"
-              onclick="showModule('dashboard')"
-            >
-              <span class="nav-icon">📊</span>
-              <span class="nav-text">Dashboard</span>
-            </a>
-            <a
-              href="#analytics"
-              class="nav-item"
-              onclick="showModule('analytics')"
-            >
-              <span class="nav-icon">📈</span>
-              <span class="nav-text">Análisis</span>
-            </a>
-          </div>
-
-          <div class="nav-section">
-            <div class="nav-section-title">Gestión</div>
-            <!-- ✅ AHORA USA showModule EN LUGAR DE LINK DIRECTO -->
-            <a href="#employees" class="nav-item" onclick="showModule('employees')">
-              <span class="nav-icon">👥</span>
-              <span class="nav-text">Empleados</span>
-            </a>
-            <a
-              href="#attendance"
-              class="nav-item"
-              onclick="showModule('attendance')"
-            >
-              <span class="nav-icon">📅</span>
-              <span class="nav-text">Asistencia</span>
-            </a>
-            <a
-              href="#products"
-              class="nav-item"
-              onclick="showModule('products')"
-            >
-              <span class="nav-icon">🛍️</span>
-              <span class="nav-text">Productos</span>
-              <span class="nav-badge" id="productCount">0</span>
-            </a>
-            <a href="#orders" class="nav-item" onclick="showModule('orders')">
-              <span class="nav-icon">📦</span>
-              <span class="nav-text">Órdenes</span>
-              <span class="nav-badge" id="orderCount">0</span>
-            </a>
-          </div>
-
-          <div class="nav-section">
-            <div class="nav-section-title">Reportes</div>
-            <a
-              href="#reports-sales"
-              class="nav-item"
-              onclick="showModule('reports-sales')"
-            >
-              <span class="nav-icon">💰</span>
-              <span class="nav-text">Ventas</span>
-            </a>
-            <a
-              href="#reports-inventory"
-              class="nav-item"
-              onclick="showModule('reports-inventory')"
-            >
-              <span class="nav-icon">📊</span>
-              <span class="nav-text">Inventario</span>
-            </a>
-            <a
-              href="#reports-employees"
-              class="nav-item"
-              onclick="showModule('reports-employees')"
-            >
-              <span class="nav-icon">👔</span>
-              <span class="nav-text">RRHH</span>
-            </a>
-          </div>
-
-          <div class="nav-section">
-            <div class="nav-section-title">Sistema</div>
-            <a href="#audit" class="nav-item" onclick="showModule('audit')">
-              <span class="nav-icon">📝</span>
-              <span class="nav-text">Auditoría</span>
-            </a>
-            <a
-              href="#settings"
-              class="nav-item"
-              onclick="showModule('settings')"
-            >
-              <span class="nav-icon">⚙️</span>
-              <span class="nav-text">Configuración</span>
-            </a>
-          </div>
-        </nav>
-
-        <!-- Footer del Sidebar -->
-        <div class="sidebar-footer">
-          <button class="sidebar-footer-btn" onclick="logout()">
-            <span>🚪</span>
-            <span>Cerrar Sesión</span>
+        <div class="topbar-actions">
+          <button class="btn-topbar" id="refreshBtn" title="Actualizar datos">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <polyline points="23 4 23 10 17 10"/>
+              <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+            </svg>
           </button>
+          <div style="width:1px;height:24px;background:var(--border);margin:0 4px;"></div>
+          <div style="display:flex;align-items:center;gap:8px;padding:4px 10px;border-radius:var(--radius-md);background:var(--bg);">
+            <div style="width:28px;height:28px;border-radius:6px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:white;" id="topUserAvatar"></div>
+            <div style="font-size:13px;font-weight:600;" id="topUserName"></div>
+          </div>
         </div>
-      </aside>
+      </header>
 
-      <!-- ========================================
-             CONTENIDO PRINCIPAL
-             ======================================== -->
-      <main class="main-content" id="mainContent">
-        <!-- Topbar con Logo -->
-        <div class="topbar">
-          <div class="topbar-content">
-            <div class="topbar-left">
-              <button class="menu-toggle" onclick="toggleSidebar()">
-                <span id="menuIcon">☰</span>
-              </button>
-              <div class="topbar-title">
-                <h2 id="pageTitle">Dashboard</h2>
-                <div class="topbar-breadcrumb">
-                  <span id="breadcrumb">Inicio</span>
+      <!-- PAGE CONTENT -->
+      <main class="page-content">
+
+        <!-- GREETING -->
+        <div class="dashboard-header">
+          <div>
+            <div class="dashboard-greeting" id="greeting">Hola,</div>
+            <div class="dashboard-date" id="currentDate"></div>
+          </div>
+          <div style="display:flex;gap:var(--spacing-sm);">
+            <button class="btn btn-secondary" onclick="window.location.href='orders.html'">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/>
+              </svg>
+              Ver Ordenes
+            </button>
+            ${Auth.isAdmin() ? `<button class="btn btn-primary" onclick="window.location.href='products.html'">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Nuevo Producto
+            </button>` : ''}
+          </div>
+        </div>
+
+        <!-- STATS GRID -->
+        <div class="stats-grid" id="statsGrid">
+          <!-- Skeleton -->
+          ${[1,2,3,4].map(() => `
+            <div class="stat-card">
+              <div>
+                <div class="skeleton" style="width:80px;height:11px;margin-bottom:8px;"></div>
+                <div class="skeleton" style="width:100px;height:28px;margin-bottom:8px;"></div>
+                <div class="skeleton" style="width:60px;height:11px;"></div>
+              </div>
+              <div class="skeleton" style="width:48px;height:48px;border-radius:10px;"></div>
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- GRID PRINCIPAL -->
+        <div class="grid-3" style="margin-bottom:var(--spacing-lg);">
+
+          <!-- ORDENES RECIENTES -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Ordenes Recientes</div>
+              <a href="orders.html" style="font-size:13px;color:var(--accent);font-weight:600;">Ver todas</a>
+            </div>
+            <div class="table-wrapper">
+              <table class="data-table" id="recentOrdersTable">
+                <thead>
+                  <tr>
+                    <th>Numero</th>
+                    <th>Cliente</th>
+                    <th>Total</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody id="recentOrdersBody">
+                  <tr><td colspan="4" style="text-align:center;padding:32px;color:var(--text-muted);">
+                    <div class="spinner spinner-dark" style="margin:auto;"></div>
+                  </td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- PANEL DERECHO -->
+          <div style="display:flex;flex-direction:column;gap:var(--spacing-lg);">
+
+            <!-- ALERTAS -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Alertas</div>
+                <span class="badge badge-warning" id="alertCount">...</span>
+              </div>
+              <div class="card-body" style="padding:var(--spacing-md);">
+                <div class="alerts-list" id="alertsList">
+                  <div class="skeleton" style="height:40px;margin-bottom:8px;"></div>
+                  <div class="skeleton" style="height:40px;"></div>
                 </div>
               </div>
             </div>
 
-            <div class="topbar-right">
-              <div class="topbar-search">
-                <span class="topbar-search-icon">🔍</span>
-                <input
-                  type="text"
-                  class="topbar-search-input"
-                  placeholder="Buscar..."
-                  id="globalSearch"
-                />
+            <!-- ACCESO RAPIDO -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Acceso Rapido</div>
               </div>
-
-              <div class="topbar-actions">
-                <button
-                  class="topbar-btn"
-                  onclick="showNotifications()"
-                  title="Notificaciones"
-                >
-                  <span>🔔</span>
-                  <span class="topbar-btn-badge" id="notificationCount">3</span>
-                </button>
-                <button
-                  class="topbar-btn"
-                  onclick="showProfile()"
-                  title="Perfil"
-                >
-                  <span>👤</span>
-                </button>
-                <!-- Logo pequeño en topbar -->
-                <div
-                  style="
-                    width: 42px;
-                    height: 42px;
-                    border-radius: 10px;
-                    overflow: hidden;
-                    border: 1px solid #e2e8f0;
-                  "
-                >
-                  <img
-                    src="img/logos.jpeg"
-                    alt="MAWEWE"
-                    style="width: 100%; height: 100%; object-fit: cover"
-                  />
+              <div class="card-body" style="padding:var(--spacing-md);">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="quickLinks">
                 </div>
               </div>
             </div>
+
           </div>
         </div>
 
-        <!-- Contenido de Página -->
-        <div class="page-content">
-          <!-- ========================================
-                     MÓDULO: DASHBOARD
-                     ======================================== -->
-          <div id="module-dashboard" class="module active">
-            <!-- Dashboard content here -->
-            <div class="page-header">
-              <h1 class="page-title">Panel de Control</h1>
-              <p class="page-description">Resumen general del sistema</p>
-            </div>
-            <!-- Stats, charts, etc. -->
+        <!-- ACTIVIDAD RECIENTE -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Actividad Reciente</div>
+            <a href="audit.html" style="font-size:13px;color:var(--accent);font-weight:600;">Ver todo</a>
           </div>
-
-          <!-- ========================================
-                     MÓDULO: EMPLEADOS (INTEGRADO)
-                     ======================================== -->
-          <div id="module-employees" class="module">
-            <!-- El contenedor donde se renderizará el módulo de empleados -->
-            <div id="employeesContainer">
-              <div style="text-align: center; padding: 4rem;">
-                <div style="font-size: 48px; margin-bottom: 1rem;">⏳</div>
-                <p style="color: #6b7280;">Cargando módulo de empleados...</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- OTROS MÓDULOS -->
-          <div id="module-analytics" class="module">
-            <div class="page-header">
-              <h1 class="page-title">Análisis Avanzado</h1>
-            </div>
-            <div class="card">
-              <div class="card-body" style="text-align: center; padding: 4rem">
-                <div style="font-size: 4rem; margin-bottom: 1rem">📈</div>
-                <h2 style="margin-bottom: 0.5rem">Análisis en Desarrollo</h2>
-                <p style="color: #666">
-                  Este módulo estará disponible próximamente
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div id="module-attendance" class="module">
-            <div class="page-header">
-              <h1 class="page-title">Control de Asistencia</h1>
-            </div>
-            <div class="card" id="attendanceContent">
-              <div class="card-body" style="text-align: center; padding: 2rem">
-                Cargando asistencia...
-              </div>
-            </div>
-          </div>
-
-          <div id="module-products" class="module">
-            <div id="productsContainer"></div>
-              <h1 class="page-title">Gestión de Productos</h1>
-            </div>
-            <div class="card" id="productsContent">
-              <div class="card-body" style="text-align: center; padding: 2rem">
-                Cargando productos...
-              </div>
-            </div>
-          </div>
-
-          <div id="module-orders" class="module">
-            <div class="page-header">
-              <h1 class="page-title">Gestión de Órdenes</h1>
-            </div>
-            <div class="card" id="ordersContent">
-              <div class="card-body" style="text-align: center; padding: 2rem">
-                Cargando órdenes...
-              </div>
-            </div>
-          </div>
-
-          <div id="module-reports-sales" class="module">
-            <div class="page-header">
-              <h1 class="page-title">Reportes de Ventas</h1>
-            </div>
-            <div class="card" id="reportsSalesContent">
-              <div class="card-body" style="text-align: center; padding: 2rem">
-                Cargando reportes...
-              </div>
-            </div>
-          </div>
-
-          <div id="module-reports-inventory" class="module">
-            <div class="page-header">
-              <h1 class="page-title">Reportes de Inventario</h1>
-            </div>
-            <div class="card" id="reportsInventoryContent">
-              <div class="card-body" style="text-align: center; padding: 2rem">
-                Cargando reportes...
-              </div>
-            </div>
-          </div>
-
-          <div id="module-reports-employees" class="module">
-            <div class="page-header">
-              <h1 class="page-title">Reportes de RRHH</h1>
-            </div>
-            <div class="card" id="reportsEmployeesContent">
-              <div class="card-body" style="text-align: center; padding: 2rem">
-                Cargando reportes...
-              </div>
-            </div>
-          </div>
-
-          <div id="module-audit" class="module">
-            <div class="page-header">
-              <h1 class="page-title">Auditoría del Sistema</h1>
-            </div>
-            <div class="card" id="auditContent">
-              <div class="card-body" style="text-align: center; padding: 2rem">
-                Cargando auditoría...
-              </div>
-            </div>
-          </div>
-
-          <div id="module-settings" class="module">
-            <div class="page-header">
-              <h1 class="page-title">Configuración</h1>
-            </div>
-            <div class="card">
-              <div class="card-body" style="text-align: center; padding: 4rem">
-                <div style="font-size: 4rem; margin-bottom: 1rem">⚙️</div>
-                <h2 style="margin-bottom: 0.5rem">Configuración del Sistema</h2>
-                <p style="color: #666">Panel de configuración en desarrollo</p>
-              </div>
+          <div class="card-body" style="padding:0 var(--spacing-xl);">
+            <div id="activityList">
+              ${[1,2,3].map(()=>`
+                <div class="activity-item">
+                  <div class="skeleton" style="width:36px;height:36px;border-radius:10px;flex-shrink:0;"></div>
+                  <div style="flex:1;">
+                    <div class="skeleton" style="height:13px;width:70%;margin-bottom:6px;"></div>
+                    <div class="skeleton" style="height:11px;width:40%;"></div>
+                  </div>
+                </div>
+              `).join('')}
             </div>
           </div>
         </div>
+
       </main>
     </div>
+  `;
 
-    <!-- Toast Container -->
-    <div class="toast-container" id="toastContainer"></div>
+  // Init sidebar
+  Sidebar.init();
 
-    <!-- Scripts -->
-    <script src="js/config.js"></script>
-    <script src="js/crm-main.js"></script>
-    <script src="js/modules/employees.js"></script>
-    <script src="js/modules/dashboard.js"></script>
-    <script src="js/modules/attendance.js"></script>
-    <script src="js/modules/products.js"></script>
-    <script src="js/modules/reports.js"></script>
-    
-    <script>
-      // ✅ INICIALIZAR MÓDULO DE EMPLEADOS CUANDO SE ACTIVE
-      document.addEventListener('DOMContentLoaded', () => {
-        console.log('Dashboard cargado, módulos listos');
-        
-        // Cuando showModule('employees') se llame, inicializar el módulo
-        const originalShowModule = window.showModule;
-        window.showModule = async function(moduleName) {
-          // Llamar a la función original
-          originalShowModule(moduleName);
-          
-          // Si es el módulo de empleados, inicializarlo
-          if (moduleName === 'employees') {
-            console.log('Inicializando módulo de empleados en dashboard');
-            try {
-              await EmployeeModule.init();
-            } catch (error) {
-              console.error('Error inicializando empleados:', error);
-              document.getElementById('employeesContainer').innerHTML = `
-                <div style="text-align: center; padding: 4rem;">
-                  <div style="font-size: 48px; margin-bottom: 1rem; color: #ef4444;">✕</div>
-                  <h3 style="margin-bottom: 0.5rem;">Error al cargar el módulo</h3>
-                  <p style="color: #6b7280; margin-bottom: 1.5rem;">${error.message}</p>
-                  <button class="btn btn-primary" onclick="showModule('employees')">
-                    Reintentar
-                  </button>
-                </div>
-              `;
-            }
-          }
-        };
-      });
-    </script>
-  </body>
+  // Greeting & date
+  const hour = new Date().getHours();
+  const greet = hour < 12 ? 'Buenos dias' : hour < 18 ? 'Buenas tardes' : 'Buenas noches';
+  document.getElementById('greeting').textContent = `${greet}, ${user.nombre.split(' ')[0]}`;
+  document.getElementById('currentDate').textContent = new Date().toLocaleDateString('es-EC', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  });
+
+  // Topbar avatar
+  document.getElementById('topUserAvatar').textContent = Fmt.initials(user.nombre);
+  document.getElementById('topUserName').textContent   = user.nombre.split(' ')[0];
+
+  // Refresh
+  document.getElementById('refreshBtn').addEventListener('click', loadDashboard);
+
+  // Quick links
+  const links = [
+    { label: 'Ordenes',    href: 'orders.html',    color: '#3B82F6', icon: 'M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z' },
+    { label: 'Productos',  href: 'products.html',  color: '#10B981', icon: 'M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z' },
+    { label: 'Empleados',  href: 'employees.html', color: '#F59E0B', icon: 'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2' },
+    { label: 'Reportes',   href: 'reports.html',   color: '#8B5CF6', icon: 'M18 20V10M12 20V4M6 20v-6' },
+  ];
+
+  document.getElementById('quickLinks').innerHTML = links.map(l => `
+    <a href="${l.href}" style="
+      display:flex;flex-direction:column;align-items:center;gap:6px;
+      padding:12px 8px;border-radius:10px;border:1px solid var(--border);
+      background:var(--bg);text-decoration:none;
+      transition:all 0.2s;cursor:pointer;
+    " onmouseover="this.style.borderColor='${l.color}';this.style.background='${l.color}18'"
+       onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg)'">
+      <div style="width:32px;height:32px;border-radius:8px;background:${l.color}20;display:flex;align-items:center;justify-content:center;">
+        <svg width="14" height="14" fill="none" stroke="${l.color}" stroke-width="2" viewBox="0 0 24 24">
+          <path d="${l.icon}"/>
+        </svg>
+      </div>
+      <span style="font-size:11px;font-weight:600;color:var(--text-secondary)">${l.label}</span>
+    </a>
+  `).join('');
+
+  loadDashboard();
+
+  async function loadDashboard() {
+    try {
+      const data = await API.get('reports.php', { action: 'dashboard' });
+
+      if (data.success) {
+        renderStats(data);
+        renderAlerts(data.alerts);
+      }
+    } catch (e) {
+      Toast.error('Error al cargar el dashboard');
+    }
+
+    loadRecentOrders();
+    loadRecentActivity();
+  }
+
+  function renderStats(data) {
+    document.getElementById('statsGrid').innerHTML = `
+      <div class="stat-card" style="--stat-color:var(--accent)">
+        <div>
+          <div class="stat-label">Ingresos del Dia</div>
+          <div class="stat-value">${Fmt.money(data.today.revenue)}</div>
+          <div class="stat-delta up">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+            Hoy
+          </div>
+        </div>
+        <div class="stat-icon" style="background:var(--accent-soft);color:var(--accent);">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="stat-card" style="--stat-color:var(--info)">
+        <div>
+          <div class="stat-label">Ordenes del Dia</div>
+          <div class="stat-value">${data.today.orders}</div>
+          <div class="stat-delta" style="color:var(--text-muted);">Hoy</div>
+        </div>
+        <div class="stat-icon" style="background:var(--info-soft);color:var(--info);">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="stat-card" style="--stat-color:var(--success)">
+        <div>
+          <div class="stat-label">Ingresos del Mes</div>
+          <div class="stat-value">${Fmt.money(data.month.revenue)}</div>
+          <div class="stat-delta" style="color:var(--text-muted);">${data.month.orders} ordenes</div>
+        </div>
+        <div class="stat-icon" style="background:var(--success-soft);color:var(--success);">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="stat-card" style="--stat-color:var(--warning)">
+        <div>
+          <div class="stat-label">Empleados Presentes</div>
+          <div class="stat-value">${data.today.employees_present}</div>
+          <div class="stat-delta" style="color:var(--text-muted);">Hoy</div>
+        </div>
+        <div class="stat-icon" style="background:var(--warning-soft);color:var(--warning);">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          </svg>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderAlerts(alerts) {
+    const count = (alerts.low_stock || 0) + (alerts.pending_orders || 0);
+    document.getElementById('alertCount').textContent = count;
+
+    const items = [];
+    if (alerts.low_stock > 0) {
+      items.push(`
+        <div class="alert-item" style="border-color:var(--warning);">
+          <svg width="16" height="16" fill="none" stroke="var(--warning)" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+          </svg>
+          <span style="color:var(--text-primary);">${alerts.low_stock} productos con stock bajo</span>
+        </div>
+      `);
+    }
+    if (alerts.pending_orders > 0) {
+      items.push(`
+        <div class="alert-item" style="border-color:var(--info);">
+          <svg width="16" height="16" fill="none" stroke="var(--info)" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span style="color:var(--text-primary);">${alerts.pending_orders} ordenes pendientes de pago</span>
+        </div>
+      `);
+    }
+
+    document.getElementById('alertsList').innerHTML = items.length
+      ? items.join('')
+      : `<div style="text-align:center;padding:16px;color:var(--text-muted);font-size:13px;">Sin alertas activas</div>`;
+  }
+
+  async function loadRecentOrders() {
+    try {
+      const data = await API.get('orders.php');
+      const orders = (data.data || []).slice(0, 8);
+
+      document.getElementById('recentOrdersBody').innerHTML = orders.length
+        ? orders.map(o => `
+          <tr style="cursor:pointer;" onclick="window.location.href='orders.html'">
+            <td style="font-family:var(--font-mono);font-size:12px;">${o.order_number}</td>
+            <td>${o.first_name || o.customer_name || '-'} ${o.last_name || ''}</td>
+            <td style="font-weight:700;">${Fmt.money(o.total)}</td>
+            <td>${Fmt.statusBadge(o.status)}</td>
+          </tr>
+        `).join('')
+        : `<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--text-muted);">Sin ordenes registradas</td></tr>`;
+    } catch(e) {
+      document.getElementById('recentOrdersBody').innerHTML =
+        `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--danger);">Error al cargar ordenes</td></tr>`;
+    }
+  }
+
+  async function loadRecentActivity() {
+    try {
+      const data = await API.get('audit.php', { action: 'list', limit: 6 });
+      const logs  = data.logs || [];
+
+      const actionColors = {
+        CREATE: 'var(--success)', UPDATE: 'var(--info)',
+        DELETE: 'var(--danger)', LOGIN: 'var(--warning)', LOGOUT: 'var(--text-muted)'
+      };
+      const actionBg = {
+        CREATE: 'var(--success-soft)', UPDATE: 'var(--info-soft)',
+        DELETE: 'var(--danger-soft)', LOGIN: 'var(--warning-soft)', LOGOUT: 'var(--bg)'
+      };
+
+      document.getElementById('activityList').innerHTML = logs.length
+        ? logs.map(l => `
+          <div class="activity-item">
+            <div class="activity-icon" style="background:${actionBg[l.action]||'var(--bg)'};color:${actionColors[l.action]||'var(--text-muted)'};">
+              <span style="font-size:11px;font-weight:800;">${l.action.slice(0,2)}</span>
+            </div>
+            <div class="activity-content">
+              <div class="activity-text">${l.description || `${l.action} - ${l.entity_type}`}</div>
+              <div class="activity-meta">${l.user_name || 'Sistema'} &bull; ${Fmt.datetime(l.created_at)}</div>
+            </div>
+          </div>
+        `).join('')
+        : `<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px;">Sin actividad reciente</div>`;
+    } catch(e) {}
+  }
+
+})();
+</script>
+</body>
 </html>

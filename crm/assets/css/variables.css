@@ -1,0 +1,75 @@
+/* ============================================================
+   Sistema de Seguimiento - Variables Globales
+   ============================================================ */
+
+:root {
+  /* Colores Primarios - Azul Marino */
+  --primary:        #0D1B3E;
+  --primary-light:  #112352;
+  --primary-mid:    #1A3A6B;
+  --accent:         #2563EB;
+  --accent-hover:   #1D4ED8;
+  --accent-soft:    rgba(37, 99, 235, 0.12);
+
+  /* Grises y Neutros */
+  --bg:             #F0F4FA;
+  --bg-card:        #FFFFFF;
+  --bg-sidebar:     #0D1B3E;
+  --border:         #E2E8F0;
+  --border-dark:    #CBD5E1;
+
+  /* Texto */
+  --text-primary:   #1E293B;
+  --text-secondary: #64748B;
+  --text-muted:     #94A3B8;
+  --text-white:     #F8FAFC;
+
+  /* Semánticos */
+  --success:        #10B981;
+  --success-soft:   rgba(16, 185, 129, 0.12);
+  --warning:        #F59E0B;
+  --warning-soft:   rgba(245, 158, 11, 0.12);
+  --danger:         #EF4444;
+  --danger-soft:    rgba(239, 68, 68, 0.12);
+  --info:           #3B82F6;
+  --info-soft:      rgba(59, 130, 246, 0.12);
+
+  /* Sidebar */
+  --sidebar-width:        260px;
+  --sidebar-width-mini:   72px;
+
+  /* Espaciado */
+  --spacing-xs:  4px;
+  --spacing-sm:  8px;
+  --spacing-md:  16px;
+  --spacing-lg:  24px;
+  --spacing-xl:  32px;
+  --spacing-2xl: 48px;
+
+  /* Radios */
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  16px;
+  --radius-xl:  24px;
+  --radius-full: 9999px;
+
+  /* Sombras */
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:  0 4px 16px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04);
+  --shadow-lg:  0 10px 40px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06);
+  --shadow-xl:  0 20px 60px rgba(0,0,0,0.16);
+  --shadow-accent: 0 8px 32px rgba(37, 99, 235, 0.30);
+
+  /* Transiciones */
+  --transition-fast:   0.15s ease;
+  --transition-base:   0.25s ease;
+  --transition-slow:   0.4s ease;
+
+  /* Topbar */
+  --topbar-height: 64px;
+
+  /* Font */
+  --font-main:    'DM Sans', sans-serif;
+  --font-display: 'Sora', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+}

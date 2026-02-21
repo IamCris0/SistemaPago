@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Seguimiento - Asistencia</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/variables.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+<body>
+<div class="app-layout" id="appLayout"></div>
+
+<script src="assets/js/core.js"></script>
+<script src="assets/js/sidebar.js"></script>
+<script>
+(function() {
+  const user = Auth.guard();
+  if (!user) return;
+
+  document.getElementById('appLayout').innerHTML = `
+    ${SidebarHTML.render('attendance.html')}
+    <div class="main-content" id="mainContent">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">Asistencia</div>
+          <div class="topbar-subtitle">Control de entradas y salidas</div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-success" id="checkInBtn" style="background:var(--success);color:white;box-shadow:0 2px 8px rgba(16,185,129,0.3);">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+            </svg>
+            Marcar Entrada
+          </button>
+          <button class="btn btn-danger" id="checkOutBtn">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+              <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Marcar Salida
+          </button>
+        </div>
+      </header>
+      <main class="page-content">
+
+        <!-- MI ESTADO HOY -->
+        <div class="card" style="margin-bottom:var(--spacing-lg);">
+          <div class="card-body" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+            <div style="width:64px;height:64px;border-radius:16px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:white;flex-shrink:0;">
+              ${Fmt.initials(user.nombre)}
+            </div>
+            <div style="flex:1;">
+              <div style="font-family:var(--font-display);font-size:20px;font-weight:800;">${user.nombre}</div>
+              <div style="font-size:13px;color:var(--text-muted);">${user.cargo || ''} ${user.sucursal ? '- ' + user.sucursal : ''}</div>
+            </div>
+            <div style="display:flex;gap:24px;flex-wrap:wrap;">
+              <div style="text-align:center;">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);">Entrada</div>
+                <div style="font-family:var(--font-mono);font-size:20px;font-weight:700;color:var(--success);" id="myCheckIn">--:--</div>
+              </div>
+              <div style="text-align:center;">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);">Salida</div>
+                <div style="font-family:var(--font-mono);font-size:20px;font-weight:700;color:var(--danger);" id="myCheckOut">--:--</div>
+              </div>
+              <div style="text-align:center;">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);">Horas</div>
+                <div style="font-family:var(--font-mono);font-size:20px;font-weight:700;color:var(--info);" id="myHours">0.00</div>
+              </div>
+            </div>
+            <div id="myStatus"><span class="badge badge-neutral">Sin registro hoy</span></div>
+          </div>
+        </div>
+
+        <!-- ASISTENCIA DEL DIA -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Asistencia de Hoy - ${new Date().toLocaleDateString('es-EC', {weekday:'long',day:'2-digit',month:'long'})}</div>
+            <button class="btn btn-secondary btn-sm" id="refreshAttendanceBtn">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+              </svg>
+            </button>
+          </div>
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Empleado</th>
+                  <th>Cargo</th>
+                  <th>Entrada</th>
+                  <th>Salida</th>
+                  <th>Horas</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="attendanceTodayBody">
+                <tr><td colspan="6" style="text-align:center;padding:32px;">
+                  <div class="spinner spinner-dark" style="margin:auto;"></div>
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  `;
+
+  Sidebar.init();
+
+  async function loadMyStatus() {
+    try {
+      const data = await API.get('attendance.php', {
+        action: 'today',
+        employee_id: user.id
+      });
+      const record = (data.records || [])[0];
+      if (record) {
+        document.getElementById('myCheckIn').textContent  = record.check_in ? record.check_in.slice(11,16) : '--:--';
+        document.getElementById('myCheckOut').textContent = record.check_out ? record.check_out.slice(11,16) : '--:--';
+        document.getElementById('myHours').textContent    = record.hours_worked || '0.00';
+        document.getElementById('myStatus').innerHTML = record.check_out
+          ? `<span class="badge badge-success">Jornada completa</span>`
+          : `<span class="badge badge-warning">Turno activo</span>`;
+      }
+    } catch(e) {}
+  }
+
+  async function loadToday() {
+    try {
+      const data = await API.get('attendance.php', { action: 'today' });
+      const records = data.records || [];
+
+      document.getElementById('attendanceTodayBody').innerHTML = records.length
+        ? records.map(r => `
+          <tr>
+            <td style="font-weight:600;">${r.nombre || '-'}</td>
+            <td>${r.cargo || '-'}</td>
+            <td style="font-family:var(--font-mono);color:var(--success);">${r.check_in ? r.check_in.slice(11,16) : '--:--'}</td>
+            <td style="font-family:var(--font-mono);color:var(--danger);">${r.check_out ? r.check_out.slice(11,16) : '--:--'}</td>
+            <td style="font-weight:600;">${r.hours_worked || '0.00'}h</td>
+            <td>${r.check_out ? `<span class="badge badge-success">Completo</span>` : `<span class="badge badge-warning">Activo</span>`}</td>
+          </tr>
+        `).join('')
+        : `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);">Sin registros de asistencia hoy</td></tr>`;
+    } catch(e) { Toast.error('Error al cargar asistencia'); }
+  }
+
+  // Marcar entrada
+  document.getElementById('checkInBtn').addEventListener('click', async () => {
+    try {
+      const data = await API.post('attendance.php?action=check-in', { employee_id: user.id });
+      if (data.success) {
+        Toast.success(`Entrada marcada a las ${data.time}`);
+        loadMyStatus();
+        loadToday();
+      } else {
+        Toast.warning(data.message || 'No se pudo marcar entrada');
+      }
+    } catch(e) { Toast.error('Error de conexion'); }
+  });
+
+  // Marcar salida
+  document.getElementById('checkOutBtn').addEventListener('click', async () => {
+    try {
+      const data = await API.post('attendance.php?action=check-out', { employee_id: user.id });
+      if (data.success) {
+        Toast.success(`Salida marcada - ${data.hours_worked}h trabajadas`);
+        loadMyStatus();
+        loadToday();
+      } else {
+        Toast.warning(data.message || 'No hay entrada registrada hoy');
+      }
+    } catch(e) { Toast.error('Error de conexion'); }
+  });
+
+  document.getElementById('refreshAttendanceBtn').addEventListener('click', () => {
+    loadMyStatus();
+    loadToday();
+  });
+
+  loadMyStatus();
+  loadToday();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Seguimiento - Reportes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/variables.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+  <style>
+    /* ============================================================
+       ESTILOS PARA IMPRESION / PDF
+       ============================================================ */
+    @media print {
+      .sidebar, .topbar, .tabs-nav, .page-actions-bar, .no-print { display: none !important; }
+      .main-content { margin: 0 !important; padding: 0 !important; }
+      .page-content { padding: 0 !important; }
+      body { background: white !important; }
+      .app-layout { display: block !important; }
+      .card { box-shadow: none !important; border: 1px solid #e2e8f0 !important; break-inside: avoid; }
+      .stats-grid { grid-template-columns: repeat(4, 1fr) !important; }
+      .print-header { display: flex !important; }
+      .hidden { display: block !important; }
+      [id^="tab-"] { display: block !important; }
+      .print-section-title { display: block !important; }
+    }
+
+    .print-header {
+      display: none;
+      align-items: center;
+      gap: 16px;
+      padding: 24px 0;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 24px;
+    }
+
+    .print-header img {
+      height: 48px;
+      width: 48px;
+      object-fit: contain;
+    }
+
+    .print-header-info h1 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #0D1B3E;
+      margin: 0 0 2px;
+    }
+
+    .print-header-info p {
+      font-size: 12px;
+      color: #64748b;
+      margin: 0;
+    }
+
+    .print-section-title {
+      display: none;
+      font-size: 16px;
+      font-weight: 800;
+      color: #0D1B3E;
+      margin: 24px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .btn-export {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: #0D1B3E;
+      color: white;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all var(--transition-fast);
+    }
+
+    .btn-export:hover { background: #1A3A6B; transform: translateY(-1px); }
+
+    /* Barras de progreso para top productos */
+    .progress-bar-wrap {
+      width: 120px;
+      height: 6px;
+      background: var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 999px;
+      transition: width 0.6s ease;
+    }
+
+    /* Donut chart simple con CSS */
+    .donut-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .donut-row:last-child { border-bottom: none; }
+    .donut-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .donut-label { flex: 1; color: var(--text-secondary); }
+    .donut-val { font-weight: 700; }
+  </style>
+</head>
+<body>
+<div class="app-layout" id="appLayout"></div>
+
+<script src="assets/js/core.js"></script>
+<script src="assets/js/sidebar.js"></script>
+<script>
+(function() {
+  const user = Auth.guard();
+  if (!user) return;
+
+  document.getElementById('appLayout').innerHTML = `
+    ${SidebarHTML.render('reports.html')}
+    <div class="main-content" id="mainContent">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">Reportes</div>
+          <div class="topbar-subtitle">Analisis y estadisticas del negocio</div>
+        </div>
+        <div class="topbar-actions">
+          <input type="month" class="form-control" id="reportMonth" style="width:auto;" value="${new Date().toISOString().slice(0,7)}">
+          <button class="btn btn-primary" id="generateBtn">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+            </svg>
+            Generar
+          </button>
+          <button class="btn-export" id="exportPdfBtn" title="Exportar como PDF">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            Exportar PDF
+          </button>
+        </div>
+      </header>
+      <main class="page-content" id="reportContent">
+
+        <!-- Encabezado solo visible al imprimir -->
+        <div class="print-header" id="printHeader">
+          <img src="assets/img/logos.jpeg" alt="Logo" onerror="this.style.display='none'">
+          <div class="print-header-info">
+            <h1>Sistema de Seguimiento - Reporte</h1>
+            <p id="printSubtitle">Generado el ${new Date().toLocaleDateString('es-EC', {dateStyle:'long'})}</p>
+          </div>
+        </div>
+
+        <div class="tabs-nav no-print">
+          <button class="tab-btn active" data-tab="sales">Ventas</button>
+          <button class="tab-btn" data-tab="products">Inventario</button>
+          <button class="tab-btn" data-tab="employees">Empleados</button>
+        </div>
+
+        <!-- TAB VENTAS -->
+        <div id="tab-sales">
+          <div class="print-section-title">Reporte de Ventas</div>
+          <div class="stats-grid" id="salesStats" style="margin-bottom:var(--spacing-xl);">
+            ${[1,2,3,4].map(()=>`<div class="stat-card"><div class="skeleton" style="width:100%;height:60px;"></div></div>`).join('')}
+          </div>
+
+          <div class="card" style="margin-bottom:var(--spacing-lg);">
+            <div class="card-header">
+              <div class="card-title">Top Productos Vendidos</div>
+              <span id="salesPeriodLabel" style="font-size:12px;color:var(--text-muted);"></span>
+            </div>
+            <div class="table-wrapper">
+              <table class="data-table">
+                <thead><tr><th>#</th><th>Producto</th><th>SKU</th><th>Unidades</th><th>Progreso</th><th>Ingresos</th></tr></thead>
+                <tbody id="topProductsBody">
+                  <tr><td colspan="6" style="text-align:center;padding:32px;"><div class="spinner spinner-dark" style="margin:auto;"></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header"><div class="card-title">Metodos de Pago</div></div>
+              <div id="paymentMethodsChart" style="padding:8px 0;"></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">Ordenes por Estado</div></div>
+              <div id="orderStatusChart" style="padding:8px 0;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB PRODUCTOS -->
+        <div id="tab-products" class="hidden">
+          <div class="print-section-title">Reporte de Inventario</div>
+          <div class="stats-grid" id="invStats" style="margin-bottom:var(--spacing-xl);">
+            ${[1,2,3,4,5].map(()=>`<div class="stat-card"><div class="skeleton" style="width:100%;height:60px;"></div></div>`).join('')}
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header"><div class="card-title">Productos sin Stock</div></div>
+              <div class="table-wrapper">
+                <table class="data-table">
+                  <thead><tr><th>Producto</th><th>SKU</th><th>Categoria</th><th>Precio</th></tr></thead>
+                  <tbody id="outStockBody"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">Stock Bajo (menos de 10)</div></div>
+              <div class="table-wrapper">
+                <table class="data-table">
+                  <thead><tr><th>Producto</th><th>SKU</th><th>Stock</th></tr></thead>
+                  <tbody id="lowStockBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB EMPLEADOS -->
+        <div id="tab-employees" class="hidden">
+          <div class="print-section-title">Reporte de Empleados</div>
+          <div class="stats-grid" id="empStats" style="margin-bottom:var(--spacing-xl);">
+            ${[1,2,3].map(()=>`<div class="stat-card"><div class="skeleton" style="width:100%;height:60px;"></div></div>`).join('')}
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Asistencia del Mes</div></div>
+            <div class="table-wrapper">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Empleado</th><th>Cargo</th>
+                    <th style="text-align:center;">Dias</th>
+                    <th style="text-align:center;">Horas Total</th>
+                    <th style="text-align:center;">Promedio</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody id="empAttendanceBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  `;
+
+  Sidebar.init();
+
+  // Tabs
+  let activeTab = 'sales';
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeTab = btn.dataset.tab;
+      document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`tab-${activeTab}`).classList.remove('hidden');
+      loadReport();
+    });
+  });
+
+  document.getElementById('generateBtn').addEventListener('click', loadReport);
+
+  // EXPORTAR PDF — usa window.print() con @media print CSS
+  document.getElementById('exportPdfBtn').addEventListener('click', () => {
+    const month = document.getElementById('reportMonth').value;
+    const [y, m] = month.split('-');
+    const monthName = new Date(y, parseInt(m)-1, 1).toLocaleDateString('es-EC', {month:'long', year:'numeric'});
+    document.getElementById('printSubtitle').textContent =
+      `Periodo: ${monthName} — Generado el ${new Date().toLocaleDateString('es-EC', {dateStyle:'long'})} a las ${new Date().toLocaleTimeString('es-EC', {hour:'2-digit',minute:'2-digit'})}`;
+
+    // Mostrar todas las tabs temporalmente para impresion
+    document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'block');
+    window.print();
+    // Restaurar
+    document.querySelectorAll('[id^="tab-"]').forEach(el => {
+      el.style.display = '';
+      if (el.id !== `tab-${activeTab}`) el.classList.add('hidden');
+    });
+    Toast.success('Dialogo de impresion/PDF abierto');
+  });
+
+  async function loadReport() {
+    const month = document.getElementById('reportMonth').value;
+    const [year, m] = month.split('-');
+    const start = `${month}-01`;
+    const end   = `${month}-${new Date(year, parseInt(m), 0).getDate()}`;
+    if (activeTab === 'sales') await loadSales(start, end, month);
+    else if (activeTab === 'products') await loadProducts();
+    else await loadEmployees(month);
+  }
+
+  async function loadSales(start, end, month) {
+    try {
+      const data = await API.get('reports.php', { action: 'sales', start_date: start, end_date: end });
+      if (!data.success) return;
+      const t = data.totals || {};
+      const [y, m2] = month.split('-');
+      const label = new Date(y, parseInt(m2)-1, 1).toLocaleDateString('es-EC', {month:'long', year:'numeric'});
+      document.getElementById('salesPeriodLabel').textContent = label;
+
+      document.getElementById('salesStats').innerHTML = `
+        <div class="stat-card" style="--stat-color:var(--accent)">
+          <div><div class="stat-label">Ingresos Totales</div><div class="stat-value">${Fmt.money(t.total_revenue||0)}</div></div>
+          <div class="stat-icon" style="background:var(--accent-soft);color:var(--accent);">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          </div>
+        </div>
+        <div class="stat-card" style="--stat-color:var(--info)">
+          <div><div class="stat-label">Total Ordenes</div><div class="stat-value">${t.total_orders||0}</div></div>
+          <div class="stat-icon" style="background:var(--info-soft);color:var(--info);">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6z"/></svg>
+          </div>
+        </div>
+        <div class="stat-card" style="--stat-color:var(--success)">
+          <div><div class="stat-label">Completadas</div><div class="stat-value">${t.completed_orders||0}</div></div>
+          <div class="stat-icon" style="background:var(--success-soft);color:var(--success);">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </div>
+        <div class="stat-card" style="--stat-color:var(--warning)">
+          <div><div class="stat-label">Ticket Promedio</div><div class="stat-value">${Fmt.money(t.avg_order_value||0)}</div></div>
+          <div class="stat-icon" style="background:var(--warning-soft);color:var(--warning);">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+        </div>
+      `;
+
+      const top = data.top_products || [];
+      const maxUnits = top.length ? Math.max(...top.map(p => parseInt(p.total_sold)||0)) : 1;
+      document.getElementById('topProductsBody').innerHTML = top.length
+        ? top.map((p, i) => {
+            const pct = Math.round(((parseInt(p.total_sold)||0) / maxUnits) * 100);
+            return `<tr>
+              <td style="font-weight:800;color:var(--text-muted);width:32px;">${i+1}</td>
+              <td style="font-weight:600;">${p.product_name}</td>
+              <td style="font-family:var(--font-mono);font-size:12px;">${p.product_sku}</td>
+              <td><span class="badge badge-info">${p.total_sold} uds</span></td>
+              <td>
+                <div class="progress-bar-wrap">
+                  <div class="progress-bar-fill" style="width:${pct}%"></div>
+                </div>
+              </td>
+              <td style="font-weight:700;">${Fmt.money(p.total_revenue)}</td>
+            </tr>`;
+          }).join('')
+        : `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-muted);">Sin datos de ventas en este periodo</td></tr>`;
+
+      // Chart metodos de pago
+      const payColors = ['#2563EB','#10B981','#F59E0B','#8B5CF6','#64748B'];
+      const methods = data.payment_methods || [];
+      document.getElementById('paymentMethodsChart').innerHTML = methods.length
+        ? methods.map((m, i) => `
+            <div class="donut-row">
+              <div class="donut-dot" style="background:${payColors[i % payColors.length]};"></div>
+              <div class="donut-label">${m.payment_method || 'No especificado'}</div>
+              <span class="badge badge-neutral">${m.count}</span>
+              <div class="donut-val" style="color:${payColors[i % payColors.length]};">${Fmt.money(m.total)}</div>
+            </div>
+          `).join('')
+        : '<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px;">Sin datos</div>';
+
+      // Chart estados ordenes
+      const statusColors = {completed:'#10B981', pending:'#F59E0B', cancelled:'#EF4444', processing:'#3B82F6'};
+      const statuses = data.order_statuses || [];
+      document.getElementById('orderStatusChart').innerHTML = statuses.length
+        ? statuses.map(s => `
+            <div class="donut-row">
+              <div class="donut-dot" style="background:${statusColors[s.status]||'#64748B'};"></div>
+              <div class="donut-label">${s.status}</div>
+              <span class="badge badge-neutral">${s.count}</span>
+              <div class="donut-val">${Fmt.money(s.total)}</div>
+            </div>
+          `).join('')
+        : '<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px;">Sin datos</div>';
+
+    } catch(e) { Toast.error('Error al cargar reporte de ventas'); }
+  }
+
+  async function loadProducts() {
+    try {
+      const data = await API.get('reports.php', { action: 'products' });
+      if (!data.success) return;
+      const inv = data.inventory || {};
+      document.getElementById('invStats').innerHTML = `
+        <div class="stat-card"><div><div class="stat-label">Total Productos</div><div class="stat-value">${inv.total_products||0}</div></div></div>
+        <div class="stat-card"><div><div class="stat-label">Con Stock</div><div class="stat-value" style="color:var(--success);">${inv.in_stock||0}</div></div></div>
+        <div class="stat-card"><div><div class="stat-label">Sin Stock</div><div class="stat-value" style="color:var(--danger);">${inv.out_of_stock||0}</div></div></div>
+        <div class="stat-card"><div><div class="stat-label">Stock Bajo</div><div class="stat-value" style="color:var(--warning);">${inv.low_stock||0}</div></div></div>
+        <div class="stat-card"><div><div class="stat-label">Unidades Totales</div><div class="stat-value">${inv.total_items||0}</div></div></div>
+      `;
+      document.getElementById('outStockBody').innerHTML = (data.out_of_stock || []).map(p => `
+        <tr>
+          <td style="font-weight:600;">${p.name}</td>
+          <td style="font-family:var(--font-mono);font-size:12px;">${p.sku}</td>
+          <td><span class="badge badge-neutral">${p.category}</span></td>
+          <td style="font-weight:700;">${Fmt.money(p.price)}</td>
+        </tr>
+      `).join('') || `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted);">Sin productos sin stock</td></tr>`;
+      document.getElementById('lowStockBody').innerHTML = (data.low_stock || []).map(p => `
+        <tr>
+          <td style="font-weight:600;">${p.name}</td>
+          <td style="font-family:var(--font-mono);font-size:12px;">${p.sku}</td>
+          <td>${Fmt.stockBadge(p.stock)}</td>
+        </tr>
+      `).join('') || `<tr><td colspan="3" style="text-align:center;padding:24px;color:var(--text-muted);">Sin alertas de stock</td></tr>`;
+    } catch(e) { Toast.error('Error al cargar reporte de inventario'); }
+  }
+
+  async function loadEmployees(month) {
+    try {
+      const data = await API.get('reports.php', { action: 'employees', month });
+      if (!data.success) return;
+      const s = data.summary || {};
+      document.getElementById('empStats').innerHTML = `
+        <div class="stat-card"><div><div class="stat-label">Total Empleados</div><div class="stat-value">${s.total_employees||0}</div></div></div>
+        <div class="stat-card"><div><div class="stat-label">Activos</div><div class="stat-value" style="color:var(--success);">${s.active_employees||0}</div></div></div>
+        <div class="stat-card"><div><div class="stat-label">Administradores</div><div class="stat-value" style="color:var(--accent);">${s.admins||0}</div></div></div>
+      `;
+      document.getElementById('empAttendanceBody').innerHTML = (data.attendance || []).map(e => {
+        const hrs = parseFloat(e.total_hours) || 0;
+        const avg = parseFloat(e.avg_hours) || 0;
+        const statusColor = hrs > 160 ? 'var(--success)' : hrs > 80 ? 'var(--warning)' : 'var(--text-muted)';
+        return `<tr>
+          <td style="font-weight:600;">${e.nombre}</td>
+          <td><span class="badge badge-neutral">${e.cargo}</span></td>
+          <td style="text-align:center;font-weight:700;">${e.days_worked}</td>
+          <td style="text-align:center;font-weight:700;color:${statusColor};">${hrs.toFixed(1)}h</td>
+          <td style="text-align:center;">${avg.toFixed(1)}h</td>
+          <td>${hrs >= 160 ? '<span class="badge badge-success">Completo</span>' : hrs >= 80 ? '<span class="badge badge-warning">Parcial</span>' : '<span class="badge badge-neutral">Bajo</span>'}</td>
+        </tr>`;
+      }).join('') || `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-muted);">Sin registros de asistencia</td></tr>`;
+    } catch(e) { Toast.error('Error al cargar reporte de empleados'); }
+  }
+
+  loadReport();
+})();
+</script>
+</body>
+</html>

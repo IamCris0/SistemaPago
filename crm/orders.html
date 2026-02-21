@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Seguimiento - Ordenes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/variables.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+<body>
+<div class="app-layout" id="appLayout"></div>
+
+<!-- MODAL: Detalle de orden -->
+<div class="modal-overlay" id="orderModal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title" id="orderModalTitle">Detalle de Orden</div>
+      <button class="modal-close" data-modal-close>
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="orderModalBody"></div>
+    <div class="modal-footer" id="orderModalFooter"></div>
+  </div>
+</div>
+
+<script src="assets/js/core.js"></script>
+<script src="assets/js/sidebar.js"></script>
+<script>
+(function() {
+  const user = Auth.guard();
+  if (!user) return;
+
+  document.getElementById('appLayout').innerHTML = `
+    ${SidebarHTML.render('orders.html')}
+    <div class="main-content" id="mainContent">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">Ordenes</div>
+          <div class="topbar-subtitle">Seguimiento y gestion de ventas</div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-secondary" id="refreshOrdersBtn">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+            </svg>
+            Actualizar
+          </button>
+        </div>
+      </header>
+      <main class="page-content">
+        <!-- STATS ORDENES -->
+        <div class="stats-grid" id="orderStats" style="grid-template-columns:repeat(4,1fr);margin-bottom:var(--spacing-xl);">
+          ${[1,2,3,4].map(()=>`<div class="stat-card"><div class="skeleton" style="width:100%;height:60px;"></div></div>`).join('')}
+        </div>
+
+        <div class="page-header">
+          <div>
+            <div class="page-title">Historial de Ordenes</div>
+            <div class="page-subtitle" id="ordSubtitle">Cargando...</div>
+          </div>
+        </div>
+
+        <!-- FILTROS -->
+        <div class="filters-bar" style="flex-wrap:wrap;margin-bottom:var(--spacing-lg);">
+          <div class="search-box">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" class="form-control" id="ordSearch" placeholder="Buscar por numero, cliente..." style="padding-left:38px;min-width:260px;">
+          </div>
+          <select class="form-control" id="ordStatusFilter" style="width:auto;min-width:180px;">
+            <option value="">Todos los estados</option>
+            <option value="pending_payment">Pendiente de pago</option>
+            <option value="completed">Completado</option>
+            <option value="processing">Procesando</option>
+            <option value="shipped">Enviado</option>
+            <option value="cancelled">Cancelado</option>
+          </select>
+          <input type="date" class="form-control" id="ordDateFrom" style="width:auto;" title="Desde">
+          <input type="date" class="form-control" id="ordDateTo" style="width:auto;" title="Hasta">
+          <button class="btn btn-secondary btn-sm" id="clearFiltersBtn">Limpiar</button>
+        </div>
+
+        <!-- TABLA -->
+        <div class="card">
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Numero</th>
+                  <th>Cliente</th>
+                  <th>Contacto</th>
+                  <th>Metodo Pago</th>
+                  <th>Total</th>
+                  <th>Estado</th>
+                  <th>Fecha</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTableBody">
+                <tr><td colspan="8" style="text-align:center;padding:32px;">
+                  <div class="spinner spinner-dark" style="margin:auto;"></div>
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:var(--spacing-lg);">
+          <div style="font-size:13px;color:var(--text-muted);" id="ordPaginationInfo"></div>
+          <div class="pagination" id="ordPagination"></div>
+        </div>
+      </main>
+    </div>
+  `;
+
+  Sidebar.init();
+
+  let orders  = [];
+  let filtered = [];
+  let currentPage = 1;
+  const perPage = 15;
+
+  const paymentLabels = {
+    transfer: 'Transferencia', cash: 'Efectivo',
+    paypal: 'PayPal', card: 'Tarjeta'
+  };
+
+  async function load() {
+    try {
+      const params = {};
+      const status = document.getElementById('ordStatusFilter').value;
+      const search = document.getElementById('ordSearch').value.trim();
+      const from   = document.getElementById('ordDateFrom').value;
+      const to     = document.getElementById('ordDateTo').value;
+
+      if (status) params.status = status;
+      if (search) params.search = search;
+      if (from)   params.date_from = from;
+      if (to)     params.date_to   = to;
+
+      const data = await API.get('orders.php', params);
+      orders = data.data || [];
+
+      document.getElementById('ordSubtitle').textContent =
+        `${orders.length} orden${orders.length !== 1 ? 'es' : ''}`;
+
+      renderStats(orders);
+      filtered = orders;
+      currentPage = 1;
+      renderTable();
+    } catch(e) {
+      Toast.error('Error al cargar ordenes');
+    }
+  }
+
+  function renderStats(orders) {
+    const total    = orders.reduce((s, o) => s + (o.total || 0), 0);
+    const pending  = orders.filter(o => o.status === 'pending_payment').length;
+    const completed = orders.filter(o => o.status === 'completed').length;
+    const today    = new Date().toISOString().slice(0,10);
+    const todayRev = orders
+      .filter(o => (o.created_at || '').slice(0,10) === today)
+      .reduce((s, o) => s + (o.total || 0), 0);
+
+    document.getElementById('orderStats').innerHTML = `
+      <div class="stat-card" style="--stat-color:var(--accent)">
+        <div>
+          <div class="stat-label">Total Ingresos</div>
+          <div class="stat-value">${Fmt.money(total)}</div>
+          <div style="font-size:12px;color:var(--text-muted);">${orders.length} ordenes</div>
+        </div>
+        <div class="stat-icon" style="background:var(--accent-soft);color:var(--accent);">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+          </svg>
+        </div>
+      </div>
+      <div class="stat-card" style="--stat-color:var(--warning)">
+        <div>
+          <div class="stat-label">Pendientes</div>
+          <div class="stat-value">${pending}</div>
+          <div style="font-size:12px;color:var(--text-muted);">Sin confirmar</div>
+        </div>
+        <div class="stat-icon" style="background:var(--warning-soft);color:var(--warning);">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+      </div>
+      <div class="stat-card" style="--stat-color:var(--success)">
+        <div>
+          <div class="stat-label">Completadas</div>
+          <div class="stat-value">${completed}</div>
+          <div style="font-size:12px;color:var(--text-muted);">Confirmadas</div>
+        </div>
+        <div class="stat-icon" style="background:var(--success-soft);color:var(--success);">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+      </div>
+      <div class="stat-card" style="--stat-color:var(--info)">
+        <div>
+          <div class="stat-label">Ingresos Hoy</div>
+          <div class="stat-value">${Fmt.money(todayRev)}</div>
+          <div style="font-size:12px;color:var(--text-muted);">Del dia</div>
+        </div>
+        <div class="stat-icon" style="background:var(--info-soft);color:var(--info);">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+          </svg>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderTable() {
+    const start = (currentPage - 1) * perPage;
+    const page  = filtered.slice(start, start + perPage);
+    const total = Math.ceil(filtered.length / perPage);
+
+    document.getElementById('ordPaginationInfo').textContent =
+      `Mostrando ${start + 1}-${Math.min(start + perPage, filtered.length)} de ${filtered.length}`;
+    renderPagination('ordPagination', currentPage, total, p => { currentPage = p; renderTable(); });
+
+    if (!page.length) {
+      document.getElementById('ordersTableBody').innerHTML =
+        `<tr><td colspan="8"><div class="empty-state">
+          <div class="empty-state-title">Sin ordenes</div>
+          <div class="empty-state-desc">No hay ordenes que coincidan con los filtros</div>
+        </div></td></tr>`;
+      return;
+    }
+
+    document.getElementById('ordersTableBody').innerHTML = page.map(o => {
+      const nombre = o.first_name
+        ? `${o.first_name} ${o.last_name || ''}`
+        : (o.customer_name || '-');
+
+      return `
+        <tr style="cursor:pointer;" onclick="viewOrder(${o.id})">
+          <td><span style="font-family:var(--font-mono);font-size:12px;">${o.order_number || '#' + o.id}</span></td>
+          <td>
+            <div style="font-weight:600;">${nombre}</div>
+            <div style="font-size:11px;color:var(--text-muted);">${o.email || ''}</div>
+          </td>
+          <td style="font-size:12px;color:var(--text-muted);">${o.phone || '-'}</td>
+          <td><span class="badge badge-neutral">${paymentLabels[o.payment_method] || o.payment_method}</span></td>
+          <td style="font-weight:700;font-size:14px;">${Fmt.money(o.total)}</td>
+          <td>${Fmt.statusBadge(o.status)}</td>
+          <td style="font-size:12px;color:var(--text-muted);">${Fmt.datetime(o.created_at)}</td>
+          <td>
+            <button class="btn btn-secondary btn-sm btn-icon" onclick="event.stopPropagation();viewOrder(${o.id})" title="Ver detalle">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+            ${user.is_admin ? `
+            <button class="btn btn-secondary btn-sm btn-icon" onclick="event.stopPropagation();changeStatus(${o.id}, '${o.status}')" title="Cambiar estado">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+              </svg>
+            </button>` : ''}
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // Ver detalle de orden
+  window.viewOrder = async function(id) {
+    const order = orders.find(o => o.id == id);
+    if (!order) return;
+
+    const nombre = order.first_name
+      ? `${order.first_name} ${order.last_name || ''}`
+      : (order.customer_name || '-');
+
+    const items = Array.isArray(order.items) ? order.items : [];
+
+    document.getElementById('orderModalTitle').textContent = order.order_number || `Orden #${id}`;
+    document.getElementById('orderModalBody').innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+        <div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:8px;">Cliente</div>
+          <div style="font-weight:700;">${nombre}</div>
+          <div style="font-size:13px;color:var(--text-muted);">${order.email || ''}</div>
+          <div style="font-size:13px;color:var(--text-muted);">${order.phone || ''}</div>
+          ${order.address ? `<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">${order.address}${order.city ? ', ' + order.city : ''}</div>` : ''}
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:8px;">Detalle</div>
+          <div style="font-size:13px;margin-bottom:4px;"><strong>Estado:</strong> ${Fmt.statusBadge(order.status)}</div>
+          <div style="font-size:13px;margin-bottom:4px;"><strong>Pago:</strong> ${paymentLabels[order.payment_method] || order.payment_method}</div>
+          <div style="font-size:13px;margin-bottom:4px;"><strong>Fecha:</strong> ${Fmt.datetime(order.created_at)}</div>
+        </div>
+      </div>
+
+      ${items.length ? `
+      <div style="margin-bottom:20px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:8px;">Productos</div>
+        <table class="data-table">
+          <thead><tr><th>Producto</th><th>Cant.</th><th>Precio</th><th>Subtotal</th></tr></thead>
+          <tbody>
+            ${items.map(item => `
+              <tr>
+                <td>${item.name || item.product_name || '-'}</td>
+                <td>${item.quantity}</td>
+                <td>${Fmt.money(item.price)}</td>
+                <td style="font-weight:700;">${Fmt.money(item.subtotal || item.price * item.quantity)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>` : ''}
+
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;border-top:1px solid var(--border);padding-top:16px;">
+        ${order.subtotal ? `<div style="font-size:13px;color:var(--text-muted);">Subtotal: <strong>${Fmt.money(order.subtotal)}</strong></div>` : ''}
+        ${order.shipping_cost > 0 ? `<div style="font-size:13px;color:var(--text-muted);">Envio: <strong>${Fmt.money(order.shipping_cost)}</strong></div>` : ''}
+        <div style="font-size:20px;font-weight:800;color:var(--accent);">Total: ${Fmt.money(order.total)}</div>
+      </div>
+    `;
+
+    document.getElementById('orderModalFooter').innerHTML = user.is_admin ? `
+      <button class="btn btn-secondary" data-modal-close>Cerrar</button>
+      <button class="btn btn-primary" onclick="changeStatus(${order.id}, '${order.status}')">Cambiar Estado</button>
+    ` : `<button class="btn btn-secondary" data-modal-close>Cerrar</button>`;
+
+    // Re-bind close
+    document.querySelectorAll('[data-modal-close]').forEach(btn => {
+      btn.onclick = () => Modal.closeAll();
+    });
+
+    Modal.open('orderModal');
+  };
+
+  // Cambiar estado
+  window.changeStatus = function(id, currentStatus) {
+    const statuses = [
+      { value: 'pending_payment', label: 'Pendiente de pago' },
+      { value: 'processing',      label: 'Procesando' },
+      { value: 'completed',       label: 'Completado' },
+      { value: 'shipped',         label: 'Enviado' },
+      { value: 'cancelled',       label: 'Cancelado' }
+    ];
+
+    const opts = statuses.filter(s => s.value !== currentStatus);
+
+    // Simple select usando prompt
+    const choices = opts.map((s, i) => `${i+1}. ${s.label}`).join('\n');
+    const idx = parseInt(prompt(`Nuevo estado para la orden:\n${choices}\n\nIngresa el numero:`)) - 1;
+
+    if (isNaN(idx) || idx < 0 || idx >= opts.length) return;
+    const newStatus = opts[idx].value;
+
+    API.put('orders.php', { id, status: newStatus }).then(data => {
+      if (data.success) {
+        Toast.success(`Estado actualizado a: ${opts[idx].label}`);
+        Modal.closeAll();
+        load();
+      } else {
+        Toast.error(data.message || 'Error');
+      }
+    }).catch(() => Toast.error('Error de conexion'));
+  };
+
+  // Event listeners
+  document.getElementById('refreshOrdersBtn').addEventListener('click', load);
+  document.getElementById('ordStatusFilter').addEventListener('change', load);
+  document.getElementById('ordDateFrom').addEventListener('change', load);
+  document.getElementById('ordDateTo').addEventListener('change', load);
+  document.getElementById('ordSearch').addEventListener('input', debounce(load, 400));
+  document.getElementById('clearFiltersBtn').addEventListener('click', () => {
+    document.getElementById('ordSearch').value = '';
+    document.getElementById('ordStatusFilter').value = '';
+    document.getElementById('ordDateFrom').value = '';
+    document.getElementById('ordDateTo').value = '';
+    load();
+  });
+
+  load();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Seguimiento - Mi Perfil</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/variables.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+  <style>
+    .profile-hero {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-mid) 100%);
+      border-radius: var(--radius-xl);
+      padding: 40px;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      margin-bottom: var(--spacing-xl);
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+    .profile-hero::after {
+      content: '';
+      position: absolute;
+      right: -60px;
+      top: -60px;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.04);
+    }
+    .profile-avatar-large {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 32px;
+      font-weight: 800;
+      color: white;
+      flex-shrink: 0;
+      border: 3px solid rgba(255,255,255,0.2);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      position: relative;
+      z-index: 1;
+    }
+    .profile-hero-info { position: relative; z-index: 1; }
+    .profile-hero-name {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .profile-hero-role {
+      font-size: 13px;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 12px;
+    }
+    .profile-hero-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+    .profile-badge {
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.9);
+    }
+    .profile-badge.admin { background: var(--accent); color: white; }
+
+    .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-lg); }
+    @media (max-width: 768px) { .profile-grid { grid-template-columns: 1fr; } }
+
+    .info-row {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-row-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
+    .info-row-value { font-size: 15px; font-weight: 600; color: var(--text-primary); font-family: var(--font-mono); }
+
+    .stat-mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .stat-mini {
+      background: var(--bg);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-mini-val { font-size: 22px; font-weight: 800; color: var(--accent); }
+    .stat-mini-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    .session-info {
+      background: var(--bg);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .session-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 3px var(--success-soft); flex-shrink: 0; }
+    .session-info-text { font-size: 13px; color: var(--text-secondary); }
+    .session-info-text strong { color: var(--text-primary); }
+  </style>
+</head>
+<body>
+<div class="app-layout" id="appLayout"></div>
+
+<script src="assets/js/core.js"></script>
+<script src="assets/js/sidebar.js"></script>
+<script>
+(function() {
+  const user = Auth.guard();
+  if (!user) return;
+
+  const isAdmin = Auth.isAdmin();
+  const initials = Fmt.initials(user.nombre || 'U');
+  const loginTime = new Date().toLocaleTimeString('es-EC', {hour:'2-digit', minute:'2-digit'});
+
+  document.getElementById('appLayout').innerHTML = `
+    ${SidebarHTML.render('profile.html')}
+    <div class="main-content" id="mainContent">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">Mi Perfil</div>
+          <div class="topbar-subtitle">Informacion de tu cuenta</div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-danger" id="logoutHeroBtn">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Cerrar Sesion
+          </button>
+        </div>
+      </header>
+      <main class="page-content">
+
+        <!-- Hero -->
+        <div class="profile-hero">
+          <div class="profile-avatar-large">${initials}</div>
+          <div class="profile-hero-info">
+            <div class="profile-hero-name">${user.nombre || 'Sin nombre'}</div>
+            <div class="profile-hero-role">${user.cargo || 'Sin cargo asignado'}</div>
+            <div class="profile-hero-badges">
+              ${isAdmin ? '<span class="profile-badge admin">Administrador</span>' : '<span class="profile-badge">Empleado</span>'}
+              ${user.sucursal ? `<span class="profile-badge">${user.sucursal}</span>` : ''}
+              <span class="profile-badge">Sesion activa</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-grid">
+          <!-- Datos personales -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Datos Personales</div>
+            </div>
+            <div style="padding:0 var(--spacing-lg) var(--spacing-lg);">
+              <div class="info-row">
+                <div class="info-row-label">Nombre completo</div>
+                <div class="info-row-value" style="font-family:var(--font-main);">${user.nombre || '—'}</div>
+              </div>
+              <div class="info-row">
+                <div class="info-row-label">Cedula de identidad</div>
+                <div class="info-row-value">${user.cedula || '—'}</div>
+              </div>
+              <div class="info-row">
+                <div class="info-row-label">Cargo</div>
+                <div class="info-row-value" style="font-family:var(--font-main);">${user.cargo || '—'}</div>
+              </div>
+              <div class="info-row">
+                <div class="info-row-label">Sucursal</div>
+                <div class="info-row-value" style="font-family:var(--font-main);">${user.sucursal || '—'}</div>
+              </div>
+              <div class="info-row">
+                <div class="info-row-label">ID de empleado</div>
+                <div class="info-row-value">#${String(user.id || '0').padStart(4,'0')}</div>
+              </div>
+              <div class="info-row">
+                <div class="info-row-label">Rol del sistema</div>
+                <div class="info-row-value" style="font-family:var(--font-main);color:${isAdmin ? 'var(--accent)' : 'var(--text-primary)'};">${isAdmin ? 'Administrador' : 'Empleado'}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sesion actual -->
+          <div>
+            <div class="card" style="margin-bottom:var(--spacing-lg);">
+              <div class="card-header">
+                <div class="card-title">Sesion Actual</div>
+              </div>
+              <div style="padding:0 var(--spacing-lg) var(--spacing-lg);">
+                <div class="info-row">
+                  <div class="info-row-label">Tipo de sesion</div>
+                  <div class="info-row-value" style="font-family:var(--font-main);">Temporal (cierra al salir)</div>
+                </div>
+                <div class="info-row">
+                  <div class="info-row-label">Inicio de sesion hoy</div>
+                  <div class="info-row-value">${loginTime}</div>
+                </div>
+                <div class="info-row">
+                  <div class="info-row-label">Seguridad</div>
+                  <div class="info-row-value" style="font-family:var(--font-main);color:var(--success);">Activa</div>
+                </div>
+                <div class="session-info">
+                  <div class="session-dot"></div>
+                  <div class="session-info-text">
+                    Conectado como <strong>${user.nombre}</strong>. La sesion se cierra automaticamente al cerrar el navegador.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Estadisticas rapidas -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Mi Actividad de Hoy</div>
+              </div>
+              <div style="padding:0 var(--spacing-lg) var(--spacing-lg);">
+                <div class="stat-mini-grid" id="myStats">
+                  <div class="stat-mini"><div class="stat-mini-val" id="myCheckIn">--:--</div><div class="stat-mini-label">Hora Entrada</div></div>
+                  <div class="stat-mini"><div class="stat-mini-val" id="myCheckOut">--:--</div><div class="stat-mini-label">Hora Salida</div></div>
+                  <div class="stat-mini"><div class="stat-mini-val" id="myHours">0h</div><div class="stat-mini-label">Horas trabajadas</div></div>
+                  <div class="stat-mini"><div class="stat-mini-val" id="myStatus" style="font-size:13px;">—</div><div class="stat-mini-label">Estado</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Permisos -->
+        <div class="card" style="margin-top:var(--spacing-lg);">
+          <div class="card-header">
+            <div class="card-title">Permisos del Sistema</div>
+          </div>
+          <div style="padding:0 var(--spacing-lg) var(--spacing-lg); display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px;">
+            ${buildPermissions(isAdmin)}
+          </div>
+        </div>
+
+      </main>
+    </div>
+  `;
+
+  Sidebar.init();
+
+  document.getElementById('logoutHeroBtn').addEventListener('click', () => {
+    Modal.confirm('Cerrar sesion', '¿Estas seguro de que deseas cerrar tu sesion?', () => Auth.logout(), true);
+  });
+
+  // Cargar asistencia del dia
+  loadMyAttendance();
+
+  async function loadMyAttendance() {
+    try {
+      const data = await API.get('attendance.php', { action: 'today' });
+      if (!data.success) return;
+      const mine = (data.records || []).find(r => r.employee_id == user.id);
+      if (!mine) return;
+      if (mine.check_in) document.getElementById('myCheckIn').textContent = mine.check_in.slice(0,5);
+      if (mine.check_out) document.getElementById('myCheckOut').textContent = mine.check_out.slice(0,5);
+      if (mine.hours_worked) document.getElementById('myHours').textContent = parseFloat(mine.hours_worked).toFixed(1) + 'h';
+      const statusEl = document.getElementById('myStatus');
+      if (mine.check_out) { statusEl.textContent = 'Completo'; statusEl.style.color = 'var(--success)'; }
+      else if (mine.check_in) { statusEl.textContent = 'Activo'; statusEl.style.color = 'var(--accent)'; }
+    } catch(e) {}
+  }
+
+  function buildPermissions(isAdmin) {
+    const perms = [
+      { label: 'Ver Dashboard',       allowed: true },
+      { label: 'Ver Ordenes',         allowed: true },
+      { label: 'Cambiar estado orden',allowed: isAdmin },
+      { label: 'Ver Productos',       allowed: true },
+      { label: 'Crear / Editar productos', allowed: isAdmin },
+      { label: 'Ver Empleados',       allowed: true },
+      { label: 'Crear / Editar empleados', allowed: isAdmin },
+      { label: 'Marcar Asistencia',   allowed: true },
+      { label: 'Ver Reportes',        allowed: true },
+      { label: 'Exportar PDF',        allowed: true },
+      { label: 'Ver Auditoria',       allowed: isAdmin },
+      { label: 'Configurar sistema',  allowed: isAdmin },
+    ];
+    return perms.map(p => `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--radius-md);background:${p.allowed ? 'var(--success-soft)' : 'var(--bg)'};">
+        <div style="width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+          background:${p.allowed ? 'var(--success)' : 'var(--border-dark)'};">
+          ${p.allowed
+            ? `<svg width="10" height="10" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`
+            : `<svg width="10" height="10" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`
+          }
+        </div>
+        <span style="font-size:13px;font-weight:600;color:${p.allowed ? 'var(--text-primary)' : 'var(--text-muted)'};">${p.label}</span>
+      </div>
+    `).join('');
+  }
+})();
+</script>
+</body>
+</html>

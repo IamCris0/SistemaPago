@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Seguimiento - Empleados</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/variables.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+<body>
+<div class="app-layout" id="appLayout"></div>
+
+<!-- MODAL: Crear / Editar Empleado -->
+<div class="modal-overlay" id="employeeModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="employeeModalTitle">Nuevo Empleado</div>
+      <button class="modal-close" data-modal-close>
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form id="employeeForm">
+        <input type="hidden" id="empId" name="id">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label required" for="empNombre">Nombre completo</label>
+            <input type="text" id="empNombre" name="nombre" class="form-control" placeholder="Ej: Juan Perez" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label required" for="empCedula">Cedula</label>
+            <input type="text" id="empCedula" name="cedula" class="form-control" placeholder="10 digitos" maxlength="10" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label required" for="empCargo">Cargo</label>
+            <select id="empCargo" name="cargo" class="form-control">
+              <option value="Vendedor">Vendedor</option>
+              <option value="Cajero">Cajero</option>
+              <option value="Bodeguero">Bodeguero</option>
+              <option value="Supervisor">Supervisor</option>
+              <option value="Gerente General">Gerente General</option>
+              <option value="Coordinador">Coordinador</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label required" for="empSucursal">Sucursal</label>
+            <select id="empSucursal" name="sucursal" class="form-control">
+              <option value="JOYERIA MATRIZ">Joyeria Matriz</option>
+              <option value="PALACIO/MAWEWE">Palacio / Mawewe</option>
+              <option value="OTRA">Otra</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;">
+            <input type="checkbox" id="empIsAdmin" name="is_admin" style="width:16px;height:16px;accent-color:var(--accent);">
+            <span>
+              <span style="font-weight:600;font-size:13px;color:var(--text-primary);">Administrador</span><br>
+              <span style="font-size:11px;color:var(--text-muted);">Puede gestionar empleados, productos y ver toda la informacion</span>
+            </span>
+          </label>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-modal-close>Cancelar</button>
+      <button class="btn btn-primary" id="saveEmployeeBtn">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+        </svg>
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/core.js"></script>
+<script src="assets/js/sidebar.js"></script>
+<script>
+(function() {
+  const user = Auth.guard();
+  if (!user) return;
+
+  // Render layout
+  document.getElementById('appLayout').innerHTML = `
+    ${SidebarHTML.render('employees.html')}
+    <div class="main-content" id="mainContent">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">Empleados</div>
+          <div class="topbar-subtitle">Gestion del equipo de trabajo</div>
+        </div>
+        <div class="topbar-actions">
+          ${user.is_admin ? `
+          <button class="btn btn-primary" id="newEmployeeBtn">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Nuevo Empleado
+          </button>` : ''}
+        </div>
+      </header>
+      <main class="page-content">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Equipo de Trabajo</div>
+            <div class="page-subtitle" id="empSubtitle">Cargando...</div>
+          </div>
+        </div>
+
+        <!-- FILTROS -->
+        <div class="filters-bar">
+          <div class="search-box">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" class="form-control" id="empSearch" placeholder="Buscar por nombre o cedula..." style="padding-left:38px;min-width:280px;">
+          </div>
+          <select class="form-control" id="empFilter" style="width:auto;min-width:150px;">
+            <option value="all">Todos los empleados</option>
+            <option value="admin">Administradores</option>
+            <option value="active">Activos</option>
+            <option value="inactive">Inactivos</option>
+          </select>
+        </div>
+
+        <!-- LISTA -->
+        <div id="employeeList" style="display:flex;flex-direction:column;gap:var(--spacing-sm);">
+          ${[1,2,3].map(() => `
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--spacing-lg);display:flex;align-items:center;gap:var(--spacing-md);">
+              <div class="skeleton" style="width:52px;height:52px;border-radius:10px;flex-shrink:0;"></div>
+              <div style="flex:1;">
+                <div class="skeleton" style="height:14px;width:200px;margin-bottom:8px;"></div>
+                <div class="skeleton" style="height:11px;width:150px;"></div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- PAGINACION -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:var(--spacing-lg);">
+          <div style="font-size:13px;color:var(--text-muted);" id="empPaginationInfo"></div>
+          <div class="pagination" id="empPagination"></div>
+        </div>
+      </main>
+    </div>
+  `;
+
+  Sidebar.init();
+
+  // Estado
+  let employees = [];
+  let filtered  = [];
+  let currentPage = 1;
+  const perPage = 10;
+
+  // Cargar empleados
+  async function load() {
+    try {
+      const data = await API.get('employees.php', { action: 'list' });
+      employees = data.employees || [];
+      applyFilters();
+    } catch(e) {
+      Toast.error('Error al cargar empleados');
+    }
+  }
+
+  function applyFilters() {
+    const q = document.getElementById('empSearch').value.toLowerCase();
+    const f = document.getElementById('empFilter').value;
+
+    filtered = employees.filter(emp => {
+      const matchQ = !q || emp.nombre.toLowerCase().includes(q) || emp.cedula.includes(q);
+      const matchF = f === 'all' ? true
+        : f === 'admin' ? emp.is_admin
+        : f === 'active' ? emp.active
+        : !emp.active;
+      return matchQ && matchF;
+    });
+
+    document.getElementById('empSubtitle').textContent = `${filtered.length} empleado${filtered.length !== 1 ? 's' : ''}`;
+    currentPage = 1;
+    renderList();
+  }
+
+  function renderList() {
+    const start = (currentPage - 1) * perPage;
+    const page  = filtered.slice(start, start + perPage);
+
+    const container = document.getElementById('employeeList');
+
+    if (!page.length) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">
+            <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            </svg>
+          </div>
+          <div class="empty-state-title">Sin empleados</div>
+          <div class="empty-state-desc">No hay empleados que coincidan con los filtros</div>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = page.map(emp => {
+      const initials = Fmt.initials(emp.nombre);
+      const adminColor = emp.is_admin ? 'var(--accent)' : '#64748B';
+
+      return `
+        <div class="employee-card" style="${!emp.active ? 'opacity:0.55;' : ''}">
+          <div class="employee-avatar-lg" style="background:${emp.is_admin ? 'var(--accent)' : 'var(--primary-mid)'};">
+            ${initials}
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div class="employee-name">
+              ${emp.nombre}
+              ${emp.is_admin ? `<span class="badge badge-accent" style="margin-left:8px;font-size:10px;">Admin</span>` : ''}
+              ${!emp.active ? `<span class="badge badge-neutral" style="margin-left:4px;font-size:10px;">Inactivo</span>` : ''}
+            </div>
+            <div class="employee-details">
+              ${emp.cargo} &bull;
+              <span style="font-family:var(--font-mono);">${emp.cedula}</span> &bull;
+              ${emp.sucursal}
+            </div>
+          </div>
+          ${user.is_admin ? `
+          <div class="employee-actions">
+            <button class="btn btn-secondary btn-sm btn-icon" onclick="editEmployee(${emp.id})" title="Editar">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </button>
+            <button class="btn ${emp.active ? 'btn-warning' : 'btn-success'} btn-sm btn-icon"
+              onclick="toggleEmployee(${emp.id}, ${emp.active})"
+              title="${emp.active ? 'Desactivar' : 'Activar'}"
+              style="background:${emp.active ? 'var(--warning-soft)' : 'var(--success-soft)'};color:${emp.active ? 'var(--warning)' : 'var(--success)'};">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                ${emp.active
+                  ? '<rect x="1" y="5" width="22" height="14" rx="7"/><circle cx="16" cy="12" r="3" fill="currentColor" stroke="none"/>'
+                  : '<rect x="1" y="5" width="22" height="14" rx="7"/><circle cx="8" cy="12" r="3" fill="currentColor" stroke="none"/>'}
+              </svg>
+            </button>
+            <button class="btn btn-danger btn-sm btn-icon" onclick="deleteEmployee(${emp.id}, '${emp.nombre}')" title="Eliminar">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+              </svg>
+            </button>
+          </div>` : ''}
+        </div>
+      `;
+    }).join('');
+
+    // Paginacion
+    const totalPages = Math.ceil(filtered.length / perPage);
+    document.getElementById('empPaginationInfo').textContent =
+      `Mostrando ${start + 1}-${Math.min(start + perPage, filtered.length)} de ${filtered.length}`;
+    renderPagination('empPagination', currentPage, totalPages, p => {
+      currentPage = p;
+      renderList();
+    });
+  }
+
+  // Nuevo empleado
+  if (user.is_admin) {
+    document.getElementById('newEmployeeBtn')?.addEventListener('click', () => {
+      document.getElementById('employeeModalTitle').textContent = 'Nuevo Empleado';
+      document.getElementById('employeeForm').reset();
+      document.getElementById('empId').value = '';
+      Modal.open('employeeModal');
+    });
+  }
+
+  // Guardar
+  document.getElementById('saveEmployeeBtn').addEventListener('click', async () => {
+    const form = document.getElementById('employeeForm');
+    const id   = document.getElementById('empId').value;
+    const nombre = document.getElementById('empNombre').value.trim();
+    const cedula = document.getElementById('empCedula').value.trim();
+
+    if (!nombre || !cedula || cedula.length < 8) {
+      Toast.warning('Completa todos los campos requeridos');
+      return;
+    }
+
+    const body = {
+      id:       id ? parseInt(id) : undefined,
+      nombre,
+      cedula,
+      cargo:    document.getElementById('empCargo').value,
+      sucursal: document.getElementById('empSucursal').value,
+      is_admin: document.getElementById('empIsAdmin').checked ? 1 : 0
+    };
+
+    try {
+      const data = id
+        ? await API.put('employees.php?action=update', body)
+        : await API.post('employees.php?action=create', body);
+
+      if (data.success) {
+        Toast.success(id ? 'Empleado actualizado' : 'Empleado creado');
+        Modal.closeAll();
+        load();
+      } else {
+        Toast.error(data.message || 'Error al guardar');
+      }
+    } catch(e) {
+      Toast.error('Error de conexion');
+    }
+  });
+
+  // Editar
+  window.editEmployee = async function(id) {
+    try {
+      const data = await API.get(`employees.php?action=get&id=${id}`);
+      if (!data.success) return;
+      const emp = data.employee;
+      document.getElementById('employeeModalTitle').textContent = 'Editar Empleado';
+      document.getElementById('empId').value       = emp.id;
+      document.getElementById('empNombre').value   = emp.nombre;
+      document.getElementById('empCedula').value   = emp.cedula;
+      document.getElementById('empCargo').value    = emp.cargo;
+      document.getElementById('empSucursal').value = emp.sucursal;
+      document.getElementById('empIsAdmin').checked = emp.is_admin;
+      Modal.open('employeeModal');
+    } catch(e) { Toast.error('Error al cargar empleado'); }
+  };
+
+  // Toggle activo
+  window.toggleEmployee = function(id, currentActive) {
+    const action = currentActive ? 'desactivar' : 'activar';
+    Modal.confirm(
+      `${action.charAt(0).toUpperCase() + action.slice(1)} empleado`,
+      `El empleado sera ${action}do en el sistema.`,
+      async () => {
+        try {
+          const data = await API.put('employees.php?action=toggle-status', { id });
+          if (data.success) {
+            Toast.success(`Empleado ${action}do correctamente`);
+            load();
+          }
+        } catch(e) { Toast.error('Error'); }
+      },
+      currentActive
+    );
+  };
+
+  // Eliminar
+  window.deleteEmployee = function(id, nombre) {
+    Modal.confirm(
+      'Eliminar empleado',
+      `Se desactivara a "${nombre}" del sistema. Esta accion puede revertirse.`,
+      async () => {
+        try {
+          const data = await API.delete(`employees.php?action=delete&id=${id}`);
+          if (data.success) {
+            Toast.success('Empleado eliminado');
+            load();
+          }
+        } catch(e) { Toast.error('Error'); }
+      }
+    );
+  };
+
+  // Filtros
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('empSearch')?.addEventListener('input', debounce(applyFilters, 250));
+    document.getElementById('empFilter')?.addEventListener('change', applyFilters);
+  });
+
+  // Solo numeros en cedula
+  document.getElementById('empCedula')?.addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '');
+  });
+
+  load();
+})();
+</script>
+</body>
+</html>
