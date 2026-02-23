@@ -1,27 +1,11 @@
 <?php
 /**
- * API DE PRODUCTOS - MAWEWE CRM v4.0
- * CRUD Completo con manejo de imágenes
- * 
- * CAMPOS AUTO-GESTIONADOS (NO ENVIAR EN FORMULARIOS):
- * - id: Auto-increment
- * - created_at: Auto timestamp
- * - updated_at: Auto timestamp on update
- * 
- * CAMPOS REQUERIDOS:
- * - sku: Código único del producto
- * - name: Nombre del producto
- * - category: Categoría principal
- * - price: Precio del producto
- * - image: URL de imagen principal
- * 
- * CAMPOS OPCIONALES:
- * - subcategory: Sub-categoría
- * - description: Descripción detallada
- * - images: Array JSON de URLs de imágenes adicionales
- * - stock: Cantidad en inventario (default 0)
- * - active: Estado activo/inactivo (default 1)
+ * API DE PRODUCTOS CRUD - MAWEWE CRM
+ * ✅ GET/list NO requiere autenticacion
+ * ✅ POST/PUT/DELETE requieren token
  */
+
+while (ob_get_level()) ob_end_clean();
 
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
@@ -30,549 +14,297 @@ header('Content-Type: application/json; charset=UTF-8');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
-    exit();
+    exit;
 }
 
 require_once __DIR__ . '/config/database.php';
-require_once __DIR__ . '/helpers/audit.php';
-require_once __DIR__ . '/helpers/auth.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
-$action = $_GET['action'] ?? '';
+$action = $_GET['action'] ?? 'list';
+
+/* ── Auth helper (solo para escritura) ── */
+function getAuthUser($db) {
+    $headers = function_exists('getallheaders') ? getallheaders() : [];
+    $token   = null;
+    if (isset($headers['Authorization'])) {
+        if (preg_match('/Bearer\s+(.+)$/i', $headers['Authorization'], $m)) {
+            $token = $m[1];
+        }
+    }
+    if (!$token) {
+        $body  = json_decode(file_get_contents('php://input'), true);
+        $token = $body['token'] ?? $_GET['token'] ?? null;
+    }
+    if (!$token) {
+        http_response_code(401);
+        echo json_encode(['success'=>false,'message'=>'Token requerido']);
+        exit;
+    }
+    $decoded = base64_decode($token);
+    $parts   = explode(':', $decoded);
+    if (count($parts) < 2) {
+        http_response_code(401);
+        echo json_encode(['success'=>false,'message'=>'Token invalido']);
+        exit;
+    }
+    $userId = (int)$parts[0];
+    $stmt = $db->prepare("SELECT id, nombre, is_admin FROM employees WHERE id=:id AND active=1");
+    $stmt->execute([':id' => $userId]);
+    $user = $stmt->fetch();
+    if (!$user) {
+        http_response_code(401);
+        echo json_encode(['success'=>false,'message'=>'Sesion invalida']);
+        exit;
+    }
+    return $user;
+}
+
+function logAuditP($db, $data) {
+    try {
+        $db->prepare("INSERT INTO audit_log (user_id,action,entity_type,entity_id,old_value,new_value,description,ip_address)
+                      VALUES (:uid,:act,:et,:eid,:ov,:nv,:desc,:ip)")
+           ->execute([
+               ':uid'  => $data['user_id'] ?? null,
+               ':act'  => $data['action'],
+               ':et'   => $data['entity_type'] ?? 'PRODUCT',
+               ':eid'  => $data['entity_id'] ?? null,
+               ':ov'   => isset($data['old_value']) ? json_encode($data['old_value']) : null,
+               ':nv'   => isset($data['new_value']) ? json_encode($data['new_value']) : null,
+               ':desc' => $data['description'] ?? '',
+               ':ip'   => $_SERVER['REMOTE_ADDR'] ?? 'Unknown'
+           ]);
+    } catch(Exception $e) { error_log('Audit: '.$e->getMessage()); }
+}
 
 try {
     $database = new Database();
     $db = $database->getConnection();
-    
-    if (!$db) {
-        throw new Exception('Error de conexión a BD');
-    }
-    
-    // ========================================
-    // LISTAR PRODUCTOS
-    // ========================================
-    if ($method === 'GET' && ($action === 'list' || $action === '')) {
-        $page = (int)($_GET['page'] ?? 1);
-        $limit = (int)($_GET['limit'] ?? 50);
+    if (!$db) throw new Exception('Error de conexion a BD');
+
+    /* ═══════ LISTAR — SIN AUTH ═══════ */
+    if ($method === 'GET' && in_array($action, ['list',''])) {
+        $page   = max(1, (int)($_GET['page']  ?? 1));
+        $limit  = max(1, (int)($_GET['limit'] ?? 50));
         $offset = ($page - 1) * $limit;
-        
-        $filters = [];
-        $params = [];
-        
-        // Filtro por categoría
+
+        $filters = ['active = 1']; // default: solo activos
+        $params  = [];
+
+        if (isset($_GET['active']) && $_GET['active'] !== '') {
+            $filters = []; // quitar default
+            $filters[] = "active = :active";
+            $params[':active'] = (int)$_GET['active'];
+        }
+
         if (!empty($_GET['category'])) {
             $filters[] = "category = :category";
             $params[':category'] = $_GET['category'];
         }
-        
-        // Filtro por subcategoría
-        if (!empty($_GET['subcategory'])) {
-            $filters[] = "subcategory = :subcategory";
-            $params[':subcategory'] = $_GET['subcategory'];
-        }
-        
-        // Búsqueda
         if (!empty($_GET['search'])) {
             $filters[] = "(name LIKE :search OR sku LIKE :search OR description LIKE :search)";
-            $params[':search'] = '%' . $_GET['search'] . '%';
+            $params[':search'] = '%'.$_GET['search'].'%';
         }
-        
-        // Filtro por stock
         if (isset($_GET['stock_status'])) {
-            switch ($_GET['stock_status']) {
-                case 'out':
-                    $filters[] = "stock = 0";
-                    break;
-                case 'low':
-                    $filters[] = "stock > 0 AND stock < 10";
-                    break;
-                case 'ok':
-                    $filters[] = "stock >= 10";
-                    break;
-            }
+            if ($_GET['stock_status'] === 'out') $filters[] = "stock = 0";
+            elseif ($_GET['stock_status'] === 'low') $filters[] = "stock > 0 AND stock < 10";
+            elseif ($_GET['stock_status'] === 'ok')  $filters[] = "stock >= 10";
         }
-        
-        // Filtro por estado
-        if (isset($_GET['active'])) {
-            $filters[] = "active = :active";
-            $params[':active'] = (int)$_GET['active'];
-        } else {
-            // Por defecto solo activos
-            $filters[] = "active = 1";
-        }
-        
-        $whereClause = !empty($filters) ? 'WHERE ' . implode(' AND ', $filters) : '';
-        
-        // Contar total
-        $sqlCount = "SELECT COUNT(*) as total FROM products $whereClause";
-        $stmtCount = $db->prepare($sqlCount);
-        $stmtCount->execute($params);
-        $total = $stmtCount->fetch()['total'];
-        
-        // Obtener productos
-        $sql = "SELECT 
-                    id, sku, name, category, subcategory, price, 
-                    description, image, images, stock, active,
-                    created_at, updated_at
-                FROM products 
-                $whereClause
-                ORDER BY created_at DESC
-                LIMIT :limit OFFSET :offset";
-        
+
+        $where = $filters ? 'WHERE '.implode(' AND ',$filters) : '';
+
+        $total = $db->prepare("SELECT COUNT(*) FROM products $where");
+        $total->execute($params);
+        $total = (int)$total->fetchColumn();
+
+        $sql = "SELECT id,sku,name,category,subcategory,price,description,image,images,stock,active,created_at,updated_at
+                FROM products $where ORDER BY created_at DESC LIMIT :lim OFFSET :off";
         $stmt = $db->prepare($sql);
-        foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value);
-        }
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        foreach ($params as $k=>$v) $stmt->bindValue($k,$v);
+        $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
         $stmt->execute();
-        
         $products = $stmt->fetchAll();
-        
-        // Procesar cada producto
-        foreach ($products as &$product) {
-            $product['id'] = (int)$product['id'];
-            $product['price'] = (float)$product['price'];
-            $product['stock'] = (int)$product['stock'];
-            $product['active'] = (bool)$product['active'];
-            
-            // Decodificar array de imágenes
-            if ($product['images']) {
-                $decoded = json_decode($product['images'], true);
-                $product['images'] = is_array($decoded) ? $decoded : [];
+
+        foreach ($products as &$p) {
+            $p['id']     = (int)$p['id'];
+            $p['price']  = (float)$p['price'];
+            $p['stock']  = (int)$p['stock'];
+            $p['active'] = (bool)$p['active'];
+            if ($p['images']) {
+                $d = json_decode($p['images'], true);
+                $p['images'] = is_array($d) ? $d : [];
             } else {
-                $product['images'] = [];
+                $p['images'] = [];
             }
         }
-        
+
         echo json_encode([
-            'success' => true,
+            'success'  => true,
             'products' => $products,
-            'total' => (int)$total,
-            'page' => $page,
-            'pages' => ceil($total / $limit),
-            'limit' => $limit
+            'total'    => $total,
+            'page'     => $page,
+            'pages'    => ceil($total / $limit),
+            'limit'    => $limit
         ]);
         exit();
     }
-    
-    // ========================================
-    // OBTENER UN PRODUCTO
-    // ========================================
+
+    /* ═══════ GET SINGLE ═══════ */
     if ($method === 'GET' && $action === 'get') {
-        $id = (int)($_GET['id'] ?? 0);
-        
-        if (!$id) {
-            throw new Exception('ID de producto requerido');
-        }
-        
-        $sql = "SELECT * FROM products WHERE id = :id";
-        $stmt = $db->prepare($sql);
-        $stmt->execute([':id' => $id]);
-        $product = $stmt->fetch();
-        
-        if (!$product) {
-            http_response_code(404);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Producto no encontrado'
-            ]);
-            exit();
-        }
-        
-        // Procesar datos
-        $product['id'] = (int)$product['id'];
-        $product['price'] = (float)$product['price'];
-        $product['stock'] = (int)$product['stock'];
-        $product['active'] = (bool)$product['active'];
-        
-        if ($product['images']) {
-            $decoded = json_decode($product['images'], true);
-            $product['images'] = is_array($decoded) ? $decoded : [];
-        } else {
-            $product['images'] = [];
-        }
-        
-        echo json_encode([
-            'success' => true,
-            'product' => $product
-        ]);
+        $id   = (int)($_GET['id'] ?? 0);
+        if (!$id) throw new Exception('ID requerido');
+        $stmt = $db->prepare("SELECT * FROM products WHERE id=:id");
+        $stmt->execute([':id'=>$id]);
+        $p = $stmt->fetch();
+        if (!$p) { http_response_code(404); echo json_encode(['success'=>false,'message'=>'No encontrado']); exit; }
+        $p['id']     = (int)$p['id'];
+        $p['price']  = (float)$p['price'];
+        $p['stock']  = (int)$p['stock'];
+        $p['active'] = (bool)$p['active'];
+        if ($p['images']) { $d=json_decode($p['images'],true); $p['images']=is_array($d)?$d:[]; } else $p['images']=[];
+        echo json_encode(['success'=>true,'product'=>$p]);
         exit();
     }
-    
-    // ========================================
-    // CREAR PRODUCTO
-    // ========================================
+
+    /* ═══════ CREAR — requiere auth ═══════ */
     if ($method === 'POST' && $action === 'create') {
-        // Verificar autenticación
-        $currentUser = verifyAuth($db);
-        
+        $user  = getAuthUser($db);
         $input = json_decode(file_get_contents('php://input'), true);
-        
-        // Validaciones
+
         if (empty($input['sku']) || empty($input['name']) || empty($input['category']) || !isset($input['price'])) {
-            throw new Exception('SKU, nombre, categoría y precio son requeridos');
+            throw new Exception('SKU, nombre, categoria y precio son requeridos');
         }
-        
-        // Verificar que el SKU no exista
-        $sqlCheck = "SELECT id FROM products WHERE sku = :sku";
-        $stmtCheck = $db->prepare($sqlCheck);
-        $stmtCheck->execute([':sku' => trim($input['sku'])]);
-        
-        if ($stmtCheck->fetch()) {
-            http_response_code(409);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Ya existe un producto con este SKU'
-            ]);
-            exit();
-        }
-        
-        // Preparar array de imágenes
-        $imagesJson = null;
+
+        $chk = $db->prepare("SELECT id FROM products WHERE sku=:sku");
+        $chk->execute([':sku'=>trim($input['sku'])]);
+        if ($chk->fetch()) { http_response_code(409); echo json_encode(['success'=>false,'message'=>'SKU ya existe']); exit; }
+
+        $imgsJson = null;
         if (!empty($input['images']) && is_array($input['images'])) {
-            $imagesJson = json_encode($input['images'], JSON_UNESCAPED_SLASHES);
+            $imgsJson = json_encode($input['images'], JSON_UNESCAPED_SLASHES);
         }
-        
-        // Crear producto
-        // NOTA: NO se envían id, created_at, updated_at (auto-gestionados)
-        $sql = "INSERT INTO products (
-                    sku, name, category, subcategory, price, 
-                    description, image, images, stock, active
-                ) VALUES (
-                    :sku, :name, :category, :subcategory, :price,
-                    :description, :image, :images, :stock, :active
-                )";
-        
-        $stmt = $db->prepare($sql);
-        $stmt->execute([
-            ':sku' => trim($input['sku']),
-            ':name' => trim($input['name']),
-            ':category' => trim($input['category']),
-            ':subcategory' => trim($input['subcategory'] ?? ''),
-            ':price' => (float)$input['price'],
-            ':description' => trim($input['description'] ?? ''),
-            ':image' => trim($input['image'] ?? ''),
-            ':images' => $imagesJson,
-            ':stock' => (int)($input['stock'] ?? 0),
+
+        $sql = "INSERT INTO products (sku,name,category,subcategory,price,description,image,images,stock,active)
+                VALUES (:sku,:name,:cat,:sub,:price,:desc,:img,:imgs,:stock,:active)";
+        $db->prepare($sql)->execute([
+            ':sku'    => trim($input['sku']),
+            ':name'   => trim($input['name']),
+            ':cat'    => trim($input['category']),
+            ':sub'    => trim($input['subcategory'] ?? ''),
+            ':price'  => (float)$input['price'],
+            ':desc'   => trim($input['description'] ?? ''),
+            ':img'    => trim($input['image'] ?? ''),
+            ':imgs'   => $imgsJson,
+            ':stock'  => (int)($input['stock'] ?? 0),
             ':active' => (int)($input['active'] ?? 1)
         ]);
-        
         $newId = (int)$db->lastInsertId();
-        
-        // Registrar en auditoría
-        logAudit($db, [
-            'user_id' => $currentUser['id'],
-            'action' => 'CREATE',
-            'entity_type' => 'PRODUCT',
-            'entity_id' => $newId,
-            'new_value' => [
-                'sku' => $input['sku'],
-                'name' => $input['name'],
-                'category' => $input['category'],
-                'price' => $input['price']
-            ],
-            'description' => "Producto creado: {$input['name']}"
-        ]);
-        
-        echo json_encode([
-            'success' => true,
-            'message' => 'Producto creado exitosamente',
-            'id' => $newId
-        ]);
+
+        logAuditP($db,['user_id'=>$user['id'],'action'=>'CREATE','entity_id'=>$newId,'description'=>"Producto creado: {$input['name']}"]);
+        echo json_encode(['success'=>true,'message'=>'Producto creado','id'=>$newId]);
         exit();
     }
-    
-    // ========================================
-    // ACTUALIZAR PRODUCTO
-    // ========================================
+
+    /* ═══════ ACTUALIZAR — requiere auth ═══════ */
     if ($method === 'PUT' && $action === 'update') {
-        // Verificar autenticación
-        $currentUser = verifyAuth($db);
-        
+        $user  = getAuthUser($db);
         $input = json_decode(file_get_contents('php://input'), true);
-        $id = (int)($input['id'] ?? 0);
-        
-        if (!$id) {
-            throw new Exception('ID de producto requerido');
+        $id    = (int)($input['id'] ?? 0);
+        if (!$id) throw new Exception('ID requerido');
+
+        $stmt = $db->prepare("SELECT * FROM products WHERE id=:id");
+        $stmt->execute([':id'=>$id]);
+        $old = $stmt->fetch();
+        if (!$old) { http_response_code(404); echo json_encode(['success'=>false,'message'=>'No encontrado']); exit; }
+
+        if (isset($input['sku']) && $input['sku'] !== $old['sku']) {
+            $chk = $db->prepare("SELECT id FROM products WHERE sku=:sku AND id!=:id");
+            $chk->execute([':sku'=>trim($input['sku']),':id'=>$id]);
+            if ($chk->fetch()) { http_response_code(409); echo json_encode(['success'=>false,'message'=>'SKU ya en uso']); exit; }
         }
-        
-        // Obtener datos actuales
-        $sqlOld = "SELECT * FROM products WHERE id = :id";
-        $stmtOld = $db->prepare($sqlOld);
-        $stmtOld->execute([':id' => $id]);
-        $oldData = $stmtOld->fetch();
-        
-        if (!$oldData) {
-            http_response_code(404);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Producto no encontrado'
-            ]);
-            exit();
-        }
-        
-        // Verificar que el SKU no exista en otro producto
-        if (isset($input['sku']) && $input['sku'] !== $oldData['sku']) {
-            $sqlCheck = "SELECT id FROM products WHERE sku = :sku AND id != :id";
-            $stmtCheck = $db->prepare($sqlCheck);
-            $stmtCheck->execute([
-                ':sku' => trim($input['sku']),
-                ':id' => $id
-            ]);
-            
-            if ($stmtCheck->fetch()) {
-                http_response_code(409);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Ya existe otro producto con este SKU'
-                ]);
-                exit();
-            }
-        }
-        
-        // Preparar array de imágenes
-        $imagesJson = $oldData['images'];
+
+        $imgsJson = $old['images'];
         if (isset($input['images'])) {
-            if (is_array($input['images'])) {
-                $imagesJson = json_encode($input['images'], JSON_UNESCAPED_SLASHES);
-            } elseif ($input['images'] === null || $input['images'] === '') {
-                $imagesJson = null;
-            }
+            $imgsJson = is_array($input['images']) ? json_encode($input['images'],JSON_UNESCAPED_SLASHES) : null;
         }
-        
-        // Actualizar producto
-        // NOTA: NO se actualiza id, created_at se mantiene, updated_at se actualiza automáticamente
-        $sql = "UPDATE products 
-                SET sku = :sku,
-                    name = :name,
-                    category = :category,
-                    subcategory = :subcategory,
-                    price = :price,
-                    description = :description,
-                    image = :image,
-                    images = :images,
-                    stock = :stock,
-                    active = :active
-                WHERE id = :id";
-        
-        $stmt = $db->prepare($sql);
-        $stmt->execute([
-            ':sku' => trim($input['sku'] ?? $oldData['sku']),
-            ':name' => trim($input['name'] ?? $oldData['name']),
-            ':category' => trim($input['category'] ?? $oldData['category']),
-            ':subcategory' => trim($input['subcategory'] ?? $oldData['subcategory']),
-            ':price' => (float)($input['price'] ?? $oldData['price']),
-            ':description' => trim($input['description'] ?? $oldData['description']),
-            ':image' => trim($input['image'] ?? $oldData['image']),
-            ':images' => $imagesJson,
-            ':stock' => (int)($input['stock'] ?? $oldData['stock']),
-            ':active' => (int)($input['active'] ?? $oldData['active']),
-            ':id' => $id
+
+        $sql = "UPDATE products SET sku=:sku,name=:name,category=:cat,subcategory=:sub,price=:price,
+                description=:desc,image=:img,images=:imgs,stock=:stock,active=:active WHERE id=:id";
+        $db->prepare($sql)->execute([
+            ':sku'    => trim($input['sku']         ?? $old['sku']),
+            ':name'   => trim($input['name']        ?? $old['name']),
+            ':cat'    => trim($input['category']    ?? $old['category']),
+            ':sub'    => trim($input['subcategory'] ?? $old['subcategory']),
+            ':price'  => (float)($input['price']   ?? $old['price']),
+            ':desc'   => trim($input['description'] ?? $old['description']),
+            ':img'    => trim($input['image']       ?? $old['image']),
+            ':imgs'   => $imgsJson,
+            ':stock'  => (int)($input['stock']     ?? $old['stock']),
+            ':active' => (int)($input['active']    ?? $old['active']),
+            ':id'     => $id
         ]);
-        
-        // Registrar en auditoría
-        logAudit($db, [
-            'user_id' => $currentUser['id'],
-            'action' => 'UPDATE',
-            'entity_type' => 'PRODUCT',
-            'entity_id' => $id,
-            'old_value' => [
-                'name' => $oldData['name'],
-                'price' => $oldData['price'],
-                'stock' => $oldData['stock']
-            ],
-            'new_value' => [
-                'name' => $input['name'] ?? $oldData['name'],
-                'price' => $input['price'] ?? $oldData['price'],
-                'stock' => $input['stock'] ?? $oldData['stock']
-            ],
-            'description' => "Producto actualizado: {$oldData['name']}"
-        ]);
-        
-        echo json_encode([
-            'success' => true,
-            'message' => 'Producto actualizado exitosamente'
-        ]);
+
+        logAuditP($db,['user_id'=>$user['id'],'action'=>'UPDATE','entity_id'=>$id,'description'=>"Producto actualizado: {$old['name']}"]);
+        echo json_encode(['success'=>true,'message'=>'Producto actualizado']);
         exit();
     }
-    
-    // ========================================
-    // ACTIVAR/DESACTIVAR PRODUCTO
-    // ========================================
+
+    /* ═══════ TOGGLE STATUS ═══════ */
     if ($method === 'PUT' && $action === 'toggle-status') {
-        $currentUser = verifyAuth($db);
-        
+        $user  = getAuthUser($db);
         $input = json_decode(file_get_contents('php://input'), true);
-        $id = (int)($input['id'] ?? 0);
-        
-        if (!$id) {
-            throw new Exception('ID de producto requerido');
-        }
-        
-        // Obtener estado actual
-        $sqlOld = "SELECT name, active FROM products WHERE id = :id";
-        $stmtOld = $db->prepare($sqlOld);
-        $stmtOld->execute([':id' => $id]);
-        $oldData = $stmtOld->fetch();
-        
-        if (!$oldData) {
-            http_response_code(404);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Producto no encontrado'
-            ]);
-            exit();
-        }
-        
-        $newStatus = !$oldData['active'];
-        
-        // Actualizar estado (updated_at se actualiza automáticamente)
-        $sql = "UPDATE products SET active = :active WHERE id = :id";
-        $stmt = $db->prepare($sql);
-        $stmt->execute([
-            ':active' => (int)$newStatus,
-            ':id' => $id
-        ]);
-        
-        // Registrar en auditoría
-        logAudit($db, [
-            'user_id' => $currentUser['id'],
-            'action' => 'UPDATE',
-            'entity_type' => 'PRODUCT',
-            'entity_id' => $id,
-            'old_value' => ['active' => (bool)$oldData['active']],
-            'new_value' => ['active' => $newStatus],
-            'description' => ($newStatus ? 'Activado' : 'Desactivado') . " producto: {$oldData['name']}"
-        ]);
-        
-        echo json_encode([
-            'success' => true,
-            'message' => 'Estado actualizado exitosamente',
-            'active' => $newStatus
-        ]);
+        $id    = (int)($input['id'] ?? 0);
+        if (!$id) throw new Exception('ID requerido');
+        $stmt = $db->prepare("SELECT name,active FROM products WHERE id=:id");
+        $stmt->execute([':id'=>$id]);
+        $old = $stmt->fetch();
+        if (!$old) { http_response_code(404); echo json_encode(['success'=>false,'message'=>'No encontrado']); exit; }
+        $newStatus = !$old['active'];
+        $db->prepare("UPDATE products SET active=:a WHERE id=:id")->execute([':a'=>(int)$newStatus,':id'=>$id]);
+        logAuditP($db,['user_id'=>$user['id'],'action'=>'UPDATE','entity_id'=>$id,'description'=>($newStatus?'Activado':'Desactivado').": {$old['name']}"]);
+        echo json_encode(['success'=>true,'active'=>$newStatus]);
         exit();
     }
-    
-    // ========================================
-    // ACTUALIZAR STOCK ÚNICAMENTE
-    // ========================================
+
+    /* ═══════ UPDATE STOCK ═══════ */
     if ($method === 'PUT' && $action === 'update-stock') {
-        $currentUser = verifyAuth($db);
-        
+        $user  = getAuthUser($db);
         $input = json_decode(file_get_contents('php://input'), true);
-        $id = (int)($input['id'] ?? 0);
+        $id    = (int)($input['id'] ?? 0);
         $newStock = (int)($input['stock'] ?? 0);
-        
-        if (!$id) {
-            throw new Exception('ID de producto requerido');
-        }
-        
-        // Obtener datos actuales
-        $sqlOld = "SELECT name, stock FROM products WHERE id = :id";
-        $stmtOld = $db->prepare($sqlOld);
-        $stmtOld->execute([':id' => $id]);
-        $oldData = $stmtOld->fetch();
-        
-        if (!$oldData) {
-            http_response_code(404);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Producto no encontrado'
-            ]);
-            exit();
-        }
-        
-        // Actualizar stock (updated_at se actualiza automáticamente)
-        $sql = "UPDATE products SET stock = :stock WHERE id = :id";
-        $stmt = $db->prepare($sql);
-        $stmt->execute([
-            ':stock' => $newStock,
-            ':id' => $id
-        ]);
-        
-        // Registrar en auditoría
-        logAudit($db, [
-            'user_id' => $currentUser['id'],
-            'action' => 'UPDATE',
-            'entity_type' => 'PRODUCT',
-            'entity_id' => $id,
-            'old_value' => ['stock' => (int)$oldData['stock']],
-            'new_value' => ['stock' => $newStock],
-            'description' => "Stock actualizado: {$oldData['name']} ({$oldData['stock']} → {$newStock})"
-        ]);
-        
-        echo json_encode([
-            'success' => true,
-            'message' => 'Stock actualizado exitosamente',
-            'stock' => $newStock
-        ]);
+        if (!$id) throw new Exception('ID requerido');
+        $stmt = $db->prepare("SELECT name,stock FROM products WHERE id=:id");
+        $stmt->execute([':id'=>$id]);
+        $old = $stmt->fetch();
+        if (!$old) { http_response_code(404); echo json_encode(['success'=>false,'message'=>'No encontrado']); exit; }
+        $db->prepare("UPDATE products SET stock=:s WHERE id=:id")->execute([':s'=>$newStock,':id'=>$id]);
+        logAuditP($db,['user_id'=>$user['id'],'action'=>'UPDATE','entity_id'=>$id,
+            'old_value'=>['stock'=>(int)$old['stock']],'new_value'=>['stock'=>$newStock],
+            'description'=>"Stock: {$old['name']} ({$old['stock']} -> $newStock)"]);
+        echo json_encode(['success'=>true,'stock'=>$newStock]);
         exit();
     }
-    
-    // ========================================
-    // ELIMINAR PRODUCTO (SOFT DELETE)
-    // ========================================
+
+    /* ═══════ ELIMINAR (soft delete) ═══════ */
     if ($method === 'DELETE' && $action === 'delete') {
-        $currentUser = verifyAuth($db);
-        
-        $id = (int)($_GET['id'] ?? 0);
-        
-        if (!$id) {
-            throw new Exception('ID de producto requerido');
-        }
-        
-        // Obtener datos
-        $sqlOld = "SELECT name FROM products WHERE id = :id";
-        $stmtOld = $db->prepare($sqlOld);
-        $stmtOld->execute([':id' => $id]);
-        $oldData = $stmtOld->fetch();
-        
-        if (!$oldData) {
-            http_response_code(404);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Producto no encontrado'
-            ]);
-            exit();
-        }
-        
-        // Soft delete: solo desactivar (updated_at se actualiza automáticamente)
-        $sql = "UPDATE products SET active = 0 WHERE id = :id";
-        $stmt = $db->prepare($sql);
-        $stmt->execute([':id' => $id]);
-        
-        // Registrar en auditoría
-        logAudit($db, [
-            'user_id' => $currentUser['id'],
-            'action' => 'DELETE',
-            'entity_type' => 'PRODUCT',
-            'entity_id' => $id,
-            'description' => "Producto eliminado (soft delete): {$oldData['name']}"
-        ]);
-        
-        echo json_encode([
-            'success' => true,
-            'message' => 'Producto eliminado exitosamente'
-        ]);
+        $user = getAuthUser($db);
+        $id   = (int)($_GET['id'] ?? 0);
+        if (!$id) throw new Exception('ID requerido');
+        $stmt = $db->prepare("SELECT name FROM products WHERE id=:id");
+        $stmt->execute([':id'=>$id]);
+        $old = $stmt->fetch();
+        if (!$old) { http_response_code(404); echo json_encode(['success'=>false,'message'=>'No encontrado']); exit; }
+        $db->prepare("UPDATE products SET active=0 WHERE id=:id")->execute([':id'=>$id]);
+        logAuditP($db,['user_id'=>$user['id'],'action'=>'DELETE','entity_id'=>$id,'description'=>"Eliminado: {$old['name']}"]);
+        echo json_encode(['success'=>true,'message'=>'Producto eliminado']);
         exit();
     }
-    
-    // Acción no válida
+
     http_response_code(400);
-    echo json_encode([
-        'success' => false,
-        'message' => 'Acción no válida'
-    ]);
-    
-} catch (Exception $e) {
-    error_log("Error products_crud.php: " . $e->getMessage());
-    
+    echo json_encode(['success'=>false,'message'=>'Accion no valida']);
+
+} catch(Exception $e) {
+    error_log('products_crud.php: '.$e->getMessage());
     http_response_code(500);
-    echo json_encode([
-        'success' => false,
-        'message' => 'Error en el servidor',
-        'error' => $e->getMessage()
-    ]);
+    echo json_encode(['success'=>false,'message'=>$e->getMessage()]);
 }
-?>

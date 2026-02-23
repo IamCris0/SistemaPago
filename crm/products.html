@@ -65,21 +65,8 @@
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">
-            Imagenes del Producto
-            <span style="font-size:11px;color:var(--text-muted);font-weight:400;margin-left:6px;">Solo el nombre del archivo (ej: camiseta-azul.jpg) — se guardan en tienda.mawewe.com.ec/assets/img/</span>
-          </label>
-          <div id="imageInputsWrap" style="display:flex;flex-direction:column;gap:8px;">
-            <div class="img-input-row" style="display:flex;gap:8px;align-items:center;">
-              <span style="font-size:11px;color:var(--text-muted);font-weight:700;width:20px;flex-shrink:0;">1</span>
-              <input type="text" class="form-control prod-img-input" placeholder="nombre-imagen-1.jpg" style="font-family:var(--font-mono);font-size:13px;">
-              <div class="img-preview" style="width:40px;height:40px;border-radius:8px;background:var(--bg);border:1px solid var(--border);overflow:hidden;flex-shrink:0;"></div>
-            </div>
-          </div>
-          <div style="display:flex;gap:8px;margin-top:8px;">
-            <button type="button" class="btn btn-secondary btn-sm" id="addImageBtn">+ Agregar imagen</button>
-            <span style="font-size:11px;color:var(--text-muted);align-self:center;">Maximo 5 imagenes</span>
-          </div>
+          <label class="form-label" for="prodImage">URL Imagen Principal</label>
+          <input type="text" id="prodImage" name="image" class="form-control" placeholder="assets/img/...">
         </div>
         <div class="form-group">
           <label class="form-label" for="prodDescription">Descripcion</label>
@@ -309,7 +296,7 @@
         <td>
           <div style="display:flex;align-items:center;gap:10px;">
             ${p.image
-              ? `<img src="${primaryImage(p.image)}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;background:var(--bg);" onerror="this.style.display='none'">`
+              ? `<img src="https://mawewe.com.ec/${p.image}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;background:var(--bg);" onerror="this.style.display='none'">`
               : `<div style="width:40px;height:40px;border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center;color:var(--text-muted);">
                   <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2"/></svg>
                 </div>`}
@@ -362,8 +349,8 @@
     container.innerHTML = page.map(p => `
       <div class="product-card">
         <div class="product-card-img">
-          ${primaryImage(p.image)
-            ? `<img src="${primaryImage(p.image)}" alt="${p.name}" loading="lazy">`
+          ${p.image
+            ? `<img src="https://mawewe.com.ec/${p.image}" alt="${p.name}" loading="lazy">`
             : `<div style="color:var(--text-muted);"><svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`}
         </div>
         <div class="product-card-body">
@@ -411,86 +398,6 @@
     });
   }
 
-  /* ------------------------------------------------------------------
-     GESTION DE IMAGENES - arreglo dinámico
-  ------------------------------------------------------------------ */
-  function buildImageRow(num, val = '') {
-    const row = document.createElement('div');
-    row.className = 'img-input-row';
-    row.style.cssText = 'display:flex;gap:8px;align-items:center;';
-    row.innerHTML = `
-      <span style="font-size:11px;color:var(--text-muted);font-weight:700;width:20px;flex-shrink:0;">${num}</span>
-      <input type="text" class="form-control prod-img-input" value="${val}" placeholder="nombre-imagen-${num}.jpg" style="font-family:var(--font-mono);font-size:13px;">
-      <div class="img-preview-thumb" style="width:40px;height:40px;border-radius:8px;background:var(--bg);border:1px solid var(--border);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;"></div>
-      ${num > 1 ? `<button type="button" class="remove-img-btn" title="Quitar imagen" style="background:none;border:none;color:var(--danger);cursor:pointer;padding:4px;flex-shrink:0;">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>` : ''}
-    `;
-    return row;
-  }
-
-  function updatePreview(input) {
-    const thumb = input.closest('.img-input-row')?.querySelector('.img-preview-thumb');
-    if (!thumb) return;
-    const url = imgUrl(input.value.trim());
-    if (url) {
-      thumb.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='<svg width=16 height=16 fill=none stroke=%23CBD5E1 stroke-width=2 viewBox=\"0 0 24 24\"><path d=\"M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2\"/></svg>'">`;
-    } else {
-      thumb.innerHTML = '';
-    }
-  }
-
-  function setupImageInputListeners() {
-    // Input event para preview
-    document.querySelectorAll('.prod-img-input').forEach(inp => {
-      inp.addEventListener('input', () => updatePreview(inp));
-      updatePreview(inp);
-    });
-    // Remove buttons
-    document.querySelectorAll('.remove-img-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        btn.closest('.img-input-row').remove();
-        renumberImageInputs();
-      });
-    });
-  }
-
-  function renumberImageInputs() {
-    document.querySelectorAll('.img-input-row').forEach((row, i) => {
-      const numEl = row.querySelector('span');
-      if (numEl) numEl.textContent = i + 1;
-      const inp = row.querySelector('.prod-img-input');
-      if (inp) inp.placeholder = `nombre-imagen-${i + 1}.jpg`;
-    });
-  }
-
-  // Setup inicial para el primer input ya en el DOM
-  setupImageInputListeners();
-
-  document.getElementById('addImageBtn').addEventListener('click', () => {
-    const rows = document.querySelectorAll('.img-input-row');
-    if (rows.length >= 5) { Toast.warning('Maximo 5 imagenes por producto'); return; }
-    const num = rows.length + 1;
-    const row = buildImageRow(num);
-    document.getElementById('imageInputsWrap').appendChild(row);
-    setupImageInputListeners();
-    row.querySelector('.prod-img-input').focus();
-  });
-
-  // Reset modal de producto
-  const prodModalOrig = document.getElementById('productModal');
-  prodModalOrig.addEventListener('click', () => {}); // keep alive
-
-  // Al abrir nuevo producto, resetear imagenes
-  document.getElementById('newProductBtn') && document.getElementById('newProductBtn').addEventListener('click', () => {
-    document.getElementById('imageInputsWrap').innerHTML = '';
-    document.getElementById('imageInputsWrap').appendChild(buildImageRow(1));
-    setupImageInputListeners();
-  });
-
-  /* ------------------------------------------------------------------
-     GUARDAR
-  ------------------------------------------------------------------ */
   // Guardar
   document.getElementById('saveProductBtn').addEventListener('click', async () => {
     const id   = document.getElementById('prodId').value;
@@ -512,7 +419,7 @@
       price:       parseFloat(document.getElementById('prodPrice').value),
       stock:       parseInt(document.getElementById('prodStock').value || 0),
       active:      parseInt(document.getElementById('prodActive').value),
-      image:       serializeImages(document.querySelectorAll('.prod-img-input')),
+      image:       document.getElementById('prodImage').value.trim(),
       description: document.getElementById('prodDescription').value.trim()
     };
 
@@ -546,16 +453,7 @@
       document.getElementById('prodPrice').value       = p.price;
       document.getElementById('prodStock').value       = p.stock;
       document.getElementById('prodActive').value      = p.active ? '1' : '0';
-      // Populate image inputs
-      const imgs = parseImages(p.image);
-      const wrap = document.getElementById('imageInputsWrap');
-      wrap.innerHTML = '';
-      const toAdd = Math.max(1, imgs.length);
-      for (let i = 0; i < toAdd; i++) {
-        const row = buildImageRow(i + 1, imgs[i] || '');
-        wrap.appendChild(row);
-      }
-      setupImageInputListeners();
+      document.getElementById('prodImage').value       = p.image || '';
       document.getElementById('prodDescription').value = p.description || '';
       Modal.open('productModal');
     } catch(e) { Toast.error('Error al cargar producto'); }
@@ -570,18 +468,7 @@
       document.getElementById('productViewBody').innerHTML = `
         <div style="display:grid;grid-template-columns:200px 1fr;gap:24px;align-items:start;">
           <div style="background:var(--bg);border-radius:12px;overflow:hidden;aspect-ratio:1;">
-            ${(() => {
-              const imgs = parseImages(p.image);
-              if (imgs.length === 0) return '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--text-muted);">Sin imagen</div>';
-              if (imgs.length === 1) return `<img src="${imgUrl(imgs[0])}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.innerHTML='<div style=height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-muted)>Sin imagen</div>'">`;
-              // Galería de thumbnails
-              return `
-                <img src="${imgUrl(imgs[0])}" id="mainProductImg" style="width:100%;height:160px;object-fit:cover;border-radius:8px 8px 0 0;" onerror="this.style.display='none'">
-                <div style="display:flex;gap:6px;padding:8px;background:var(--bg);border-radius:0 0 8px 8px;flex-wrap:wrap;">
-                  ${imgs.map((img, i) => `<img src="${imgUrl(img)}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;cursor:pointer;border:2px solid ${i===0 ? 'var(--accent)' : 'transparent'};transition:all 0.15s;" onclick="const m=document.getElementById('mainProductImg');m.src=this.src;document.querySelectorAll('.thumb-active').forEach(e=>e.classList.remove('thumb-active'));this.style.borderColor='var(--accent)';" onerror="this.style.display='none'">`).join('')}
-                </div>
-              `;
-            })()}
+            ${p.image ? `<img src="https://mawewe.com.ec/${p.image}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.innerHTML='<div style=height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-muted)>Sin imagen</div>'">` : `<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--text-muted);">Sin imagen</div>`}
           </div>
           <div>
             <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:1px;margin-bottom:4px;">${p.category} / ${p.subcategory || '-'}</div>

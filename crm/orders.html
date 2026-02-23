@@ -619,7 +619,7 @@
   async function preloadData() {
     try {
       const [pd, cd] = await Promise.all([
-        API.get('products.php', { active: 1 }),
+        API.get('products_crud.php', { action: 'list', active: 1 }),
         API.get('customers.php?action=list')
       ]);
       allProds   = pd.products  || [];
