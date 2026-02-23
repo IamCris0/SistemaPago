@@ -1,17 +1,14 @@
 <?php
 /**
- * API DE ÓRDENES - SISTEMA MAWEWE
- * ✅ Corregida para carga correcta de órdenes
- * ✅ Incluye información completa de productos y clientes
- * ✅ Optimizada para presentación
+ * API DE ÓRDENES - MAWEWE CRM
+ * ✅ Corregido para estructura real de BD:
+ *    first_name, last_name, email, phone, address, city
  */
 
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, cache-control');
 header('Content-Type: application/json; charset=UTF-8');
-
-// Headers para evitar caché
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 
@@ -25,296 +22,252 @@ require_once __DIR__ . '/config/database.php';
 try {
     $database = new Database();
     $db = $database->getConnection();
-    
-    if (!$db) {
-        throw new Exception('Error de conexión a BD');
-    }
-    
+
+    if (!$db) throw new Exception('Error de conexion a BD');
+
     $method = $_SERVER['REQUEST_METHOD'];
-    
-    // ========================================
-    // GET: LISTAR ÓRDENES
-    // ========================================
+
+    /* ══════════════════════════════════════════════════════
+       GET — LISTAR ORDENES
+    ══════════════════════════════════════════════════════ */
     if ($method === 'GET') {
-        
-        // Parámetros de filtrado
-        $status = isset($_GET['status']) && $_GET['status'] !== 'all' && $_GET['status'] !== '' 
-            ? trim($_GET['status']) 
-            : null;
-        
-        $search = isset($_GET['search']) && $_GET['search'] !== '' 
-            ? trim($_GET['search']) 
-            : null;
-        
-        $date_from = isset($_GET['date_from']) && $_GET['date_from'] !== '' 
-            ? trim($_GET['date_from']) 
-            : null;
-        
-        $date_to = isset($_GET['date_to']) && $_GET['date_to'] !== '' 
-            ? trim($_GET['date_to']) 
-            : null;
-        
-        // Construir query SQL
+
+        $status    = (isset($_GET['status'])    && $_GET['status']    !== '' && $_GET['status'] !== 'all') ? trim($_GET['status'])    : null;
+        $search    = (isset($_GET['search'])    && $_GET['search']    !== '') ? trim($_GET['search'])    : null;
+        $date_from = (isset($_GET['date_from']) && $_GET['date_from'] !== '') ? trim($_GET['date_from']) : null;
+        $date_to   = (isset($_GET['date_to'])   && $_GET['date_to']   !== '') ? trim($_GET['date_to'])   : null;
+
         $sql = "SELECT 
                     o.id,
                     o.order_number,
-                    o.customer_name,
-                    o.customer_email,
-                    o.customer_phone,
-                    o.customer_address,
-                    o.customer_cedula,
+                    o.first_name,
+                    o.last_name,
+                    o.email,
+                    o.phone,
+                    o.address,
+                    o.apartment,
+                    o.city,
+                    o.postal_code,
                     o.shipping_method,
                     o.shipping_cost,
                     o.subtotal,
-                    o.tax,
                     o.total,
                     o.status,
                     o.payment_method,
-                    o.payment_status,
                     o.notes,
-                    o.tracking_number,
                     o.created_at,
-                    o.updated_at,
-                    o.items,
-                    COUNT(*) OVER() as total_count
+                    o.updated_at
                 FROM orders o
                 WHERE 1=1";
-        
+
         $params = [];
-        
-        // Filtro por estado
+
         if ($status !== null) {
             $sql .= " AND o.status = :status";
             $params[':status'] = $status;
         }
-        
-        // Filtro por búsqueda (número de orden, nombre cliente, email, teléfono)
+
         if ($search !== null) {
             $sql .= " AND (
-                o.order_number LIKE :search 
-                OR o.customer_name LIKE :search 
-                OR o.customer_email LIKE :search 
-                OR o.customer_phone LIKE :search
-                OR o.customer_cedula LIKE :search
+                o.order_number LIKE :search
+                OR o.first_name LIKE :search
+                OR o.last_name  LIKE :search
+                OR o.email      LIKE :search
+                OR o.phone      LIKE :search
             )";
             $params[':search'] = '%' . $search . '%';
         }
-        
-        // Filtro por fecha desde
+
         if ($date_from !== null) {
             $sql .= " AND DATE(o.created_at) >= :date_from";
             $params[':date_from'] = $date_from;
         }
-        
-        // Filtro por fecha hasta
+
         if ($date_to !== null) {
             $sql .= " AND DATE(o.created_at) <= :date_to";
             $params[':date_to'] = $date_to;
         }
-        
-        // Ordenar por más recientes primero
+
         $sql .= " ORDER BY o.created_at DESC";
-        
-        // Preparar y ejecutar query
+
         $stmt = $db->prepare($sql);
         $stmt->execute($params);
         $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Procesar cada orden
-        foreach ($orders as &$order) {
-            // Decodificar items JSON
-            if (isset($order['items']) && is_string($order['items'])) {
-                $order['items'] = json_decode($order['items'], true);
-                if (json_last_error() !== JSON_ERROR_NONE) {
-                    $order['items'] = [];
-                }
-            } else {
-                $order['items'] = [];
+
+        // Adjuntar items reales desde order_items
+        $stmtItems = $db->prepare("SELECT * FROM order_items WHERE order_id = :oid ORDER BY id");
+
+        foreach ($orders as &$o) {
+            $o['id']            = (int)$o['id'];
+            $o['shipping_cost'] = (float)$o['shipping_cost'];
+            $o['subtotal']      = (float)$o['subtotal'];
+            $o['total']         = (float)$o['total'];
+
+            $stmtItems->execute([':oid' => $o['id']]);
+            $items = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($items as &$item) {
+                $item['id']       = (int)$item['id'];
+                $item['price']    = (float)$item['price'];
+                $item['quantity'] = (int)$item['quantity'];
+                $item['subtotal'] = (float)$item['subtotal'];
             }
-            
-            // Convertir valores numéricos
-            $order['id'] = (int)$order['id'];
-            $order['shipping_cost'] = (float)$order['shipping_cost'];
-            $order['subtotal'] = (float)$order['subtotal'];
-            $order['tax'] = (float)$order['tax'];
-            $order['total'] = (float)$order['total'];
-            $order['total_count'] = (int)$order['total_count'];
-            
-            // Calcular cantidad de items
-            $order['items_count'] = count($order['items']);
+            $o['items']       = $items;
+            $o['items_count'] = count($items);
         }
-        
-        // Total de registros
-        $total_count = count($orders) > 0 ? (int)$orders[0]['total_count'] : 0;
-        
-        // Eliminar total_count de cada orden
-        foreach ($orders as &$order) {
-            unset($order['total_count']);
-        }
-        
+
         echo json_encode([
             'success' => true,
-            'data' => $orders,
-            'total' => $total_count,
-            'message' => count($orders) > 0 ? 'Órdenes obtenidas correctamente' : 'No se encontraron órdenes'
+            'data'    => $orders,
+            'total'   => count($orders)
         ], JSON_UNESCAPED_UNICODE);
-        
+        exit();
     }
-    
-    // ========================================
-    // POST: CREAR NUEVA ORDEN
-    // ========================================
-    else if ($method === 'POST') {
-        
+
+    /* ══════════════════════════════════════════════════════
+       PUT — ACTUALIZAR ORDEN
+    ══════════════════════════════════════════════════════ */
+    if ($method === 'PUT') {
         $input = json_decode(file_get_contents('php://input'), true);
-        
-        if (!$input) {
-            throw new Exception('Datos inválidos');
-        }
-        
-        // Validar campos requeridos
-        $required = ['customer_name', 'customer_email', 'customer_phone', 'customer_address', 
-                     'items', 'subtotal', 'total', 'shipping_method', 'payment_method'];
-        
-        foreach ($required as $field) {
-            if (!isset($input[$field]) || $input[$field] === '') {
-                throw new Exception("Campo requerido: $field");
-            }
-        }
-        
-        // Validar que items sea un array con al menos 1 producto
-        if (!is_array($input['items']) || count($input['items']) === 0) {
-            throw new Exception('Debe incluir al menos un producto');
-        }
-        
-        // Generar número de orden único
-        $order_number = 'ORD-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
-        
-        // Preparar datos
-        $customer_name = trim($input['customer_name']);
-        $customer_email = trim($input['customer_email']);
-        $customer_phone = trim($input['customer_phone']);
-        $customer_address = trim($input['customer_address']);
-        $customer_cedula = isset($input['customer_cedula']) ? trim($input['customer_cedula']) : null;
-        $shipping_method = trim($input['shipping_method']);
-        $shipping_cost = isset($input['shipping_cost']) ? (float)$input['shipping_cost'] : 0.0;
-        $subtotal = (float)$input['subtotal'];
-        $tax = isset($input['tax']) ? (float)$input['tax'] : 0.0;
-        $total = (float)$input['total'];
-        $payment_method = trim($input['payment_method']);
-        $payment_status = isset($input['payment_status']) ? trim($input['payment_status']) : 'pending';
-        $notes = isset($input['notes']) ? trim($input['notes']) : null;
-        $items_json = json_encode($input['items'], JSON_UNESCAPED_UNICODE);
-        
-        // Insertar orden
-        $sql = "INSERT INTO orders (
-                    order_number, customer_name, customer_email, customer_phone, 
-                    customer_address, customer_cedula, shipping_method, shipping_cost,
-                    subtotal, tax, total, status, payment_method, payment_status,
-                    notes, items, created_at, updated_at
-                ) VALUES (
-                    :order_number, :customer_name, :customer_email, :customer_phone,
-                    :customer_address, :customer_cedula, :shipping_method, :shipping_cost,
-                    :subtotal, :tax, :total, 'pending', :payment_method, :payment_status,
-                    :notes, :items, NOW(), NOW()
-                )";
-        
-        $stmt = $db->prepare($sql);
-        $stmt->execute([
-            ':order_number' => $order_number,
-            ':customer_name' => $customer_name,
-            ':customer_email' => $customer_email,
-            ':customer_phone' => $customer_phone,
-            ':customer_address' => $customer_address,
-            ':customer_cedula' => $customer_cedula,
-            ':shipping_method' => $shipping_method,
-            ':shipping_cost' => $shipping_cost,
-            ':subtotal' => $subtotal,
-            ':tax' => $tax,
-            ':total' => $total,
-            ':payment_method' => $payment_method,
-            ':payment_status' => $payment_status,
-            ':notes' => $notes,
-            ':items' => $items_json
-        ]);
-        
-        $order_id = $db->lastInsertId();
-        
-        echo json_encode([
-            'success' => true,
-            'data' => [
-                'id' => (int)$order_id,
-                'order_number' => $order_number
-            ],
-            'message' => 'Orden creada exitosamente'
-        ], JSON_UNESCAPED_UNICODE);
-        
-    }
-    
-    // ========================================
-    // PUT: ACTUALIZAR ORDEN
-    // ========================================
-    else if ($method === 'PUT') {
-        
-        $input = json_decode(file_get_contents('php://input'), true);
-        
-        if (!$input || !isset($input['id'])) {
-            throw new Exception('ID de orden requerido');
-        }
-        
+
+        if (!$input || !isset($input['id'])) throw new Exception('ID de orden requerido');
+
         $order_id = (int)$input['id'];
-        
-        // Verificar que la orden existe
+
         $stmt = $db->prepare("SELECT id FROM orders WHERE id = :id");
         $stmt->execute([':id' => $order_id]);
-        if (!$stmt->fetch()) {
-            throw new Exception('Orden no encontrada');
-        }
-        
-        // Construir query de actualización dinámicamente
+        if (!$stmt->fetch()) throw new Exception('Orden no encontrada');
+
         $updates = [];
-        $params = [':id' => $order_id];
-        
-        $updatable_fields = [
-            'status', 'payment_status', 'tracking_number', 'notes',
-            'customer_name', 'customer_email', 'customer_phone', 
-            'customer_address', 'customer_cedula'
-        ];
-        
-        foreach ($updatable_fields as $field) {
-            if (isset($input[$field])) {
-                $updates[] = "$field = :$field";
-                $params[":$field"] = trim($input[$field]);
+        $params  = [':id' => $order_id];
+
+        $fields = ['status','payment_method','notes','first_name','last_name','email','phone','address','city'];
+        foreach ($fields as $f) {
+            if (isset($input[$f])) {
+                $updates[] = "$f = :$f";
+                $params[":$f"] = trim($input[$f]);
             }
         }
-        
-        if (count($updates) === 0) {
-            throw new Exception('No hay campos para actualizar');
-        }
-        
+
+        if (!$updates) throw new Exception('Nada que actualizar');
         $updates[] = "updated_at = NOW()";
-        
-        $sql = "UPDATE orders SET " . implode(', ', $updates) . " WHERE id = :id";
-        
-        $stmt = $db->prepare($sql);
-        $stmt->execute($params);
-        
+
+        $db->prepare("UPDATE orders SET " . implode(', ', $updates) . " WHERE id = :id")->execute($params);
+
+        echo json_encode(['success' => true, 'message' => 'Orden actualizada'], JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
+    /* ══════════════════════════════════════════════════════
+       POST — CREAR ORDEN
+    ══════════════════════════════════════════════════════ */
+    if ($method === 'POST') {
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!$input) throw new Exception('Datos invalidos');
+
+        $firstName  = trim($input['firstName'] ?? $input['first_name'] ?? '');
+        $lastName   = trim($input['lastName']  ?? $input['last_name']  ?? '');
+        $email      = strtolower(trim($input['email'] ?? ''));
+        $phone      = trim($input['phone'] ?? '');
+        $address    = trim($input['address'] ?? '');
+        $city       = trim($input['city'] ?? '');
+        $apartment  = trim($input['apartment'] ?? '');
+        $postalCode = trim($input['postalCode'] ?? $input['postal_code'] ?? '');
+        $payMethod  = trim($input['paymentMethod'] ?? $input['payment_method'] ?? 'transfer');
+        $notes      = trim($input['notes'] ?? '');
+
+        $totals    = $input['totals'] ?? [];
+        $subtotal  = (float)($totals['subtotal'] ?? $input['subtotal'] ?? 0);
+        $shipping  = (float)($totals['shipping']  ?? $input['shipping_cost'] ?? 0);
+        $total     = (float)($totals['total']     ?? $input['total'] ?? 0);
+        $items     = $input['items'] ?? [];
+
+        if (!$firstName || !$email || $total <= 0 || empty($items)) {
+            throw new Exception('Faltan datos: nombre, email, total o items');
+        }
+
+        // Generar numero de orden
+        $prefix = 'MW' . date('Ymd') . '-';
+        $last = $db->query("SELECT order_number FROM orders WHERE order_number LIKE '{$prefix}%' ORDER BY id DESC LIMIT 1")->fetchColumn();
+        $num  = $last ? intval(substr($last, -4)) + 1 : 1;
+        $orderNumber = $prefix . str_pad($num, 4, '0', STR_PAD_LEFT);
+
+        $db->beginTransaction();
+
+        // Verificar stock
+        $stmtProd = $db->prepare("SELECT id, name, stock FROM products WHERE id = :id AND active = 1");
+        foreach ($items as $item) {
+            $pid = (int)($item['productId'] ?? $item['product_id'] ?? 0);
+            $stmtProd->execute([':id' => $pid]);
+            $prod = $stmtProd->fetch();
+            if (!$prod) throw new Exception('Producto no encontrado: ' . ($item['name'] ?? $pid));
+            if ($prod['stock'] < (int)($item['quantity'] ?? 1)) {
+                throw new Exception('Stock insuficiente: ' . $prod['name']);
+            }
+        }
+
+        $status = in_array($payMethod, ['card','paypal']) ? 'completed' : 'pending_payment';
+
+        $sql = "INSERT INTO orders 
+                    (order_number, first_name, last_name, email, phone, address, apartment,
+                     city, postal_code, shipping_method, payment_method, subtotal, shipping_cost,
+                     total, status, notes)
+                VALUES 
+                    (:on, :fn, :ln, :em, :ph, :ad, :ap, :ci, :pc, 'standard', :pm, :sub, :ship, :tot, :st, :no)";
+
+        $db->prepare($sql)->execute([
+            ':on'   => $orderNumber,
+            ':fn'   => $firstName,
+            ':ln'   => $lastName,
+            ':em'   => $email,
+            ':ph'   => $phone,
+            ':ad'   => $address,
+            ':ap'   => $apartment,
+            ':ci'   => $city,
+            ':pc'   => $postalCode,
+            ':pm'   => $payMethod,
+            ':sub'  => $subtotal,
+            ':ship' => $shipping,
+            ':tot'  => $total,
+            ':st'   => $status,
+            ':no'   => $notes
+        ]);
+        $orderId = (int)$db->lastInsertId();
+
+        $stmtItem  = $db->prepare("INSERT INTO order_items (order_id, product_id, product_name, product_sku, price, quantity, subtotal) VALUES (:oid,:pid,:pn,:psku,:price,:qty,:sub)");
+        $stmtStock = $db->prepare("UPDATE products SET stock = stock - :qty WHERE id = :id");
+
+        foreach ($items as $item) {
+            $qty   = (int)($item['quantity'] ?? 1);
+            $price = (float)($item['price'] ?? 0);
+            $pid   = (int)($item['productId'] ?? $item['product_id']);
+            $stmtItem->execute([
+                ':oid'   => $orderId,
+                ':pid'   => $pid,
+                ':pn'    => $item['name'],
+                ':psku'  => $item['sku'] ?? '',
+                ':price' => $price,
+                ':qty'   => $qty,
+                ':sub'   => $price * $qty
+            ]);
+            $stmtStock->execute([':qty' => $qty, ':id' => $pid]);
+        }
+
+        $db->commit();
+
         echo json_encode([
-            'success' => true,
-            'message' => 'Orden actualizada exitosamente'
+            'success'     => true,
+            'orderId'     => $orderId,
+            'orderNumber' => $orderNumber,
+            'message'     => 'Orden creada exitosamente'
         ], JSON_UNESCAPED_UNICODE);
-        
+        exit();
     }
-    
-    else {
-        http_response_code(405);
-        echo json_encode(['success' => false, 'message' => 'Método no permitido']);
-    }
-    
+
+    http_response_code(405);
+    echo json_encode(['success' => false, 'message' => 'Metodo no permitido']);
+
 } catch (Exception $e) {
+    if (isset($db) && $db->inTransaction()) $db->rollBack();
     http_response_code(500);
-    echo json_encode([
-        'success' => false,
-        'message' => 'Error: ' . $e->getMessage()
-    ], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['success' => false, 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
 }
