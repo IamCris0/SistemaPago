@@ -10,21 +10,240 @@
   <link rel="stylesheet" href="assets/css/variables.css">
   <link rel="stylesheet" href="assets/css/main.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
+  <style>
+    .modal-xl { max-width: 880px; }
+
+    /* Buscador de productos */
+    .prod-search-wrap { position: relative; }
+    .prod-results {
+      position: absolute; top: 100%; left: 0; right: 0; z-index: 300;
+      background: var(--surface); border: 1px solid var(--border);
+      border-top: none; border-radius: 0 0 var(--radius) var(--radius);
+      box-shadow: var(--shadow-md); max-height: 240px; overflow-y: auto;
+    }
+    .prod-result-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border);
+      transition: background .12s;
+    }
+    .prod-result-row:hover { background: var(--bg); }
+    .prod-result-row:last-child { border-bottom: none; }
+    .prod-thumb {
+      width: 38px; height: 38px; border-radius: 8px;
+      object-fit: cover; background: var(--bg); flex-shrink: 0;
+    }
+
+    /* Tabla items carrito */
+    .items-tbl { width: 100%; border-collapse: collapse; }
+    .items-tbl th {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .8px; color: var(--text-muted);
+      padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--border);
+    }
+    .items-tbl td { padding: 8px 10px; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .items-tbl tr:last-child td { border-bottom: none; }
+
+    /* Control cantidad */
+    .qty-wrap { display: flex; align-items: center; gap: 5px; }
+    .qty-btn {
+      width: 26px; height: 26px; border-radius: 6px;
+      border: 1px solid var(--border); background: var(--bg);
+      cursor: pointer; font-size: 15px; display: flex;
+      align-items: center; justify-content: center; color: var(--text-primary);
+      transition: all .12s; flex-shrink: 0;
+    }
+    .qty-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .qty-inp {
+      width: 42px; text-align: center; border: 1px solid var(--border);
+      border-radius: 6px; padding: 3px 4px; font-size: 13px;
+      font-family: var(--font-mono);
+    }
+
+    /* Totales */
+    .tot-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
+    .tot-row.final { border-top: 2px solid var(--border); margin-top: 8px; padding-top: 10px; }
+    .tot-row.final .val { font-size: 22px; font-weight: 800; color: var(--accent); }
+
+    /* Timeline estado */
+    .stt-line { display: flex; margin: 12px 0 4px; }
+    .stt-step { flex: 1; text-align: center; position: relative; padding-top: 26px; }
+    .stt-step::before {
+      content: ''; position: absolute; top: 9px; left: 50%;
+      width: 100%; height: 2px; background: var(--border);
+    }
+    .stt-step:first-child::before { display: none; }
+    .stt-step.done::before { background: var(--success); }
+    .stt-step.cur::before  { background: var(--accent); }
+    .stt-dot {
+      position: absolute; top: 3px; left: 50%; transform: translateX(-50%);
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--border); border: 2px solid var(--surface); z-index: 1;
+    }
+    .stt-step.done .stt-dot { background: var(--success); }
+    .stt-step.cur  .stt-dot { background: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,.2); }
+    .stt-lbl { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+    .stt-step.done .stt-lbl, .stt-step.cur .stt-lbl { color: var(--text-primary); font-weight: 600; }
+
+    /* Detalle grid */
+    .det-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    @media(max-width:600px){ .det-grid { grid-template-columns: 1fr; } }
+    .det-block { background: var(--bg); border-radius: var(--radius); padding: 14px 16px; }
+    .det-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 6px; }
+    .det-val { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+    .det-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    .section-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--text-muted); margin-bottom: 10px;
+    }
+  </style>
 </head>
 <body>
 <div class="app-layout" id="appLayout"></div>
 
-<!-- MODAL: Detalle de orden -->
-<div class="modal-overlay" id="orderModal">
-  <div class="modal modal-lg">
+<!-- ── MODAL DETALLE ORDEN ── -->
+<div class="modal-overlay" id="modalDetail">
+  <div class="modal modal-xl">
     <div class="modal-header">
-      <div class="modal-title" id="orderModalTitle">Detalle de Orden</div>
-      <button class="modal-close" data-modal-close>
+      <div class="modal-title" id="modalDetailTitle">Detalle de Orden</div>
+      <button class="modal-close" onclick="Modal.closeAll()">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
-    <div class="modal-body" id="orderModalBody"></div>
-    <div class="modal-footer" id="orderModalFooter"></div>
+    <div class="modal-body" id="modalDetailBody" style="max-height:72vh;overflow-y:auto;"></div>
+    <div class="modal-footer" id="modalDetailFooter"></div>
+  </div>
+</div>
+
+<!-- ── MODAL NUEVA ORDEN ── -->
+<div class="modal-overlay" id="modalCreate">
+  <div class="modal modal-xl">
+    <div class="modal-header">
+      <div class="modal-title">Nueva Orden</div>
+      <button class="modal-close" onclick="Modal.closeAll()">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" style="max-height:74vh;overflow-y:auto;">
+      <form id="createForm" onsubmit="return false;">
+
+        <!-- CLIENTE -->
+        <div style="background:var(--bg);border-radius:var(--radius);padding:16px 18px;margin-bottom:14px;">
+          <div class="section-label">👤 Datos del cliente</div>
+
+          <!-- Buscar cliente existente -->
+          <div style="margin-bottom:12px;position:relative;">
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+              <svg width="13" height="13" fill="none" stroke="var(--text-muted)" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <span style="font-size:12px;color:var(--text-muted);">Buscar cliente guardado (opcional)</span>
+            </div>
+            <input type="text" id="clientSearch" class="form-control" placeholder="Escribe nombre o email del cliente...">
+            <div id="clientResults" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:300;
+              background:var(--surface);border:1px solid var(--border);border-top:none;
+              border-radius:0 0 var(--radius) var(--radius);box-shadow:var(--shadow-md);max-height:180px;overflow-y:auto;">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label required">Nombre</label>
+              <input type="text" id="c_fn" class="form-control" placeholder="Nombre" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label required">Apellido</label>
+              <input type="text" id="c_ln" class="form-control" placeholder="Apellido" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label required">Email</label>
+              <input type="email" id="c_email" class="form-control" placeholder="correo@ejemplo.com" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Teléfono</label>
+              <input type="text" id="c_phone" class="form-control" placeholder="09XXXXXXXX">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="flex:2;">
+              <label class="form-label">Dirección</label>
+              <input type="text" id="c_addr" class="form-control" placeholder="Calle, número...">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ciudad</label>
+              <input type="text" id="c_city" class="form-control" placeholder="Ciudad">
+            </div>
+            <div class="form-group" style="flex:0.6;">
+              <label class="form-label">Código postal</label>
+              <input type="text" id="c_postal" class="form-control" placeholder="000000">
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:4px;">
+            <input type="checkbox" id="c_save" style="width:15px;height:15px;cursor:pointer;">
+            <label for="c_save" style="font-size:12px;color:var(--text-muted);cursor:pointer;">Guardar como cliente en la base de datos</label>
+          </div>
+        </div>
+
+        <!-- PRODUCTOS -->
+        <div style="background:var(--bg);border-radius:var(--radius);padding:16px 18px;margin-bottom:14px;">
+          <div class="section-label">🛍️ Productos</div>
+          <div class="prod-search-wrap">
+            <div style="position:relative;">
+              <svg style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;" width="14" height="14" fill="none" stroke="var(--text-muted)" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="prodSearch" class="form-control" placeholder="Buscar producto por nombre o SKU..." style="padding-left:36px;" autocomplete="off">
+            </div>
+            <div id="prodResults" class="prod-results" style="display:none;"></div>
+          </div>
+
+          <div style="margin-top:12px;">
+            <div id="cartEmpty" style="text-align:center;padding:18px;color:var(--text-muted);font-size:13px;">
+              Sin productos — busca arriba para agregar
+            </div>
+            <table class="items-tbl" id="cartTable" style="display:none;">
+              <thead>
+                <tr><th>Producto</th><th>Precio</th><th>Cantidad</th><th>Subtotal</th><th></th></tr>
+              </thead>
+              <tbody id="cartBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- PAGO -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label required">Método de pago</label>
+            <select id="c_pay" class="form-control" required>
+              <option value="transfer">Transferencia</option>
+              <option value="cash">Efectivo</option>
+              <option value="card">Tarjeta</option>
+              <option value="paypal">PayPal</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Envío ($)</label>
+            <input type="number" id="c_ship" class="form-control" value="0" min="0" step="0.01">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notas</label>
+          <textarea id="c_notes" class="form-control" rows="2" placeholder="Instrucciones especiales para el despacho..."></textarea>
+        </div>
+
+        <!-- RESUMEN -->
+        <div style="background:var(--bg);border-radius:var(--radius);padding:12px 16px;margin-top:4px;">
+          <div class="tot-row"><span style="font-size:13px;color:var(--text-muted);">Subtotal</span><span style="font-family:var(--font-mono);" id="t_sub">$0.00</span></div>
+          <div class="tot-row"><span style="font-size:13px;color:var(--text-muted);">Envío</span><span style="font-family:var(--font-mono);" id="t_ship">$0.00</span></div>
+          <div class="tot-row final"><span style="font-size:15px;font-weight:700;">Total</span><span class="val" id="t_total">$0.00</span></div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="Modal.closeAll()">Cancelar</button>
+      <button class="btn btn-primary" id="btnSaveOrder">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+        Guardar Orden
+      </button>
+    </div>
   </div>
 </div>
 
@@ -35,6 +254,14 @@
   const user = Auth.guard();
   if (!user) return;
 
+  /* ═══════════════════════════════ CONSTANTES ═══════════════════════════════ */
+  const IMG  = 'https://tienda.mawewe.com.ec/';
+  const SL   = { pending_payment:'Pendiente de pago', processing:'Procesando', shipped:'Enviado', completed:'Completado', cancelled:'Cancelado', pending:'Pendiente' };
+  const SC   = { pending_payment:'var(--warning)', processing:'var(--info)', shipped:'#8B5CF6', completed:'var(--success)', cancelled:'var(--danger)', pending:'var(--warning)' };
+  const PL   = { transfer:'Transferencia', cash:'Efectivo', card:'Tarjeta', paypal:'PayPal' };
+  const SORD = ['pending_payment','processing','shipped','completed'];
+
+  /* ═══════════════════════════════ LAYOUT ═══════════════════════════════ */
   document.getElementById('appLayout').innerHTML = `
     ${SidebarHTML.render('orders.html')}
     <div class="main-content" id="mainContent">
@@ -44,46 +271,46 @@
           <div class="topbar-subtitle">Seguimiento y gestion de ventas</div>
         </div>
         <div class="topbar-actions">
-          <button class="btn btn-secondary" id="refreshOrdersBtn">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
-            </svg>
+          <button class="btn btn-secondary btn-sm" id="btnRefresh">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
             Actualizar
+          </button>
+          <button class="btn btn-primary" id="btnNew">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nueva Orden
           </button>
         </div>
       </header>
       <main class="page-content">
-        <!-- STATS ORDENES -->
-        <div class="stats-grid" id="orderStats" style="grid-template-columns:repeat(4,1fr);margin-bottom:var(--spacing-xl);">
-          ${[1,2,3,4].map(()=>`<div class="stat-card"><div class="skeleton" style="width:100%;height:60px;"></div></div>`).join('')}
-        </div>
 
-        <div class="page-header">
-          <div>
-            <div class="page-title">Historial de Ordenes</div>
-            <div class="page-subtitle" id="ordSubtitle">Cargando...</div>
-          </div>
+        <!-- STATS -->
+        <div class="stats-grid" id="statsGrid" style="grid-template-columns:repeat(4,1fr);margin-bottom:var(--spacing-xl);">
+          ${[0,1,2,3].map(()=>`<div class="stat-card"><div class="skeleton" style="width:100%;height:64px;border-radius:8px;"></div></div>`).join('')}
         </div>
 
         <!-- FILTROS -->
-        <div class="filters-bar" style="flex-wrap:wrap;margin-bottom:var(--spacing-lg);">
-          <div class="search-box">
-            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-            <input type="text" class="form-control" id="ordSearch" placeholder="Buscar por numero, cliente..." style="padding-left:38px;min-width:260px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+          <div>
+            <div class="page-title">Historial de Ordenes</div>
+            <div class="page-subtitle" id="subCount">Cargando...</div>
           </div>
-          <select class="form-control" id="ordStatusFilter" style="width:auto;min-width:180px;">
+        </div>
+        <div class="filters-bar" style="flex-wrap:wrap;margin-bottom:var(--spacing-lg);">
+          <div style="position:relative;">
+            <svg style="position:absolute;left:11px;top:50%;transform:translateY(-50%);" width="14" height="14" fill="none" stroke="var(--text-muted)" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="fSearch" class="form-control" placeholder="Buscar número, cliente, email..." style="padding-left:36px;min-width:230px;">
+          </div>
+          <select id="fStatus" class="form-control" style="width:auto;min-width:180px;">
             <option value="">Todos los estados</option>
             <option value="pending_payment">Pendiente de pago</option>
-            <option value="completed">Completado</option>
             <option value="processing">Procesando</option>
             <option value="shipped">Enviado</option>
+            <option value="completed">Completado</option>
             <option value="cancelled">Cancelado</option>
           </select>
-          <input type="date" class="form-control" id="ordDateFrom" style="width:auto;" title="Desde">
-          <input type="date" class="form-control" id="ordDateTo" style="width:auto;" title="Hasta">
-          <button class="btn btn-secondary btn-sm" id="clearFiltersBtn">Limpiar</button>
+          <input type="date" id="fFrom" class="form-control" style="width:auto;">
+          <input type="date" id="fTo"   class="form-control" style="width:auto;">
+          <button class="btn btn-secondary btn-sm" id="btnClear">Limpiar</button>
         </div>
 
         <!-- TABLA -->
@@ -92,298 +319,551 @@
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Numero</th>
-                  <th>Cliente</th>
-                  <th>Contacto</th>
-                  <th>Metodo Pago</th>
-                  <th>Total</th>
-                  <th>Estado</th>
-                  <th>Fecha</th>
-                  <th>Acciones</th>
+                  <th>Número</th><th>Cliente</th><th>Contacto</th>
+                  <th>Pago</th><th>Total</th><th>Estado</th><th>Fecha</th><th>Acciones</th>
                 </tr>
               </thead>
-              <tbody id="ordersTableBody">
-                <tr><td colspan="8" style="text-align:center;padding:32px;">
+              <tbody id="ordBody">
+                <tr><td colspan="8" style="text-align:center;padding:40px;">
                   <div class="spinner spinner-dark" style="margin:auto;"></div>
                 </td></tr>
               </tbody>
             </table>
           </div>
         </div>
-
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:var(--spacing-lg);">
-          <div style="font-size:13px;color:var(--text-muted);" id="ordPaginationInfo"></div>
-          <div class="pagination" id="ordPagination"></div>
+          <div style="font-size:13px;color:var(--text-muted);" id="pgInfo"></div>
+          <div class="pagination" id="pgBar"></div>
         </div>
+
       </main>
-    </div>
-  `;
+    </div>`;
 
   Sidebar.init();
 
-  let orders  = [];
-  let filtered = [];
-  let currentPage = 1;
-  const perPage = 15;
+  /* ═══════════════════════════════ ESTADO ═══════════════════════════════ */
+  let orders = [], page = 1;
+  const PER  = 20;
 
-  const paymentLabels = {
-    transfer: 'Transferencia', cash: 'Efectivo',
-    paypal: 'PayPal', card: 'Tarjeta'
-  };
+  /* ═══════════════════════════════ NORMALIZAR ═══════════════════════════════
+     La tabla orders usa: first_name, last_name, email, phone, address, city,
+     postal_code, apartment — NO customer_name / customer_email
+  ══════════════════════════════════════════════════════════════════════════ */
+  function norm(o) {
+    const nom = [o.first_name, o.last_name].filter(Boolean).join(' ').trim() || o.customer_name || '—';
+    const items = (() => {
+      if (Array.isArray(o.items)) return o.items;
+      if (typeof o.items === 'string' && o.items.trim()) {
+        try { return JSON.parse(o.items); } catch { return []; }
+      }
+      return [];
+    })();
+    return {
+      ...o,
+      _nom:   nom,
+      _email: o.email    || o.customer_email   || '',
+      _phone: o.phone    || o.customer_phone   || '',
+      _addr:  o.address  || o.customer_address || '',
+      _city:  o.city     || o.customer_city    || '',
+      total:         parseFloat(o.total         || 0),
+      subtotal:      parseFloat(o.subtotal      || 0),
+      shipping_cost: parseFloat(o.shipping_cost || 0),
+      items
+    };
+  }
 
+  /* ═══════════════════════════════ CARGAR ═══════════════════════════════ */
   async function load() {
+    document.getElementById('ordBody').innerHTML =
+      `<tr><td colspan="8" style="text-align:center;padding:40px;"><div class="spinner spinner-dark" style="margin:auto;"></div></td></tr>`;
     try {
-      const params = {};
-      const status = document.getElementById('ordStatusFilter').value;
-      const search = document.getElementById('ordSearch').value.trim();
-      const from   = document.getElementById('ordDateFrom').value;
-      const to     = document.getElementById('ordDateTo').value;
+      const p = {};
+      const s = document.getElementById('fStatus').value;
+      const q = document.getElementById('fSearch').value.trim();
+      const f = document.getElementById('fFrom').value;
+      const t = document.getElementById('fTo').value;
+      if (s) p.status    = s;
+      if (q) p.search    = q;
+      if (f) p.date_from = f;
+      if (t) p.date_to   = t;
 
-      if (status) params.status = status;
-      if (search) params.search = search;
-      if (from)   params.date_from = from;
-      if (to)     params.date_to   = to;
+      const data = await API.get('orders.php', p);
 
-      const data = await API.get('orders.php', params);
-      orders = data.data || [];
+      /* Acepta data.data, data.orders, data.results, o array directo */
+      let raw = data.data || data.orders || data.results || [];
+      if (!Array.isArray(raw)) raw = [];
 
-      document.getElementById('ordSubtitle').textContent =
-        `${orders.length} orden${orders.length !== 1 ? 'es' : ''}`;
-
-      renderStats(orders);
-      filtered = orders;
-      currentPage = 1;
+      orders = raw.map(norm);
+      document.getElementById('subCount').textContent = `${orders.length} orden${orders.length !== 1 ? 'es' : ''}`;
+      renderStats();
+      page = 1;
       renderTable();
     } catch(e) {
+      document.getElementById('ordBody').innerHTML = `
+        <tr><td colspan="8">
+          <div class="empty-state">
+            <div class="empty-state-title">Error al conectar con el servidor</div>
+            <div class="empty-state-desc">No se pudo cargar las ordenes.<br>
+              <small style="font-family:monospace;color:var(--danger);">${e.message}</small></div>
+            <button class="btn btn-primary" onclick="load()" style="margin-top:14px;">Reintentar</button>
+          </div>
+        </td></tr>`;
       Toast.error('Error al cargar ordenes');
     }
   }
 
-  function renderStats(orders) {
-    const total    = orders.reduce((s, o) => s + (o.total || 0), 0);
-    const pending  = orders.filter(o => o.status === 'pending_payment').length;
-    const completed = orders.filter(o => o.status === 'completed').length;
+  /* ═══════════════════════════════ STATS ═══════════════════════════════ */
+  function renderStats() {
+    const total    = orders.reduce((s,o) => s + o.total, 0);
+    const pend     = orders.filter(o => o.status === 'pending_payment' || o.status === 'pending').length;
+    const comp     = orders.filter(o => o.status === 'completed').length;
     const today    = new Date().toISOString().slice(0,10);
-    const todayRev = orders
-      .filter(o => (o.created_at || '').slice(0,10) === today)
-      .reduce((s, o) => s + (o.total || 0), 0);
-
-    document.getElementById('orderStats').innerHTML = `
+    const todayRev = orders.filter(o => (o.created_at||'').slice(0,10) === today)
+                           .reduce((s,o) => s + o.total, 0);
+    document.getElementById('statsGrid').innerHTML = `
       <div class="stat-card" style="--stat-color:var(--accent)">
-        <div>
-          <div class="stat-label">Total Ingresos</div>
-          <div class="stat-value">${Fmt.money(total)}</div>
-          <div style="font-size:12px;color:var(--text-muted);">${orders.length} ordenes</div>
-        </div>
+        <div><div class="stat-label">Total Ingresos</div><div class="stat-value">${Fmt.money(total)}</div>
+          <div style="font-size:11px;color:var(--text-muted);">${orders.length} ordenes</div></div>
         <div class="stat-icon" style="background:var(--accent-soft);color:var(--accent);">
-          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
-          </svg>
-        </div>
-      </div>
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div></div>
       <div class="stat-card" style="--stat-color:var(--warning)">
-        <div>
-          <div class="stat-label">Pendientes</div>
-          <div class="stat-value">${pending}</div>
-          <div style="font-size:12px;color:var(--text-muted);">Sin confirmar</div>
-        </div>
+        <div><div class="stat-label">Pendientes</div><div class="stat-value">${pend}</div>
+          <div style="font-size:11px;color:var(--text-muted);">Sin confirmar</div></div>
         <div class="stat-icon" style="background:var(--warning-soft);color:var(--warning);">
-          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-          </svg>
-        </div>
-      </div>
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div>
       <div class="stat-card" style="--stat-color:var(--success)">
-        <div>
-          <div class="stat-label">Completadas</div>
-          <div class="stat-value">${completed}</div>
-          <div style="font-size:12px;color:var(--text-muted);">Confirmadas</div>
-        </div>
+        <div><div class="stat-label">Completadas</div><div class="stat-value">${comp}</div>
+          <div style="font-size:11px;color:var(--text-muted);">Confirmadas</div></div>
         <div class="stat-icon" style="background:var(--success-soft);color:var(--success);">
-          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-        </div>
-      </div>
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div></div>
       <div class="stat-card" style="--stat-color:var(--info)">
-        <div>
-          <div class="stat-label">Ingresos Hoy</div>
-          <div class="stat-value">${Fmt.money(todayRev)}</div>
-          <div style="font-size:12px;color:var(--text-muted);">Del dia</div>
-        </div>
+        <div><div class="stat-label">Ingresos Hoy</div><div class="stat-value">${Fmt.money(todayRev)}</div>
+          <div style="font-size:11px;color:var(--text-muted);">Del día</div></div>
         <div class="stat-icon" style="background:var(--info-soft);color:var(--info);">
-          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-          </svg>
-        </div>
-      </div>
-    `;
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg></div></div>`;
   }
 
+  /* ═══════════════════════════════ TABLA ═══════════════════════════════ */
   function renderTable() {
-    const start = (currentPage - 1) * perPage;
-    const page  = filtered.slice(start, start + perPage);
-    const total = Math.ceil(filtered.length / perPage);
+    const start = (page - 1) * PER;
+    const slice = orders.slice(start, start + PER);
+    const pages = Math.ceil(orders.length / PER);
 
-    document.getElementById('ordPaginationInfo').textContent =
-      `Mostrando ${start + 1}-${Math.min(start + perPage, filtered.length)} de ${filtered.length}`;
-    renderPagination('ordPagination', currentPage, total, p => { currentPage = p; renderTable(); });
+    document.getElementById('pgInfo').textContent = orders.length
+      ? `Mostrando ${start+1}–${Math.min(start+PER, orders.length)} de ${orders.length}`
+      : 'Mostrando 1–0 de 0';
 
-    if (!page.length) {
-      document.getElementById('ordersTableBody').innerHTML =
-        `<tr><td colspan="8"><div class="empty-state">
-          <div class="empty-state-title">Sin ordenes</div>
-          <div class="empty-state-desc">No hay ordenes que coincidan con los filtros</div>
-        </div></td></tr>`;
+    renderPagination('pgBar', page, pages, p => { page = p; renderTable(); });
+
+    if (!slice.length) {
+      document.getElementById('ordBody').innerHTML = `
+        <tr><td colspan="8">
+          <div class="empty-state">
+            <div class="empty-state-title">Sin ordenes</div>
+            <div class="empty-state-desc">No hay ordenes que coincidan con los filtros</div>
+          </div>
+        </td></tr>`;
       return;
     }
 
-    document.getElementById('ordersTableBody').innerHTML = page.map(o => {
-      const nombre = o.first_name
-        ? `${o.first_name} ${o.last_name || ''}`
-        : (o.customer_name || '-');
-
+    document.getElementById('ordBody').innerHTML = slice.map(o => {
+      const sc = SC[o.status] || 'var(--text-muted)';
+      const sl = SL[o.status] || o.status;
       return `
         <tr style="cursor:pointer;" onclick="viewOrder(${o.id})">
-          <td><span style="font-family:var(--font-mono);font-size:12px;">${o.order_number || '#' + o.id}</span></td>
+          <td><span style="font-family:var(--font-mono);font-size:11px;color:var(--accent);">${o.order_number||'#'+o.id}</span></td>
           <td>
-            <div style="font-weight:600;">${nombre}</div>
-            <div style="font-size:11px;color:var(--text-muted);">${o.email || ''}</div>
+            <div style="font-weight:600;">${o._nom}</div>
+            <div style="font-size:11px;color:var(--text-muted);">${o._email}</div>
           </td>
-          <td style="font-size:12px;color:var(--text-muted);">${o.phone || '-'}</td>
-          <td><span class="badge badge-neutral">${paymentLabels[o.payment_method] || o.payment_method}</span></td>
-          <td style="font-weight:700;font-size:14px;">${Fmt.money(o.total)}</td>
-          <td>${Fmt.statusBadge(o.status)}</td>
-          <td style="font-size:12px;color:var(--text-muted);">${Fmt.datetime(o.created_at)}</td>
+          <td style="font-size:12px;color:var(--text-muted);">${o._phone||'—'}</td>
+          <td><span class="badge badge-neutral">${PL[o.payment_method]||o.payment_method||'—'}</span></td>
+          <td style="font-weight:700;font-family:var(--font-mono);">${Fmt.money(o.total)}</td>
           <td>
-            <button class="btn btn-secondary btn-sm btn-icon" onclick="event.stopPropagation();viewOrder(${o.id})" title="Ver detalle">
-              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-              </svg>
+            <span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;
+              font-size:11px;font-weight:700;background:${sc}22;color:${sc};">
+              <span style="width:6px;height:6px;border-radius:50%;background:${sc};flex-shrink:0;"></span>
+              ${sl}
+            </span>
+          </td>
+          <td style="font-size:12px;color:var(--text-muted);">${Fmt.datetime(o.created_at)}</td>
+          <td onclick="event.stopPropagation();" style="white-space:nowrap;">
+            <button class="btn btn-secondary btn-sm btn-icon" onclick="viewOrder(${o.id})" title="Ver detalle">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
             ${user.is_admin ? `
-            <button class="btn btn-secondary btn-sm btn-icon" onclick="event.stopPropagation();changeStatus(${o.id}, '${o.status}')" title="Cambiar estado">
-              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
-              </svg>
+            <button class="btn btn-danger btn-sm btn-icon" onclick="cancelOrder(${o.id},'${o.order_number||'#'+o.id}')" title="Cancelar">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
             </button>` : ''}
           </td>
-        </tr>
-      `;
+        </tr>`;
     }).join('');
   }
 
-  // Ver detalle de orden
-  window.viewOrder = async function(id) {
-    const order = orders.find(o => o.id == id);
-    if (!order) return;
+  /* ═══════════════════════════════ VER DETALLE ═══════════════════════════════ */
+  window.viewOrder = function(id) {
+    const o = orders.find(x => x.id == id);
+    if (!o) return;
 
-    const nombre = order.first_name
-      ? `${order.first_name} ${order.last_name || ''}`
-      : (order.customer_name || '-');
+    const sc   = SC[o.status] || 'var(--text-muted)';
+    const sl   = SL[o.status] || o.status;
+    const isCancelled = o.status === 'cancelled';
 
-    const items = Array.isArray(order.items) ? order.items : [];
+    // Timeline
+    const tl = SORD.map(s => {
+      const oi = SORD.indexOf(o.status), si = SORD.indexOf(s);
+      let cls = '';
+      if (!isCancelled) { cls = si < oi ? 'done' : si === oi ? 'cur' : ''; }
+      return `<div class="stt-step ${cls}"><div class="stt-dot"></div><div class="stt-lbl">${SL[s]}</div></div>`;
+    }).join('');
 
-    document.getElementById('orderModalTitle').textContent = order.order_number || `Orden #${id}`;
-    document.getElementById('orderModalBody').innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
-        <div>
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:8px;">Cliente</div>
-          <div style="font-weight:700;">${nombre}</div>
-          <div style="font-size:13px;color:var(--text-muted);">${order.email || ''}</div>
-          <div style="font-size:13px;color:var(--text-muted);">${order.phone || ''}</div>
-          ${order.address ? `<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">${order.address}${order.city ? ', ' + order.city : ''}</div>` : ''}
+    // Items
+    const itemsHtml = o.items.length
+      ? `<table class="items-tbl"><thead><tr><th>Producto</th><th>SKU</th><th>Cant.</th><th>Precio</th><th>Subtotal</th></tr></thead>
+          <tbody>${o.items.map(it => `
+            <tr>
+              <td style="font-weight:600;">${it.product_name||it.name||'—'}</td>
+              <td style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);">${it.product_sku||it.sku||'—'}</td>
+              <td style="text-align:center;font-weight:700;">${it.quantity||1}</td>
+              <td style="font-family:var(--font-mono);">${Fmt.money(it.price||0)}</td>
+              <td style="font-family:var(--font-mono);font-weight:700;">${Fmt.money(it.subtotal||(it.price*it.quantity)||0)}</td>
+            </tr>`).join('')}
+          </tbody></table>`
+      : `<div style="text-align:center;padding:16px;color:var(--text-muted);font-size:13px;">Sin items registrados</div>`;
+
+    document.getElementById('modalDetailTitle').textContent = `Orden ${o.order_number||'#'+o.id}`;
+    document.getElementById('modalDetailBody').innerHTML = `
+
+      <div style="background:var(--bg);border-radius:var(--radius);padding:12px 16px;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <span class="section-label" style="margin:0;">Estado actual</span>
+          <span style="padding:4px 12px;border-radius:999px;font-size:12px;font-weight:700;background:${sc}22;color:${sc};">
+            ${isCancelled ? '❌ Cancelado' : sl}
+          </span>
         </div>
-        <div>
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:8px;">Detalle</div>
-          <div style="font-size:13px;margin-bottom:4px;"><strong>Estado:</strong> ${Fmt.statusBadge(order.status)}</div>
-          <div style="font-size:13px;margin-bottom:4px;"><strong>Pago:</strong> ${paymentLabels[order.payment_method] || order.payment_method}</div>
-          <div style="font-size:13px;margin-bottom:4px;"><strong>Fecha:</strong> ${Fmt.datetime(order.created_at)}</div>
+        ${!isCancelled ? `<div class="stt-line">${tl}</div>` : ''}
+      </div>
+
+      <div class="det-grid">
+        <div class="det-block">
+          <div class="det-label">Cliente</div>
+          <div class="det-val">${o._nom}</div>
+          <div class="det-sub">${o._email}</div>
+          <div class="det-sub">${o._phone||''}</div>
+          ${o._addr ? `<div class="det-sub" style="margin-top:6px;">${o._addr}${o._city?', '+o._city:''}</div>` : ''}
+        </div>
+        <div class="det-block">
+          <div class="det-label">Pago y envío</div>
+          <div class="det-val">${PL[o.payment_method]||o.payment_method||'—'}</div>
+          <div class="det-sub">Método de pago</div>
+          <div style="margin-top:10px;" class="det-label">Fecha</div>
+          <div style="font-size:13px;font-weight:600;">${Fmt.datetime(o.created_at)}</div>
+          ${o.notes ? `<div style="margin-top:8px;" class="det-label">Notas</div>
+            <div style="font-size:12px;color:var(--text-muted);font-style:italic;">${o.notes}</div>` : ''}
         </div>
       </div>
 
-      ${items.length ? `
-      <div style="margin-bottom:20px;">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:8px;">Productos</div>
-        <table class="data-table">
-          <thead><tr><th>Producto</th><th>Cant.</th><th>Precio</th><th>Subtotal</th></tr></thead>
-          <tbody>
-            ${items.map(item => `
-              <tr>
-                <td>${item.name || item.product_name || '-'}</td>
-                <td>${item.quantity}</td>
-                <td>${Fmt.money(item.price)}</td>
-                <td style="font-weight:700;">${Fmt.money(item.subtotal || item.price * item.quantity)}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>` : ''}
+      <div style="margin-bottom:14px;">
+        <div class="section-label">Productos</div>
+        ${itemsHtml}
+      </div>
 
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;border-top:1px solid var(--border);padding-top:16px;">
-        ${order.subtotal ? `<div style="font-size:13px;color:var(--text-muted);">Subtotal: <strong>${Fmt.money(order.subtotal)}</strong></div>` : ''}
-        ${order.shipping_cost > 0 ? `<div style="font-size:13px;color:var(--text-muted);">Envio: <strong>${Fmt.money(order.shipping_cost)}</strong></div>` : ''}
-        <div style="font-size:20px;font-weight:800;color:var(--accent);">Total: ${Fmt.money(order.total)}</div>
+      <div style="background:var(--bg);border-radius:var(--radius);padding:12px 16px;">
+        ${o.subtotal > 0 ? `<div class="tot-row"><span style="font-size:13px;color:var(--text-muted);">Subtotal</span><span style="font-family:var(--font-mono);">${Fmt.money(o.subtotal)}</span></div>` : ''}
+        ${o.shipping_cost > 0 ? `<div class="tot-row"><span style="font-size:13px;color:var(--text-muted);">Envío</span><span style="font-family:var(--font-mono);">${Fmt.money(o.shipping_cost)}</span></div>` : ''}
+        <div class="tot-row final"><span style="font-size:15px;font-weight:700;">Total</span><span class="val">${Fmt.money(o.total)}</span></div>
       </div>
     `;
 
-    document.getElementById('orderModalFooter').innerHTML = user.is_admin ? `
-      <button class="btn btn-secondary" data-modal-close>Cerrar</button>
-      <button class="btn btn-primary" onclick="changeStatus(${order.id}, '${order.status}')">Cambiar Estado</button>
-    ` : `<button class="btn btn-secondary" data-modal-close>Cerrar</button>`;
-
-    // Re-bind close
-    document.querySelectorAll('[data-modal-close]').forEach(btn => {
-      btn.onclick = () => Modal.closeAll();
-    });
-
-    Modal.open('orderModal');
+    document.getElementById('modalDetailFooter').innerHTML = `
+      <button class="btn btn-secondary" onclick="Modal.closeAll()">Cerrar</button>
+      ${user.is_admin && !isCancelled ? `
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select id="newStatusSel" class="form-control" style="width:auto;">
+            ${Object.entries(SL).map(([v,l]) => `<option value="${v}" ${v===o.status?'selected':''}>${l}</option>`).join('')}
+          </select>
+          <button class="btn btn-primary" onclick="applyStatus(${o.id})">Aplicar Estado</button>
+        </div>` : ''}
+    `;
+    Modal.open('modalDetail');
   };
 
-  // Cambiar estado
-  window.changeStatus = function(id, currentStatus) {
-    const statuses = [
-      { value: 'pending_payment', label: 'Pendiente de pago' },
-      { value: 'processing',      label: 'Procesando' },
-      { value: 'completed',       label: 'Completado' },
-      { value: 'shipped',         label: 'Enviado' },
-      { value: 'cancelled',       label: 'Cancelado' }
-    ];
+  /* ═══════════════════════════════ CAMBIAR ESTADO ═══════════════════════════════ */
+  window.applyStatus = async function(id) {
+    const ns = document.getElementById('newStatusSel').value;
+    try {
+      const d = await API.put('orders.php', { id, status: ns });
+      if (d.success) { Toast.success('Estado actualizado'); Modal.closeAll(); load(); }
+      else Toast.error(d.message || 'Error');
+    } catch { Toast.error('Error de conexión'); }
+  };
 
-    const opts = statuses.filter(s => s.value !== currentStatus);
+  /* ═══════════════════════════════ CANCELAR ═══════════════════════════════ */
+  window.cancelOrder = function(id, num) {
+    Modal.confirm(
+      `¿Cancelar orden ${num}?`,
+      'Esta acción marcará la orden como cancelada.',
+      async () => {
+        try {
+          const d = await API.put('orders.php', { id, status: 'cancelled' });
+          if (d.success) { Toast.success('Orden cancelada'); load(); }
+          else Toast.error(d.message || 'Error');
+        } catch { Toast.error('Error de conexión'); }
+      }, true
+    );
+  };
 
-    // Simple select usando prompt
-    const choices = opts.map((s, i) => `${i+1}. ${s.label}`).join('\n');
-    const idx = parseInt(prompt(`Nuevo estado para la orden:\n${choices}\n\nIngresa el numero:`)) - 1;
+  /* ═══════════════════════════════ NUEVA ORDEN ═══════════════════════════════ */
+  let cart = [], allProds = [], allClients = [], searchTimeout;
 
-    if (isNaN(idx) || idx < 0 || idx >= opts.length) return;
-    const newStatus = opts[idx].value;
+  async function preloadData() {
+    try {
+      const [pd, cd] = await Promise.all([
+        API.get('products.php', { active: 1 }),
+        API.get('customers.php?action=list')
+      ]);
+      allProds   = pd.products  || [];
+      allClients = cd.customers || [];
+    } catch {}
+  }
+  preloadData();
 
-    API.put('orders.php', { id, status: newStatus }).then(data => {
-      if (data.success) {
-        Toast.success(`Estado actualizado a: ${opts[idx].label}`);
+  document.getElementById('btnNew').addEventListener('click', () => {
+    cart = [];
+    document.getElementById('createForm').reset();
+    renderCart();
+    recalc();
+    document.getElementById('c_ship').value = '0';
+    Modal.open('modalCreate');
+    setTimeout(() => document.getElementById('c_fn').focus(), 200);
+  });
+
+  /* Buscar cliente guardado */
+  let clientTimeout;
+  document.getElementById('clientSearch').addEventListener('input', function() {
+    clearTimeout(clientTimeout);
+    const q = this.value.trim().toLowerCase();
+    const res = document.getElementById('clientResults');
+    if (!q) { res.style.display = 'none'; return; }
+    clientTimeout = setTimeout(() => {
+      const matches = allClients.filter(c =>
+        `${c.first_name} ${c.last_name}`.toLowerCase().includes(q) ||
+        (c.email||'').toLowerCase().includes(q)
+      ).slice(0, 6);
+      if (!matches.length) { res.style.display = 'none'; return; }
+      res.innerHTML = matches.map(c => `
+        <div onclick="fillClient(${c.id})" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);
+          transition:background .12s;" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">
+          <div style="font-size:13px;font-weight:600;">${c.first_name} ${c.last_name}</div>
+          <div style="font-size:11px;color:var(--text-muted);">${c.email||''} · ${c.phone||''}</div>
+        </div>`).join('');
+      res.style.display = 'block';
+    }, 250);
+  });
+
+  window.fillClient = function(id) {
+    const c = allClients.find(x => x.id == id);
+    if (!c) return;
+    document.getElementById('c_fn').value    = c.first_name || '';
+    document.getElementById('c_ln').value    = c.last_name  || '';
+    document.getElementById('c_email').value = c.email      || '';
+    document.getElementById('c_phone').value = c.phone      || '';
+    document.getElementById('c_addr').value  = c.address    || '';
+    document.getElementById('c_city').value  = c.city       || '';
+    document.getElementById('c_postal').value= c.postal_code|| '';
+    document.getElementById('clientSearch').value = `${c.first_name} ${c.last_name}`;
+    document.getElementById('clientResults').style.display = 'none';
+    Toast.success(`Cliente ${c.first_name} cargado`);
+  };
+
+  /* Buscar producto */
+  document.getElementById('prodSearch').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    const q = this.value.trim().toLowerCase();
+    const res = document.getElementById('prodResults');
+    if (!q) { res.style.display = 'none'; return; }
+    searchTimeout = setTimeout(() => {
+      const m = allProds.filter(p =>
+        p.name.toLowerCase().includes(q) || (p.sku||'').toLowerCase().includes(q)
+      ).slice(0, 8);
+      if (!m.length) { res.style.display = 'none'; return; }
+
+      res.innerHTML = m.map(p => {
+        const imgs = (() => { try { return JSON.parse(p.images||'[]'); } catch { return []; } })();
+        const img  = imgs[0] || p.image || '';
+        return `
+          <div class="prod-result-row" onclick="addToCart(${p.id})">
+            ${img
+              ? `<img src="${IMG}${img}" class="prod-thumb" onerror="this.style.display='none'">`
+              : `<div class="prod-thumb" style="display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:18px;">📦</div>`}
+            <div style="flex:1;overflow:hidden;">
+              <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</div>
+              <div style="font-size:11px;color:var(--text-muted);">${p.sku||''} · Stock: ${p.stock}</div>
+            </div>
+            <div style="font-family:var(--font-mono);font-weight:700;color:var(--accent);font-size:13px;flex-shrink:0;">${Fmt.money(p.price)}</div>
+          </div>`;
+      }).join('');
+      res.style.display = 'block';
+    }, 200);
+  });
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#prodSearch') && !e.target.closest('#prodResults'))
+      document.getElementById('prodResults').style.display = 'none';
+    if (!e.target.closest('#clientSearch') && !e.target.closest('#clientResults'))
+      document.getElementById('clientResults').style.display = 'none';
+  });
+
+  window.addToCart = function(pid) {
+    const p = allProds.find(x => x.id == pid);
+    if (!p) return;
+    if (p.stock <= 0) { Toast.warning(`Sin stock: ${p.name}`); return; }
+    const ex = cart.find(x => x.id == pid);
+    if (ex) ex.qty = Math.min(ex.qty + 1, p.stock);
+    else cart.push({ id: p.id, name: p.name, sku: p.sku||'', price: p.price, qty: 1, maxStock: p.stock });
+    document.getElementById('prodSearch').value = '';
+    document.getElementById('prodResults').style.display = 'none';
+    renderCart(); recalc();
+    Toast.success(`${p.name} agregado`);
+  };
+
+  window.changeQty = function(id, d) {
+    const it = cart.find(x => x.id == id);
+    if (!it) return;
+    it.qty = Math.max(1, Math.min(it.qty + d, it.maxStock));
+    renderCart(); recalc();
+  };
+  window.setQty = function(id, v) {
+    const it = cart.find(x => x.id == id);
+    if (!it) return;
+    it.qty = Math.max(1, Math.min(parseInt(v)||1, it.maxStock));
+    recalc();
+  };
+  window.removeFromCart = function(id) {
+    cart = cart.filter(x => x.id != id);
+    renderCart(); recalc();
+  };
+
+  function renderCart() {
+    const tbl = document.getElementById('cartTable');
+    const emp = document.getElementById('cartEmpty');
+    if (!cart.length) { tbl.style.display='none'; emp.style.display='block'; return; }
+    tbl.style.display='table'; emp.style.display='none';
+    document.getElementById('cartBody').innerHTML = cart.map(it => `
+      <tr>
+        <td>
+          <div style="font-size:13px;font-weight:600;">${it.name}</div>
+          <div style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);">${it.sku}</div>
+        </td>
+        <td style="font-family:var(--font-mono);">${Fmt.money(it.price)}</td>
+        <td>
+          <div class="qty-wrap">
+            <button class="qty-btn" onclick="changeQty(${it.id},-1)">−</button>
+            <input type="number" class="qty-inp" value="${it.qty}" min="1" max="${it.maxStock}"
+              onchange="setQty(${it.id},this.value)" onblur="setQty(${it.id},this.value)">
+            <button class="qty-btn" onclick="changeQty(${it.id},1)">+</button>
+          </div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Max: ${it.maxStock}</div>
+        </td>
+        <td style="font-family:var(--font-mono);font-weight:700;">${Fmt.money(it.price * it.qty)}</td>
+        <td>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="removeFromCart(${it.id})">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </td>
+      </tr>`).join('');
+  }
+
+  function recalc() {
+    const ship = parseFloat(document.getElementById('c_ship').value) || 0;
+    const sub  = cart.reduce((s,x) => s + x.price * x.qty, 0);
+    const tot  = sub + ship;
+    document.getElementById('t_sub').textContent   = Fmt.money(sub);
+    document.getElementById('t_ship').textContent  = Fmt.money(ship);
+    document.getElementById('t_total').textContent = Fmt.money(tot);
+  }
+  document.getElementById('c_ship').addEventListener('input', recalc);
+
+  /* ═══════════════════════════════ GUARDAR ORDEN ═══════════════════════════════ */
+  document.getElementById('btnSaveOrder').addEventListener('click', async () => {
+    const fn     = document.getElementById('c_fn').value.trim();
+    const ln     = document.getElementById('c_ln').value.trim();
+    const email  = document.getElementById('c_email').value.trim();
+    const phone  = document.getElementById('c_phone').value.trim();
+    const addr   = document.getElementById('c_addr').value.trim();
+    const city   = document.getElementById('c_city').value.trim();
+    const postal = document.getElementById('c_postal').value.trim();
+    const pay    = document.getElementById('c_pay').value;
+    const notes  = document.getElementById('c_notes').value.trim();
+    const ship   = parseFloat(document.getElementById('c_ship').value) || 0;
+    const save   = document.getElementById('c_save').checked;
+
+    if (!fn || !ln || !email) { Toast.warning('Completa nombre, apellido y email'); return; }
+    if (!cart.length) { Toast.warning('Agrega al menos un producto'); return; }
+
+    const sub  = cart.reduce((s,x) => s + x.price * x.qty, 0);
+    const tot  = sub + ship;
+
+    const btn = document.getElementById('btnSaveOrder');
+    btn.disabled = true; btn.textContent = 'Guardando...';
+
+    try {
+      /* save-order.php espera los campos exactos así */
+      const body = {
+        firstName: fn, lastName: ln,
+        email, phone,
+        address: addr, city, postalCode: postal,
+        paymentMethod: pay,
+        notes,
+        totals: { subtotal: sub, shipping: ship, total: tot },
+        items: cart.map(x => ({
+          productId: x.id, name: x.name, sku: x.sku,
+          price: x.price, quantity: x.qty
+        }))
+      };
+
+      const d = await API.post('save-order.php', body);
+
+      if (d.success) {
+        Toast.success(`Orden ${d.orderNumber} creada exitosamente`);
+
+        /* Guardar cliente si se pidió */
+        if (save) {
+          try {
+            await API.post('customers.php?action=create', {
+              first_name: fn, last_name: ln, email, phone,
+              address: addr, city, postal_code: postal,
+              created_by: user.id
+            });
+            Toast.success('Cliente guardado en la base de datos');
+          } catch {}
+        }
+
         Modal.closeAll();
         load();
       } else {
-        Toast.error(data.message || 'Error');
+        Toast.error(d.message || 'Error al crear la orden');
       }
-    }).catch(() => Toast.error('Error de conexion'));
-  };
+    } catch(e) {
+      Toast.error('Error de conexión: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg> Guardar Orden`;
+    }
+  });
 
-  // Event listeners
-  document.getElementById('refreshOrdersBtn').addEventListener('click', load);
-  document.getElementById('ordStatusFilter').addEventListener('change', load);
-  document.getElementById('ordDateFrom').addEventListener('change', load);
-  document.getElementById('ordDateTo').addEventListener('change', load);
-  document.getElementById('ordSearch').addEventListener('input', debounce(load, 400));
-  document.getElementById('clearFiltersBtn').addEventListener('click', () => {
-    document.getElementById('ordSearch').value = '';
-    document.getElementById('ordStatusFilter').value = '';
-    document.getElementById('ordDateFrom').value = '';
-    document.getElementById('ordDateTo').value = '';
+  /* ═══════════════════════════════ EVENTOS FILTROS ═══════════════════════════════ */
+  document.getElementById('btnRefresh').addEventListener('click', load);
+  document.getElementById('fStatus').addEventListener('change', load);
+  document.getElementById('fFrom').addEventListener('change', load);
+  document.getElementById('fTo').addEventListener('change', load);
+  document.getElementById('fSearch').addEventListener('input', debounce(load, 450));
+  document.getElementById('btnClear').addEventListener('click', () => {
+    ['fSearch','fStatus','fFrom','fTo'].forEach(id => document.getElementById(id).value = '');
     load();
   });
 
+  /* Carga inicial */
   load();
 })();
 </script>
