@@ -144,39 +144,8 @@
       if (from)   params.date_from = from;
       if (to)     params.date_to   = to;
 
-      // Mostrar spinner mientras carga
-      document.getElementById('ordersTableBody').innerHTML =
-        '<tr><td colspan="8" style="text-align:center;padding:32px;"><div class="spinner spinner-dark" style="margin:auto;"></div></td></tr>';
-
       const data = await API.get('orders.php', params);
-
-      // La API puede devolver { success, data } o { success, orders } o directamente un array
-      orders = data.data || data.orders || data.results || (Array.isArray(data) ? data : []);
-
-      // Normalizar campos del pedido (WooCommerce / custom)
-      orders = orders.map(o => ({
-        ...o,
-        total:         parseFloat(o.total || o.order_total || 0),
-        status:        o.status || o.order_status || 'pending',
-        created_at:    o.created_at || o.date_created || o.date || '',
-        order_number:  o.order_number || o.number || ('#' + o.id),
-        first_name:    o.first_name || o.billing_first_name || '',
-        last_name:     o.last_name  || o.billing_last_name  || '',
-        customer_name: o.customer_name || `${o.first_name || o.billing_first_name || ''} ${o.last_name || o.billing_last_name || ''}`.trim() || 'Cliente',
-        email:         o.email || o.billing_email || '',
-        phone:         o.phone || o.billing_phone || '',
-        address:       o.address || o.billing_address_1 || '',
-        city:          o.city   || o.billing_city || '',
-        payment_method: o.payment_method || o.payment_method_title || '-',
-        // Items: puede ser JSON string o array
-        items: (() => {
-          let items = o.items || o.line_items || o.order_items || [];
-          if (typeof items === 'string') {
-            try { items = JSON.parse(items); } catch { items = []; }
-          }
-          return Array.isArray(items) ? items : [];
-        })()
-      }));
+      orders = data.data || [];
 
       document.getElementById('ordSubtitle').textContent =
         `${orders.length} orden${orders.length !== 1 ? 'es' : ''}`;
@@ -186,14 +155,7 @@
       currentPage = 1;
       renderTable();
     } catch(e) {
-      console.error('Error ordenes:', e);
-      document.getElementById('ordersTableBody').innerHTML =
-        `<tr><td colspan="8"><div class="empty-state">
-          <div class="empty-state-title">Error al conectar</div>
-          <div class="empty-state-desc">No se pudo cargar la lista de ordenes. Verifica la conexion con el servidor.</div>
-          <button class="btn btn-primary" onclick="location.reload()" style="margin-top:16px;">Reintentar</button>
-        </div></td></tr>`;
-      Toast.error('Error al cargar ordenes — revisa la conexion al servidor');
+      Toast.error('Error al cargar ordenes');
     }
   }
 
@@ -316,20 +278,11 @@
     const order = orders.find(o => o.id == id);
     if (!order) return;
 
-    const nombre = order.customer_name || 
-      (order.first_name ? `${order.first_name} ${order.last_name || ''}`.trim() : '-');
+    const nombre = order.first_name
+      ? `${order.first_name} ${order.last_name || ''}`
+      : (order.customer_name || '-');
 
-    // Items ya normalizados en load()
-    let items = order.items || [];
-    // Normalizr campos de items
-    items = items.map(item => ({
-      ...item,
-      name:     item.name || item.product_name || item.title || '-',
-      quantity: parseInt(item.quantity || item.qty || 1),
-      price:    parseFloat(item.price || item.unit_price || item.product_price || 0),
-      subtotal: parseFloat(item.subtotal || item.line_total || 0) ||
-                parseFloat(item.price || 0) * parseInt(item.quantity || 1)
-    }));
+    const items = Array.isArray(order.items) ? order.items : [];
 
     document.getElementById('orderModalTitle').textContent = order.order_number || `Orden #${id}`;
     document.getElementById('orderModalBody').innerHTML = `
