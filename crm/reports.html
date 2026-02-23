@@ -11,114 +11,50 @@
   <link rel="stylesheet" href="assets/css/main.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
   <style>
-    /* ============================================================
-       ESTILOS PARA IMPRESION / PDF
-       ============================================================ */
-    @media print {
-      .sidebar, .topbar, .tabs-nav, .page-actions-bar, .no-print { display: none !important; }
-      .main-content { margin: 0 !important; padding: 0 !important; }
-      .page-content { padding: 0 !important; }
-      body { background: white !important; }
-      .app-layout { display: block !important; }
-      .card { box-shadow: none !important; border: 1px solid #e2e8f0 !important; break-inside: avoid; }
-      .stats-grid { grid-template-columns: repeat(4, 1fr) !important; }
-      .print-header { display: flex !important; }
-      .hidden { display: block !important; }
-      [id^="tab-"] { display: block !important; }
-      .print-section-title { display: block !important; }
+    /* Tabs */
+    .rep-tabs { display:flex; gap:4px; border-bottom:2px solid var(--border); margin-bottom:var(--spacing-lg); }
+    .rep-tab {
+      padding:10px 20px; border:none; background:none; cursor:pointer;
+      font-size:14px; font-weight:600; color:var(--text-muted);
+      border-bottom:2px solid transparent; margin-bottom:-2px;
+      transition:color .15s, border-color .15s;
     }
+    .rep-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+    .rep-panel { display:none; }
+    .rep-panel.active { display:block; }
 
-    .print-header {
-      display: none;
-      align-items: center;
-      gap: 16px;
-      padding: 24px 0;
-      border-bottom: 2px solid var(--border);
-      margin-bottom: 24px;
+    /* Date range bar */
+    .date-range-bar {
+      display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+      background:var(--bg); border:1px solid var(--border); border-radius:var(--radius);
+      padding:12px 16px; margin-bottom:var(--spacing-lg);
     }
+    .date-range-bar label { font-size:13px; font-weight:600; color:var(--text-secondary); }
+    .date-range-bar .sep { color:var(--text-muted); }
 
-    .print-header img {
-      height: 48px;
-      width: 48px;
-      object-fit: contain;
-    }
+    /* KPI cards */
+    .kpi-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:var(--spacing-lg); }
+    .kpi-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px; }
+    .kpi-label { font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.6px; margin-bottom:4px; }
+    .kpi-value { font-size:26px; font-weight:800; color:var(--text-primary); line-height:1.1; }
+    .kpi-sub   { font-size:11px; color:var(--text-muted); margin-top:2px; }
 
-    .print-header-info h1 {
-      font-size: 20px;
-      font-weight: 800;
-      color: #0D1B3E;
-      margin: 0 0 2px;
-    }
+    /* Tabla compacta */
+    .compact-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .compact-table th { background:var(--bg); font-weight:600; font-size:11px; text-transform:uppercase;
+      letter-spacing:.5px; color:var(--text-muted); padding:8px 12px; text-align:left;
+      border-bottom:1px solid var(--border); }
+    .compact-table td { padding:9px 12px; border-bottom:1px solid var(--border); color:var(--text-secondary); }
+    .compact-table tr:last-child td { border-bottom:none; }
+    .compact-table tr:hover td { background:var(--bg); }
 
-    .print-header-info p {
-      font-size: 12px;
-      color: #64748b;
-      margin: 0;
-    }
-
-    .print-section-title {
-      display: none;
-      font-size: 16px;
-      font-weight: 800;
-      color: #0D1B3E;
-      margin: 24px 0 12px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid #e2e8f0;
-    }
-
-    .btn-export {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 16px;
-      background: #0D1B3E;
-      color: white;
-      border-radius: var(--radius-md);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-      transition: all var(--transition-fast);
-    }
-
-    .btn-export:hover { background: #1A3A6B; transform: translateY(-1px); }
-
-    /* Barras de progreso para top productos */
-    .progress-bar-wrap {
-      width: 120px;
-      height: 6px;
-      background: var(--border);
-      border-radius: 999px;
-      overflow: hidden;
-    }
-    .progress-bar-fill {
-      height: 100%;
-      background: var(--accent);
-      border-radius: 999px;
-      transition: width 0.6s ease;
-    }
-
-    /* Donut chart simple con CSS */
-    .donut-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 13px;
-    }
-    .donut-row:last-child { border-bottom: none; }
-    .donut-dot {
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .donut-label { flex: 1; color: var(--text-secondary); }
-    .donut-val { font-weight: 700; }
+    /* PDF hidden frame — para PDFs por seccion */
+    #pdfFrame { display:none; }
   </style>
 </head>
 <body>
 <div class="app-layout" id="appLayout"></div>
+<div id="pdfFrame"></div>
 
 <script src="assets/js/core.js"></script>
 <script src="assets/js/sidebar.js"></script>
@@ -127,134 +63,83 @@
   const user = Auth.guard();
   if (!user) return;
 
+  /* ═════════════════════════════════════
+     TEMPLATE DE LAYOUT
+  ═════════════════════════════════════ */
   document.getElementById('appLayout').innerHTML = `
     ${SidebarHTML.render('reports.html')}
     <div class="main-content" id="mainContent">
       <header class="topbar">
         <div class="topbar-left">
           <div class="topbar-title">Reportes</div>
-          <div class="topbar-subtitle">Analisis y estadisticas del negocio</div>
-        </div>
-        <div class="topbar-actions">
-          <input type="month" class="form-control" id="reportMonth" style="width:auto;" value="${new Date().toISOString().slice(0,7)}">
-          <button class="btn btn-primary" id="generateBtn">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
-            </svg>
-            Generar
-          </button>
-          <button class="btn-export" id="exportPdfBtn" title="Exportar como PDF">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <line x1="16" y1="13" x2="8" y2="13"/>
-              <line x1="16" y1="17" x2="8" y2="17"/>
-            </svg>
-            Exportar PDF
-          </button>
+          <div class="topbar-subtitle">Analisis y estadisticas del sistema</div>
         </div>
       </header>
-      <main class="page-content" id="reportContent">
+      <main class="page-content">
 
-        <!-- Encabezado solo visible al imprimir -->
-        <div class="print-header" id="printHeader">
-          <img src="assets/img/logos.jpeg" alt="Logo" onerror="this.style.display='none'">
-          <div class="print-header-info">
-            <h1>Sistema de Seguimiento - Reporte</h1>
-            <p id="printSubtitle">Generado el ${new Date().toLocaleDateString('es-EC', {dateStyle:'long'})}</p>
+        <!-- TABS -->
+        <div class="rep-tabs" id="repTabs">
+          <button class="rep-tab active" data-tab="ventas">Ventas</button>
+          <button class="rep-tab" data-tab="productos">Inventario</button>
+          <button class="rep-tab" data-tab="empleados">Empleados</button>
+        </div>
+
+        <!-- ══ TAB VENTAS ══ -->
+        <div class="rep-panel active" id="panel-ventas">
+          <div class="date-range-bar">
+            <label>Periodo:</label>
+            <input type="date" class="form-control" id="vFrom" style="width:auto;">
+            <span class="sep">→</span>
+            <input type="date" class="form-control" id="vTo" style="width:auto;">
+            <button class="btn btn-primary btn-sm" id="vLoad">Buscar</button>
+            <button class="btn btn-secondary btn-sm" id="vPDF">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Exportar PDF
+            </button>
+          </div>
+          <div id="ventasContent">
+            <div class="empty-state"><div class="spinner spinner-dark" style="margin:auto;"></div></div>
           </div>
         </div>
 
-        <div class="tabs-nav no-print">
-          <button class="tab-btn active" data-tab="sales">Ventas</button>
-          <button class="tab-btn" data-tab="products">Inventario</button>
-          <button class="tab-btn" data-tab="employees">Empleados</button>
-        </div>
-
-        <!-- TAB VENTAS -->
-        <div id="tab-sales">
-          <div class="print-section-title">Reporte de Ventas</div>
-          <div class="stats-grid" id="salesStats" style="margin-bottom:var(--spacing-xl);">
-            ${[1,2,3,4].map(()=>`<div class="stat-card"><div class="skeleton" style="width:100%;height:60px;"></div></div>`).join('')}
+        <!-- ══ TAB PRODUCTOS ══ -->
+        <div class="rep-panel" id="panel-productos">
+          <div class="date-range-bar">
+            <button class="btn btn-secondary btn-sm" id="pLoad">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+              </svg>
+              Actualizar
+            </button>
+            <button class="btn btn-secondary btn-sm" id="pPDF">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Exportar PDF
+            </button>
           </div>
-
-          <div class="card" style="margin-bottom:var(--spacing-lg);">
-            <div class="card-header">
-              <div class="card-title">Top Productos Vendidos</div>
-              <span id="salesPeriodLabel" style="font-size:12px;color:var(--text-muted);"></span>
-            </div>
-            <div class="table-wrapper">
-              <table class="data-table">
-                <thead><tr><th>#</th><th>Producto</th><th>SKU</th><th>Unidades</th><th>Progreso</th><th>Ingresos</th></tr></thead>
-                <tbody id="topProductsBody">
-                  <tr><td colspan="6" style="text-align:center;padding:32px;"><div class="spinner spinner-dark" style="margin:auto;"></div></td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="grid-2">
-            <div class="card">
-              <div class="card-header"><div class="card-title">Metodos de Pago</div></div>
-              <div id="paymentMethodsChart" style="padding:8px 0;"></div>
-            </div>
-            <div class="card">
-              <div class="card-header"><div class="card-title">Ordenes por Estado</div></div>
-              <div id="orderStatusChart" style="padding:8px 0;"></div>
-            </div>
+          <div id="productosContent">
+            <div class="empty-state"><div class="spinner spinner-dark" style="margin:auto;"></div></div>
           </div>
         </div>
 
-        <!-- TAB PRODUCTOS -->
-        <div id="tab-products" class="hidden">
-          <div class="print-section-title">Reporte de Inventario</div>
-          <div class="stats-grid" id="invStats" style="margin-bottom:var(--spacing-xl);">
-            ${[1,2,3,4,5].map(()=>`<div class="stat-card"><div class="skeleton" style="width:100%;height:60px;"></div></div>`).join('')}
+        <!-- ══ TAB EMPLEADOS ══ -->
+        <div class="rep-panel" id="panel-empleados">
+          <div class="date-range-bar">
+            <label>Mes:</label>
+            <input type="month" class="form-control" id="eMonth" style="width:auto;">
+            <button class="btn btn-primary btn-sm" id="eLoad">Buscar</button>
+            <button class="btn btn-secondary btn-sm" id="ePDF">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Exportar PDF
+            </button>
           </div>
-          <div class="grid-2">
-            <div class="card">
-              <div class="card-header"><div class="card-title">Productos sin Stock</div></div>
-              <div class="table-wrapper">
-                <table class="data-table">
-                  <thead><tr><th>Producto</th><th>SKU</th><th>Categoria</th><th>Precio</th></tr></thead>
-                  <tbody id="outStockBody"></tbody>
-                </table>
-              </div>
-            </div>
-            <div class="card">
-              <div class="card-header"><div class="card-title">Stock Bajo (menos de 10)</div></div>
-              <div class="table-wrapper">
-                <table class="data-table">
-                  <thead><tr><th>Producto</th><th>SKU</th><th>Stock</th></tr></thead>
-                  <tbody id="lowStockBody"></tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- TAB EMPLEADOS -->
-        <div id="tab-employees" class="hidden">
-          <div class="print-section-title">Reporte de Empleados</div>
-          <div class="stats-grid" id="empStats" style="margin-bottom:var(--spacing-xl);">
-            ${[1,2,3].map(()=>`<div class="stat-card"><div class="skeleton" style="width:100%;height:60px;"></div></div>`).join('')}
-          </div>
-          <div class="card">
-            <div class="card-header"><div class="card-title">Asistencia del Mes</div></div>
-            <div class="table-wrapper">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Empleado</th><th>Cargo</th>
-                    <th style="text-align:center;">Dias</th>
-                    <th style="text-align:center;">Horas Total</th>
-                    <th style="text-align:center;">Promedio</th>
-                    <th>Estado</th>
-                  </tr>
-                </thead>
-                <tbody id="empAttendanceBody"></tbody>
-              </table>
-            </div>
+          <div id="empleadosContent">
+            <div class="empty-state"><div class="spinner spinner-dark" style="margin:auto;"></div></div>
           </div>
         </div>
 
@@ -264,194 +149,491 @@
 
   Sidebar.init();
 
-  // Tabs
-  let activeTab = 'sales';
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      activeTab = btn.dataset.tab;
-      document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
-      document.getElementById(`tab-${activeTab}`).classList.remove('hidden');
-      loadReport();
+  /* ══════════════════ TABS ══════════════════ */
+  document.querySelectorAll('.rep-tab').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.rep-tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.rep-panel').forEach(p => p.classList.remove('active'));
+      this.classList.add('active');
+      document.getElementById('panel-' + this.dataset.tab).classList.add('active');
     });
   });
 
-  document.getElementById('generateBtn').addEventListener('click', loadReport);
+  /* ══════════════════ DEFAULTS DE FECHAS ══════════════════ */
+  const today   = new Date();
+  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0,10);
+  const lastDay  = new Date(today.getFullYear(), today.getMonth()+1, 0).toISOString().slice(0,10);
+  document.getElementById('vFrom').value  = firstDay;
+  document.getElementById('vTo').value    = lastDay;
+  document.getElementById('eMonth').value = today.toISOString().slice(0,7);
 
-  // EXPORTAR PDF — usa window.print() con @media print CSS
-  document.getElementById('exportPdfBtn').addEventListener('click', () => {
-    const month = document.getElementById('reportMonth').value;
-    const [y, m] = month.split('-');
-    const monthName = new Date(y, parseInt(m)-1, 1).toLocaleDateString('es-EC', {month:'long', year:'numeric'});
-    document.getElementById('printSubtitle').textContent =
-      `Periodo: ${monthName} — Generado el ${new Date().toLocaleDateString('es-EC', {dateStyle:'long'})} a las ${new Date().toLocaleTimeString('es-EC', {hour:'2-digit',minute:'2-digit'})}`;
+  /* ═══════════════════════════════════════════
+     REPORTE DE VENTAS
+  ═══════════════════════════════════════════ */
+  let ventasData = null;
 
-    // Mostrar todas las tabs temporalmente para impresion
-    document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'block');
-    window.print();
-    // Restaurar
-    document.querySelectorAll('[id^="tab-"]').forEach(el => {
-      el.style.display = '';
-      if (el.id !== `tab-${activeTab}`) el.classList.add('hidden');
-    });
-    Toast.success('Dialogo de impresion/PDF abierto');
-  });
-
-  async function loadReport() {
-    const month = document.getElementById('reportMonth').value;
-    const [year, m] = month.split('-');
-    const start = `${month}-01`;
-    const end   = `${month}-${new Date(year, parseInt(m), 0).getDate()}`;
-    if (activeTab === 'sales') await loadSales(start, end, month);
-    else if (activeTab === 'products') await loadProducts();
-    else await loadEmployees(month);
-  }
-
-  async function loadSales(start, end, month) {
+  async function loadVentas() {
+    const from = document.getElementById('vFrom').value || firstDay;
+    const to   = document.getElementById('vTo').value   || lastDay;
+    document.getElementById('ventasContent').innerHTML = `<div class="empty-state"><div class="spinner spinner-dark" style="margin:auto;"></div></div>`;
     try {
-      const data = await API.get('reports.php', { action: 'sales', start_date: start, end_date: end });
-      if (!data.success) return;
-      const t = data.totals || {};
-      const [y, m2] = month.split('-');
-      const label = new Date(y, parseInt(m2)-1, 1).toLocaleDateString('es-EC', {month:'long', year:'numeric'});
-      document.getElementById('salesPeriodLabel').textContent = label;
+      const d = await API.get('reports.php', { action:'sales', start_date:from, end_date:to });
+      ventasData = { ...d, from, to };
 
-      document.getElementById('salesStats').innerHTML = `
-        <div class="stat-card" style="--stat-color:var(--accent)">
-          <div><div class="stat-label">Ingresos Totales</div><div class="stat-value">${Fmt.money(t.total_revenue||0)}</div></div>
-          <div class="stat-icon" style="background:var(--accent-soft);color:var(--accent);">
-            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-          </div>
-        </div>
-        <div class="stat-card" style="--stat-color:var(--info)">
-          <div><div class="stat-label">Total Ordenes</div><div class="stat-value">${t.total_orders||0}</div></div>
-          <div class="stat-icon" style="background:var(--info-soft);color:var(--info);">
-            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6z"/></svg>
-          </div>
-        </div>
-        <div class="stat-card" style="--stat-color:var(--success)">
-          <div><div class="stat-label">Completadas</div><div class="stat-value">${t.completed_orders||0}</div></div>
-          <div class="stat-icon" style="background:var(--success-soft);color:var(--success);">
-            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-          </div>
-        </div>
-        <div class="stat-card" style="--stat-color:var(--warning)">
-          <div><div class="stat-label">Ticket Promedio</div><div class="stat-value">${Fmt.money(t.avg_order_value||0)}</div></div>
-          <div class="stat-icon" style="background:var(--warning-soft);color:var(--warning);">
-            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-          </div>
-        </div>
-      `;
+      const t = d.totals || {};
+      const daily = d.daily || [];
+      const top   = d.top_products || [];
 
-      const top = data.top_products || [];
-      const maxUnits = top.length ? Math.max(...top.map(p => parseInt(p.total_sold)||0)) : 1;
-      document.getElementById('topProductsBody').innerHTML = top.length
-        ? top.map((p, i) => {
-            const pct = Math.round(((parseInt(p.total_sold)||0) / maxUnits) * 100);
-            return `<tr>
-              <td style="font-weight:800;color:var(--text-muted);width:32px;">${i+1}</td>
-              <td style="font-weight:600;">${p.product_name}</td>
-              <td style="font-family:var(--font-mono);font-size:12px;">${p.product_sku}</td>
-              <td><span class="badge badge-info">${p.total_sold} uds</span></td>
-              <td>
-                <div class="progress-bar-wrap">
-                  <div class="progress-bar-fill" style="width:${pct}%"></div>
-                </div>
-              </td>
-              <td style="font-weight:700;">${Fmt.money(p.total_revenue)}</td>
-            </tr>`;
-          }).join('')
-        : `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-muted);">Sin datos de ventas en este periodo</td></tr>`;
+      document.getElementById('ventasContent').innerHTML = `
+        <div class="kpi-row">
+          <div class="kpi-card">
+            <div class="kpi-label">Total Ingresos</div>
+            <div class="kpi-value">${Fmt.money(t.total_revenue || 0)}</div>
+            <div class="kpi-sub">${t.total_orders || 0} ordenes</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Ticket Promedio</div>
+            <div class="kpi-value">${Fmt.money(t.avg_order_value || 0)}</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Completadas</div>
+            <div class="kpi-value" style="color:var(--success);">${t.completed_orders || 0}</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Pendientes</div>
+            <div class="kpi-value" style="color:var(--warning);">${t.pending_orders || 0}</div>
+          </div>
+        </div>
 
-      // Chart metodos de pago
-      const payColors = ['#2563EB','#10B981','#F59E0B','#8B5CF6','#64748B'];
-      const methods = data.payment_methods || [];
-      document.getElementById('paymentMethodsChart').innerHTML = methods.length
-        ? methods.map((m, i) => `
-            <div class="donut-row">
-              <div class="donut-dot" style="background:${payColors[i % payColors.length]};"></div>
-              <div class="donut-label">${m.payment_method || 'No especificado'}</div>
-              <span class="badge badge-neutral">${m.count}</span>
-              <div class="donut-val" style="color:${payColors[i % payColors.length]};">${Fmt.money(m.total)}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Ventas por dia</div></div>
+            <div class="card-body" style="padding:0;">
+              ${daily.length === 0
+                ? `<div class="empty-state" style="padding:32px;"><div class="empty-state-title">Sin ventas en el periodo</div></div>`
+                : `<table class="compact-table">
+                    <thead><tr><th>Fecha</th><th>Ordenes</th><th>Ingresos</th></tr></thead>
+                    <tbody>${daily.map(r => `
+                      <tr>
+                        <td>${Fmt.date(r.date)}</td>
+                        <td>${r.orders}</td>
+                        <td style="font-family:var(--font-mono);font-weight:600;">${Fmt.money(r.revenue)}</td>
+                      </tr>`).join('')}
+                    </tbody>
+                  </table>`}
             </div>
-          `).join('')
-        : '<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px;">Sin datos</div>';
-
-      // Chart estados ordenes
-      const statusColors = {completed:'#10B981', pending:'#F59E0B', cancelled:'#EF4444', processing:'#3B82F6'};
-      const statuses = data.order_statuses || [];
-      document.getElementById('orderStatusChart').innerHTML = statuses.length
-        ? statuses.map(s => `
-            <div class="donut-row">
-              <div class="donut-dot" style="background:${statusColors[s.status]||'#64748B'};"></div>
-              <div class="donut-label">${s.status}</div>
-              <span class="badge badge-neutral">${s.count}</span>
-              <div class="donut-val">${Fmt.money(s.total)}</div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Productos mas vendidos</div></div>
+            <div class="card-body" style="padding:0;">
+              ${top.length === 0
+                ? `<div class="empty-state" style="padding:32px;"><div class="empty-state-title">Sin datos</div></div>`
+                : `<table class="compact-table">
+                    <thead><tr><th>Producto</th><th>Uds</th><th>Total</th></tr></thead>
+                    <tbody>${top.map(r => `
+                      <tr>
+                        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.product_name}</td>
+                        <td>${r.total_sold}</td>
+                        <td style="font-family:var(--font-mono);font-weight:600;">${Fmt.money(r.total_revenue)}</td>
+                      </tr>`).join('')}
+                    </tbody>
+                  </table>`}
             </div>
-          `).join('')
-        : '<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px;">Sin datos</div>';
-
-    } catch(e) { Toast.error('Error al cargar reporte de ventas'); }
-  }
-
-  async function loadProducts() {
-    try {
-      const data = await API.get('reports.php', { action: 'products' });
-      if (!data.success) return;
-      const inv = data.inventory || {};
-      document.getElementById('invStats').innerHTML = `
-        <div class="stat-card"><div><div class="stat-label">Total Productos</div><div class="stat-value">${inv.total_products||0}</div></div></div>
-        <div class="stat-card"><div><div class="stat-label">Con Stock</div><div class="stat-value" style="color:var(--success);">${inv.in_stock||0}</div></div></div>
-        <div class="stat-card"><div><div class="stat-label">Sin Stock</div><div class="stat-value" style="color:var(--danger);">${inv.out_of_stock||0}</div></div></div>
-        <div class="stat-card"><div><div class="stat-label">Stock Bajo</div><div class="stat-value" style="color:var(--warning);">${inv.low_stock||0}</div></div></div>
-        <div class="stat-card"><div><div class="stat-label">Unidades Totales</div><div class="stat-value">${inv.total_items||0}</div></div></div>
+          </div>
+        </div>
       `;
-      document.getElementById('outStockBody').innerHTML = (data.out_of_stock || []).map(p => `
-        <tr>
-          <td style="font-weight:600;">${p.name}</td>
-          <td style="font-family:var(--font-mono);font-size:12px;">${p.sku}</td>
-          <td><span class="badge badge-neutral">${p.category}</span></td>
-          <td style="font-weight:700;">${Fmt.money(p.price)}</td>
-        </tr>
-      `).join('') || `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted);">Sin productos sin stock</td></tr>`;
-      document.getElementById('lowStockBody').innerHTML = (data.low_stock || []).map(p => `
-        <tr>
-          <td style="font-weight:600;">${p.name}</td>
-          <td style="font-family:var(--font-mono);font-size:12px;">${p.sku}</td>
-          <td>${Fmt.stockBadge(p.stock)}</td>
-        </tr>
-      `).join('') || `<tr><td colspan="3" style="text-align:center;padding:24px;color:var(--text-muted);">Sin alertas de stock</td></tr>`;
-    } catch(e) { Toast.error('Error al cargar reporte de inventario'); }
+    } catch(e) {
+      document.getElementById('ventasContent').innerHTML = `<div class="empty-state"><div class="empty-state-title">Error al cargar</div><div class="empty-state-desc">${e.message}</div></div>`;
+      Toast.error('Error al cargar reporte de ventas');
+    }
   }
 
-  async function loadEmployees(month) {
+  document.getElementById('vLoad').addEventListener('click', loadVentas);
+  document.getElementById('vPDF').addEventListener('click', () => exportPDF('ventas'));
+  loadVentas();
+
+  /* ═══════════════════════════════════════════
+     REPORTE DE INVENTARIO
+  ═══════════════════════════════════════════ */
+  let productosData = null;
+
+  async function loadProductos() {
+    document.getElementById('productosContent').innerHTML = `<div class="empty-state"><div class="spinner spinner-dark" style="margin:auto;"></div></div>`;
     try {
-      const data = await API.get('reports.php', { action: 'employees', month });
-      if (!data.success) return;
-      const s = data.summary || {};
-      document.getElementById('empStats').innerHTML = `
-        <div class="stat-card"><div><div class="stat-label">Total Empleados</div><div class="stat-value">${s.total_employees||0}</div></div></div>
-        <div class="stat-card"><div><div class="stat-label">Activos</div><div class="stat-value" style="color:var(--success);">${s.active_employees||0}</div></div></div>
-        <div class="stat-card"><div><div class="stat-label">Administradores</div><div class="stat-value" style="color:var(--accent);">${s.admins||0}</div></div></div>
+      const d = await API.get('reports.php', { action:'products' });
+      productosData = d;
+
+      const inv      = d.inventory   || {};
+      const lowStock = d.low_stock   || [];
+      const outStock = d.out_of_stock || [];
+      const byCat    = d.by_category || [];
+
+      document.getElementById('productosContent').innerHTML = `
+        <div class="kpi-row">
+          <div class="kpi-card">
+            <div class="kpi-label">Total Productos</div>
+            <div class="kpi-value">${inv.total_products || 0}</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">En Stock</div>
+            <div class="kpi-value" style="color:var(--success);">${inv.in_stock || 0}</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Bajo Stock</div>
+            <div class="kpi-value" style="color:var(--warning);">${inv.low_stock || 0}</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Sin Stock</div>
+            <div class="kpi-value" style="color:var(--danger);">${inv.out_of_stock || 0}</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Unidades Totales</div>
+            <div class="kpi-value">${inv.total_items || 0}</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Por categoria</div></div>
+            <div class="card-body" style="padding:0;">
+              <table class="compact-table">
+                <thead><tr><th>Categoria</th><th>Productos</th><th>Stock</th></tr></thead>
+                <tbody>${byCat.map(r => `
+                  <tr>
+                    <td style="text-transform:capitalize;">${r.category || '—'}</td>
+                    <td>${r.count}</td>
+                    <td>${r.total_stock}</td>
+                  </tr>`).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header" style="background:rgba(234,179,8,.08);">
+              <div class="card-title" style="color:var(--warning);">⚠ Bajo stock (&lt;10 uds)</div>
+            </div>
+            <div class="card-body" style="padding:0;">
+              ${lowStock.length === 0
+                ? `<div class="empty-state" style="padding:24px;"><div class="empty-state-title" style="font-size:13px;">Todo bien</div></div>`
+                : `<table class="compact-table">
+                    <thead><tr><th>SKU</th><th>Producto</th><th>Stock</th><th>Precio</th></tr></thead>
+                    <tbody>${lowStock.map(r => `
+                      <tr>
+                        <td style="font-family:var(--font-mono);font-size:11px;">${r.sku}</td>
+                        <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.name}</td>
+                        <td><span class="badge ${r.stock===0?'badge-danger':'badge-warning'}">${r.stock}</span></td>
+                        <td style="font-family:var(--font-mono);">${Fmt.money(r.price)}</td>
+                      </tr>`).join('')}
+                    </tbody>
+                  </table>`}
+            </div>
+          </div>
+        </div>
+
+        ${outStock.length > 0 ? `
+        <div class="card">
+          <div class="card-header" style="background:rgba(239,68,68,.06);">
+            <div class="card-title" style="color:var(--danger);">🚫 Sin stock (${outStock.length} productos)</div>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <table class="compact-table">
+              <thead><tr><th>SKU</th><th>Producto</th><th>Categoria</th><th>Precio</th></tr></thead>
+              <tbody>${outStock.map(r => `
+                <tr>
+                  <td style="font-family:var(--font-mono);font-size:11px;">${r.sku}</td>
+                  <td>${r.name}</td>
+                  <td style="text-transform:capitalize;">${r.category}</td>
+                  <td style="font-family:var(--font-mono);">${Fmt.money(r.price)}</td>
+                </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>` : ''}
       `;
-      document.getElementById('empAttendanceBody').innerHTML = (data.attendance || []).map(e => {
-        const hrs = parseFloat(e.total_hours) || 0;
-        const avg = parseFloat(e.avg_hours) || 0;
-        const statusColor = hrs > 160 ? 'var(--success)' : hrs > 80 ? 'var(--warning)' : 'var(--text-muted)';
-        return `<tr>
-          <td style="font-weight:600;">${e.nombre}</td>
-          <td><span class="badge badge-neutral">${e.cargo}</span></td>
-          <td style="text-align:center;font-weight:700;">${e.days_worked}</td>
-          <td style="text-align:center;font-weight:700;color:${statusColor};">${hrs.toFixed(1)}h</td>
-          <td style="text-align:center;">${avg.toFixed(1)}h</td>
-          <td>${hrs >= 160 ? '<span class="badge badge-success">Completo</span>' : hrs >= 80 ? '<span class="badge badge-warning">Parcial</span>' : '<span class="badge badge-neutral">Bajo</span>'}</td>
-        </tr>`;
-      }).join('') || `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-muted);">Sin registros de asistencia</td></tr>`;
-    } catch(e) { Toast.error('Error al cargar reporte de empleados'); }
+    } catch(e) {
+      document.getElementById('productosContent').innerHTML = `<div class="empty-state"><div class="empty-state-title">Error al cargar</div><div class="empty-state-desc">${e.message}</div></div>`;
+      Toast.error('Error al cargar reporte de inventario');
+    }
   }
 
-  loadReport();
+  document.getElementById('pLoad').addEventListener('click', loadProductos);
+  document.getElementById('pPDF').addEventListener('click', () => exportPDF('productos'));
+
+  /* ═══════════════════════════════════════════
+     REPORTE DE EMPLEADOS
+  ═══════════════════════════════════════════ */
+  let empleadosData = null;
+
+  async function loadEmpleados() {
+    const month = document.getElementById('eMonth').value;
+    document.getElementById('empleadosContent').innerHTML = `<div class="empty-state"><div class="spinner spinner-dark" style="margin:auto;"></div></div>`;
+    try {
+      const d = await API.get('reports.php', { action:'employees', month });
+      empleadosData = { ...d, month };
+
+      const s  = d.summary    || {};
+      const at = d.attendance || [];
+
+      document.getElementById('empleadosContent').innerHTML = `
+        <div class="kpi-row">
+          <div class="kpi-card">
+            <div class="kpi-label">Total Empleados</div>
+            <div class="kpi-value">${s.total_employees || 0}</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Activos</div>
+            <div class="kpi-value" style="color:var(--success);">${s.active_employees || 0}</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Administradores</div>
+            <div class="kpi-value">${s.admins || 0}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Asistencia del mes — ${month}</div>
+          </div>
+          <div class="card-body" style="padding:0;">
+            ${at.length === 0
+              ? `<div class="empty-state" style="padding:32px;"><div class="empty-state-title">Sin registros de asistencia</div></div>`
+              : `<table class="compact-table">
+                  <thead>
+                    <tr>
+                      <th>Empleado</th><th>Cargo</th><th>Dias trabajados</th>
+                      <th>Horas totales</th><th>Promedio/dia</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${at.map(r => `
+                      <tr>
+                        <td style="font-weight:600;">${r.nombre}</td>
+                        <td style="color:var(--text-muted);">${r.cargo || '—'}</td>
+                        <td style="text-align:center;">${r.days_worked}</td>
+                        <td style="font-family:var(--font-mono);">${r.total_hours} h</td>
+                        <td style="font-family:var(--font-mono);color:var(--text-muted);">${r.avg_hours} h</td>
+                      </tr>`).join('')}
+                  </tbody>
+                </table>`}
+          </div>
+        </div>
+      `;
+    } catch(e) {
+      document.getElementById('empleadosContent').innerHTML = `<div class="empty-state"><div class="empty-state-title">Error al cargar</div><div class="empty-state-desc">${e.message}</div></div>`;
+      Toast.error('Error al cargar reporte de empleados');
+    }
+  }
+
+  document.getElementById('eLoad').addEventListener('click', loadEmpleados);
+  document.getElementById('ePDF').addEventListener('click', () => exportPDF('empleados'));
+
+  /* ══════════════════════════════════════════════════════════════
+     EXPORTAR PDF — Genera HTML limpio y lo imprime en nueva ventana
+  ══════════════════════════════════════════════════════════════ */
+  function exportPDF(tipo) {
+    let titulo = '', subtitulo = '', bodyHTML = '';
+    const now = Fmt.datetime(new Date());
+
+    if (tipo === 'ventas') {
+      if (!ventasData) { Toast.warning('Carga el reporte primero'); return; }
+      const t   = ventasData.totals || {};
+      const daily= ventasData.daily || [];
+      const top  = ventasData.top_products || [];
+
+      titulo    = 'Reporte de Ventas';
+      subtitulo = `Periodo: ${Fmt.date(ventasData.from)} — ${Fmt.date(ventasData.to)}`;
+
+      bodyHTML = `
+        <h2 style="margin:0 0 16px;font-size:15px;color:#0D1B3E;">Resumen General</h2>
+        <table class="kpi-table">
+          <tr><td>Total Ingresos</td><td class="val">${Fmt.money(t.total_revenue||0)}</td></tr>
+          <tr><td>Total Ordenes</td><td class="val">${t.total_orders||0}</td></tr>
+          <tr><td>Ticket Promedio</td><td class="val">${Fmt.money(t.avg_order_value||0)}</td></tr>
+          <tr><td>Ordenes Completadas</td><td class="val green">${t.completed_orders||0}</td></tr>
+          <tr><td>Ordenes Pendientes</td><td class="val orange">${t.pending_orders||0}</td></tr>
+        </table>
+
+        ${daily.length > 0 ? `
+        <h2 style="margin:24px 0 12px;font-size:15px;color:#0D1B3E;">Detalle por Dia</h2>
+        <table class="data-table">
+          <thead><tr><th>Fecha</th><th>Ordenes</th><th>Ingresos</th></tr></thead>
+          <tbody>${daily.map(r=>`<tr><td>${Fmt.date(r.date)}</td><td>${r.orders}</td><td class="mono">${Fmt.money(r.revenue)}</td></tr>`).join('')}</tbody>
+        </table>` : ''}
+
+        ${top.length > 0 ? `
+        <h2 style="margin:24px 0 12px;font-size:15px;color:#0D1B3E;">Productos Mas Vendidos</h2>
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Producto</th><th>SKU</th><th>Unidades</th><th>Total</th></tr></thead>
+          <tbody>${top.map((r,i)=>`<tr><td>${i+1}</td><td>${r.product_name}</td><td class="mono">${r.product_sku||'—'}</td><td>${r.total_sold}</td><td class="mono">${Fmt.money(r.total_revenue)}</td></tr>`).join('')}</tbody>
+        </table>` : '<p style="color:#94a3b8;text-align:center;padding:24px 0;">Sin datos de productos vendidos en este periodo</p>'}
+      `;
+
+    } else if (tipo === 'productos') {
+      if (!productosData) { Toast.warning('Carga el reporte primero'); return; }
+      const inv      = productosData.inventory   || {};
+      const lowStock = productosData.low_stock    || [];
+      const outStock = productosData.out_of_stock || [];
+      const byCat    = productosData.by_category  || [];
+
+      titulo    = 'Reporte de Inventario';
+      subtitulo = `Generado: ${now}`;
+
+      bodyHTML = `
+        <h2 style="margin:0 0 16px;font-size:15px;color:#0D1B3E;">Estado del Inventario</h2>
+        <table class="kpi-table">
+          <tr><td>Total Productos Activos</td><td class="val">${inv.total_products||0}</td></tr>
+          <tr><td>En Stock</td><td class="val green">${inv.in_stock||0}</td></tr>
+          <tr><td>Stock Bajo (&lt;10 uds)</td><td class="val orange">${inv.low_stock||0}</td></tr>
+          <tr><td>Sin Stock</td><td class="val red">${inv.out_of_stock||0}</td></tr>
+          <tr><td>Unidades Totales</td><td class="val">${inv.total_items||0}</td></tr>
+        </table>
+
+        ${byCat.length > 0 ? `
+        <h2 style="margin:24px 0 12px;font-size:15px;color:#0D1B3E;">Por Categoria</h2>
+        <table class="data-table">
+          <thead><tr><th>Categoria</th><th>Productos</th><th>Stock Total</th></tr></thead>
+          <tbody>${byCat.map(r=>`<tr><td style="text-transform:capitalize;">${r.category||'—'}</td><td>${r.count}</td><td>${r.total_stock}</td></tr>`).join('')}</tbody>
+        </table>` : ''}
+
+        ${lowStock.length > 0 ? `
+        <h2 style="margin:24px 0 12px;font-size:15px;color:#b45309;">⚠ Productos con Bajo Stock</h2>
+        <table class="data-table">
+          <thead><tr><th>SKU</th><th>Producto</th><th>Categoria</th><th>Stock</th><th>Precio</th></tr></thead>
+          <tbody>${lowStock.map(r=>`<tr><td class="mono">${r.sku}</td><td>${r.name}</td><td style="text-transform:capitalize;">${r.category}</td><td><span style="color:${r.stock===0?'#ef4444':'#f59e0b'};font-weight:700;">${r.stock}</span></td><td class="mono">${Fmt.money(r.price)}</td></tr>`).join('')}</tbody>
+        </table>` : ''}
+
+        ${outStock.length > 0 ? `
+        <h2 style="margin:24px 0 12px;font-size:15px;color:#dc2626;">🚫 Productos Sin Stock</h2>
+        <table class="data-table">
+          <thead><tr><th>SKU</th><th>Producto</th><th>Categoria</th><th>Precio</th></tr></thead>
+          <tbody>${outStock.map(r=>`<tr><td class="mono">${r.sku}</td><td>${r.name}</td><td style="text-transform:capitalize;">${r.category}</td><td class="mono">${Fmt.money(r.price)}</td></tr>`).join('')}</tbody>
+        </table>` : ''}
+      `;
+
+    } else if (tipo === 'empleados') {
+      if (!empleadosData) { Toast.warning('Carga el reporte primero'); return; }
+      const s  = empleadosData.summary    || {};
+      const at = empleadosData.attendance || [];
+
+      titulo    = 'Reporte de Empleados';
+      subtitulo = `Mes: ${empleadosData.month}`;
+
+      bodyHTML = `
+        <h2 style="margin:0 0 16px;font-size:15px;color:#0D1B3E;">Resumen de Personal</h2>
+        <table class="kpi-table">
+          <tr><td>Total Empleados</td><td class="val">${s.total_employees||0}</td></tr>
+          <tr><td>Activos</td><td class="val green">${s.active_employees||0}</td></tr>
+          <tr><td>Administradores</td><td class="val">${s.admins||0}</td></tr>
+        </table>
+
+        ${at.length > 0 ? `
+        <h2 style="margin:24px 0 12px;font-size:15px;color:#0D1B3E;">Asistencia — ${empleadosData.month}</h2>
+        <table class="data-table">
+          <thead><tr><th>Empleado</th><th>Cargo</th><th>Dias Trabajados</th><th>Horas Totales</th><th>Prom. / Dia</th></tr></thead>
+          <tbody>${at.map(r=>`<tr><td style="font-weight:600;">${r.nombre}</td><td>${r.cargo||'—'}</td><td style="text-align:center;">${r.days_worked}</td><td class="mono">${r.total_hours} h</td><td class="mono">${r.avg_hours} h</td></tr>`).join('')}</tbody>
+        </table>` : '<p style="color:#94a3b8;text-align:center;padding:24px 0;">Sin registros de asistencia en este mes</p>'}
+      `;
+    }
+
+    /* ──────── Abrir ventana PDF ──────── */
+    const win = window.open('', '_blank', 'width=900,height=650');
+    win.document.write(`<!DOCTYPE html>
+<html lang="es"><head>
+  <meta charset="UTF-8">
+  <title>${titulo} — Mawewe</title>
+  <style>
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Helvetica Neue',Arial,sans-serif; font-size:13px; color:#1e293b; background:#fff; padding:0; }
+
+    /* ── Portada / header ── */
+    .cover {
+      background:linear-gradient(135deg,#0D1B3E 0%,#1e3a6e 100%);
+      color:#fff; padding:32px 40px; display:flex; align-items:center;
+      justify-content:space-between;
+    }
+    .cover-title { font-size:22px; font-weight:800; letter-spacing:-.3px; }
+    .cover-sub   { font-size:12px; opacity:.7; margin-top:4px; }
+    .cover-logo  { font-size:26px; font-weight:900; letter-spacing:-.5px; }
+    .cover-logo span { color:#2563EB; }
+
+    /* ── Cuerpo ── */
+    .body-wrap { padding:32px 40px; }
+
+    /* ── Tablas KPI ── */
+    .kpi-table { width:100%; border-collapse:collapse; margin-bottom:8px; }
+    .kpi-table td { padding:9px 14px; border-bottom:1px solid #e2e8f0; font-size:13px; }
+    .kpi-table td:first-child { color:#475569; }
+    .kpi-table td.val { text-align:right; font-weight:700; font-family:monospace; }
+    .kpi-table td.green  { color:#16a34a; }
+    .kpi-table td.orange { color:#d97706; }
+    .kpi-table td.red    { color:#dc2626; }
+    .kpi-table tr:last-child td { border-bottom:none; }
+    .kpi-table { background:#f8fafc; border-radius:8px; overflow:hidden; border:1px solid #e2e8f0; }
+
+    /* ── Data tables ── */
+    .data-table { width:100%; border-collapse:collapse; font-size:12px; }
+    .data-table th { background:#0D1B3E; color:#fff; padding:8px 12px; text-align:left;
+                     font-size:10px; text-transform:uppercase; letter-spacing:.5px; font-weight:700; }
+    .data-table td { padding:8px 12px; border-bottom:1px solid #e2e8f0; color:#334155; }
+    .data-table tr:last-child td { border-bottom:none; }
+    .data-table tr:nth-child(even) td { background:#f8fafc; }
+    .mono { font-family:monospace; }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top:32px; padding:16px 40px; border-top:1px solid #e2e8f0;
+      display:flex; justify-content:space-between; font-size:11px; color:#94a3b8;
+    }
+
+    @media print {
+      body { margin:0; }
+      .no-print { display:none !important; }
+      @page { margin: 15mm 12mm; }
+    }
+  </style>
+</head>
+<body>
+  <!-- HEADER -->
+  <div class="cover">
+    <div>
+      <div class="cover-title">${titulo}</div>
+      <div class="cover-sub">${subtitulo}</div>
+    </div>
+    <div class="cover-logo">MAW<span>EWE</span></div>
+  </div>
+
+  <!-- CONTENIDO -->
+  <div class="body-wrap">
+    ${bodyHTML}
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <span>Mawewe CRM — Sistema de Seguimiento</span>
+    <span>Generado: ${now}</span>
+  </div>
+
+  <!-- BOTÓN IMPRIMIR -->
+  <div class="no-print" style="text-align:center;padding:20px;">
+    <button onclick="window.print()"
+      style="background:#2563EB;color:#fff;border:none;padding:10px 28px;border-radius:8px;
+             font-size:14px;font-weight:700;cursor:pointer;">
+      🖨 Imprimir / Guardar PDF
+    </button>
+  </div>
+
+  <script>
+    // Auto-abrir dialogo de impresion despues de cargar
+    window.addEventListener('load', () => setTimeout(() => window.print(), 600));
+  <\/script>
+</body></html>`);
+    win.document.close();
+  }
+
+  /* ── Cargar paneles al inicio ── */
+  loadProductos();
+  loadEmpleados();
+
 })();
 </script>
 </body>
