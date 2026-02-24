@@ -2,7 +2,8 @@
 /**
  * MAWEWE API - PRODUCTS.PHP - VERSIÓN CORREGIDA
  * ✅ Búsqueda global funcionando
- * ✅ Fix error 500 en búsqueda
+ * ✅ Fix CORS para tienda.mawewe.com.ec
+ * ✅ Fix error 415 Unsupported Media Type
  */
 
 // ============================================================
@@ -13,11 +14,25 @@ while (ob_get_level()) {
 }
 
 // ============================================================
-// 2. HEADERS CORS
+// 2. HEADERS CORS - CORREGIDO
 // ============================================================
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+$allowed_origins = [
+    'https://tienda.mawewe.com.ec',
+    'https://mawewe.com.ec',
+    'http://localhost',
+    'http://localhost:3000',
+];
+
+$origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
+
+if (in_array($origin, $allowed_origins)) {
+    header("Access-Control-Allow-Origin: $origin");
+} else {
+    header('Access-Control-Allow-Origin: *');
+}
+
+header('Access-Control-Allow-Methods: GET, OPTIONS');
+header('Access-Control-Allow-Headers: Accept, Content-Type, Authorization, X-Requested-With');
 header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Max-Age: 3600');
 header('Content-Type: application/json; charset=UTF-8');
