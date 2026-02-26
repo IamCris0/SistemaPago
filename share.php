@@ -10,7 +10,7 @@
 $DB_HOST  = 'localhost';
 $DB_NAME  = 'maweweco_tienda_db';
 $DB_USER  = 'maweweco_cris';
-$DB_PASS  = 'bdC(ZFro1rYds';                    // ← PON TU CONTRASEÑA AQUÍ
+$DB_PASS  = 'bdC(ZFro1rYd';                    // ← PON TU CONTRASEÑA AQUÍ
 $SITE_URL = 'https://tienda.mawewe.com.ec';
 
 $og_title = 'Mawewe | Tienda Online Premium - Envío Gratis sobre $60';
