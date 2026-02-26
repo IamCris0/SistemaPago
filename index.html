@@ -4,16 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- ✅ FIX: $50 → $60 en title y todas las metas -->
     <title>
-      Mawewe | Tienda Online Premium en Ecuador - Envío Gratis sobre $50
+      Mawewe | Tienda Online Premium en Ecuador - Envío Gratis sobre $60
     </title>
     <meta
       name="title"
-      content="Mawewe | Tienda Online Premium en Ecuador - Envío Gratis sobre $50"
+      content="Mawewe | Tienda Online Premium en Ecuador - Envío Gratis sobre $60"
     />
     <meta
       name="description"
-      content="Descubre productos premium en Ecuador: peluches, perfumes de lujo, LEGO, joyas y más. Envío gratis en compras sobre $50. Pago 100% seguro con PayPal. ¡Compra ahora!"
+      content="Descubre productos premium en Ecuador: peluches, perfumes de lujo, LEGO, joyas y más. Envío gratis en compras sobre $60. Pago 100% seguro con PayPal. ¡Compra ahora!"
     />
     <meta
       name="keywords"
@@ -23,36 +24,40 @@
     <meta name="language" content="Spanish" />
     <meta name="author" content="Mawewe" />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://mawewe.com.ec/" />
+    <meta property="og:url" content="https://tienda.mawewe.com.ec/" />
+    <!-- ✅ FIX: $50 → $60 en og:title y og:description -->
     <meta
       property="og:title"
-      content="Mawewe | Tienda Online Premium - Envío Gratis sobre $50"
+      content="Mawewe | Tienda Online Premium - Envío Gratis sobre $60"
     />
     <meta
       property="og:description"
-      content="Productos premium con envío gratis en compras sobre $50. Pago seguro con PayPal. ¡Descubre nuestro catálogo!"
+      content="Productos premium con envío gratis en compras sobre $60. Pago seguro con PayPal. ¡Descubre nuestro catálogo!"
     />
     <meta
       property="og:image"
-      content="https://mawewe.com.ec/assets/images/og-image.jpg"
+      content="https://tienda.mawewe.com.ec/assets/img/logo.jpg"
     />
+    <meta property="og:image:width"  content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta property="og:locale" content="es_EC" />
     <meta property="og:site_name" content="Mawewe" />
+    <!-- ✅ FIX: $50 → $60 en twitter metas -->
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://mawewe.com.ec/" />
+    <meta property="twitter:url" content="https://tienda.mawewe.com.ec/" />
     <meta
       property="twitter:title"
       content="Mawewe | Tienda Online Premium Ecuador"
     />
     <meta
       property="twitter:description"
-      content="Productos premium con envío gratis sobre $50. Pago seguro con PayPal."
+      content="Productos premium con envío gratis sobre $60. Pago seguro con PayPal."
     />
     <meta
       property="twitter:image"
-      content="https://mawewe.com.ec/assets/images/twitter-card.jpg"
+      content="https://tienda.mawewe.com.ec/assets/img/logo.jpg"
     />
-    <!-- Favicon: emoji 🛒 via inline SVG (no archivo externo necesario) -->
+    <!-- Favicon -->
     <link
       rel="icon"
       type="image/svg+xml"
@@ -63,7 +68,7 @@
       href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🛒</text></svg>"
     />
     <link rel="manifest" href="./site.webmanifest" />
-    <link rel="canonical" href="https://mawewe.com.ec/" />
+    <link rel="canonical" href="https://tienda.mawewe.com.ec/" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://www.paypal.com" />
@@ -85,10 +90,10 @@
         "@context": "https://schema.org",
         "@type": "Store",
         "name": "Mawewe",
-        "description": "Tienda online premium en Ecuador con envío gratis sobre $50",
-        "url": "https://mawewe.com.ec",
-        "logo": "https://mawewe.com.ec/assets/images/logo.png",
-        "image": "https://mawewe.com.ec/assets/images/store.jpg",
+        "description": "Tienda online premium en Ecuador con envío gratis sobre $60",
+        "url": "https://tienda.mawewe.com.ec",
+        "logo": "https://tienda.mawewe.com.ec/assets/img/logo.jpg",
+        "image": "https://tienda.mawewe.com.ec/assets/images/store.jpg",
         "telephone": "+593981832313",
         "email": "info@mawewe.com.ec",
         "address": {
@@ -115,60 +120,26 @@
     ></script>
     <script>
       window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        dataLayer.push(arguments);
-      }
+      function gtag() { dataLayer.push(arguments); }
       gtag("js", new Date());
-      gtag("config", "G-FHRFVTPYFQ", {
-        send_page_view: true,
-        anonymize_ip: true,
-      });
-      function trackAddToCart(productName, price, category) {
-        gtag("event", "add_to_cart", {
-          currency: "USD",
-          value: price,
-          items: [
-            {
-              item_name: productName,
-              item_category: category,
-              price: price,
-              quantity: 1,
-            },
-          ],
-        });
-      }
-      function trackPurchase(orderId, total, items) {
-        gtag("event", "purchase", {
-          transaction_id: orderId,
-          value: total,
-          currency: "USD",
-          items: items,
-        });
-      }
+      gtag("config", "G-FHRFVTPYFQ", { send_page_view: true, anonymize_ip: true });
     </script>
   </head>
   <body>
     <a href="#main-content" class="skip-to-main">Ir al contenido principal</a>
+
     <!-- HEADER -->
     <header class="site-header" role="banner">
       <div class="header-container">
         <div class="site-branding">
           <a href="/" aria-label="Mawewe - Inicio" class="logo-link">
-            <img
-              src="assets/img/logo.jpg"
-              alt="Mawewe Logo"
-              class="site-logo-img"
-            />
+            <img src="assets/img/logo.jpg" alt="Mawewe Logo" class="site-logo-img" />
           </a>
         </div>
         <div class="site-slogan">
           <p>Hace que cada ocasión sea inolvidable</p>
         </div>
-        <nav
-          class="header-actions"
-          role="navigation"
-          aria-label="Acciones principales"
-        >
+        <nav class="header-actions" role="navigation" aria-label="Acciones principales">
           <button
             class="btn-cart"
             onclick="mawewe.ui.toggleCart()"
@@ -176,35 +147,28 @@
             aria-expanded="false"
             aria-controls="cart-modal"
           >
-            <span aria-hidden="true" style="font-size: 1.25rem; line-height: 1"
-              >🛒</span
-            >
+            <span aria-hidden="true" style="font-size: 1.25rem; line-height: 1">🛒</span>
             <span>Carrito</span>
-            <span
-              class="cart-badge"
-              id="cart-count"
-              style="display: none"
-              aria-live="polite"
-              >0</span
-            >
+            <span class="cart-badge" id="cart-count" style="display: none" aria-live="polite">0</span>
           </button>
         </nav>
       </div>
     </header>
+
     <!-- MAIN CONTENT -->
     <main class="site-main" id="main-content" role="main">
+
       <section class="hero-section" aria-labelledby="hero-title">
         <div class="container">
           <div class="hero-content">
             <div class="hero-right">
               <div class="hero-title-wrapper">
-                <h2 class="hero-title" id="hero-title">
-                  Encuentra el Regalo Perfecto
-                </h2>
+                <h2 class="hero-title" id="hero-title">Encuentra el Regalo Perfecto</h2>
                 <span class="hero-emoji">🎁</span>
               </div>
+              <!-- ✅ FIX: $50 → $60 -->
               <p class="hero-subtitle">
-                Productos premium con envío gratis en compras sobre $50. Pago
+                Productos premium con envío gratis en compras sobre $60. Pago
                 100% seguro con PayPal y entrega en todo Ecuador.
               </p>
             </div>
@@ -217,15 +181,8 @@
                 rel="noopener noreferrer"
                 aria-label="Contactar por WhatsApp"
               >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path
-                    d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"
-                  />
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
                 </svg>
                 <span>Escríbenos a WhatsApp</span>
               </a>
@@ -233,23 +190,13 @@
           </div>
         </div>
       </section>
-      <section
-        class="section products-section"
-        aria-labelledby="products-heading"
-      >
+
+      <section class="section products-section" aria-labelledby="products-heading">
         <div class="container">
-          <h2 id="products-heading" class="visually-hidden">
-            Nuestros Productos
-          </h2>
-          <div
-            class="filters-container"
-            role="search"
-            aria-label="Filtros de productos"
-          >
+          <h2 id="products-heading" class="visually-hidden">Nuestros Productos</h2>
+          <div class="filters-container" role="search" aria-label="Filtros de productos">
             <div class="search-container" style="position: relative">
-              <label for="search-input" class="visually-hidden"
-                >Buscar productos</label
-              >
+              <label for="search-input" class="visually-hidden">Buscar productos</label>
               <input
                 type="search"
                 id="search-input"
@@ -264,37 +211,25 @@
                 onclick="filters.clearSearch()"
                 style="display: none"
                 aria-label="Limpiar búsqueda"
-              >
-                ×
-              </button>
+              >×</button>
             </div>
-            <div
-              id="category-filters"
-              class="category-filters"
-              role="group"
-              aria-label="Filtrar por categoría"
-            ></div>
+            <div id="category-filters" class="category-filters" role="group" aria-label="Filtrar por categoría"></div>
             <div id="subcategory-container" class="subcategory-container">
               <span class="subcategory-label">Marcas de Ropa:</span>
               <div id="subcategory-filters" class="subcategory-filters"></div>
             </div>
           </div>
-          <div
-            id="products-grid"
-            class="products-grid"
-            role="list"
-            aria-label="Lista de productos"
-          >
+          <div id="products-grid" class="products-grid" role="list" aria-label="Lista de productos">
             <noscript>
               <div style="grid-column: 1/-1; text-align: center; padding: 4rem">
-                <p>
-                  Por favor, habilita JavaScript para ver nuestros productos.
-                </p>
+                <p>Por favor, habilita JavaScript para ver nuestros productos.</p>
               </div>
             </noscript>
           </div>
         </div>
       </section>
+
+      <!-- FEATURES -->
       <section
         class="section features-section"
         style="background-color: var(--gray-100)"
@@ -303,162 +238,73 @@
         <div class="container">
           <div style="text-align: center; margin-bottom: var(--spacing-2xl)">
             <h2 id="features-heading">¿Por Qué Elegir Mawewe?</h2>
-            <p
-              style="
-                color: var(--gray-600);
-                max-width: 800px;
-                margin: var(--spacing-lg) auto 0;
-              "
-            >
+            <p style="color: var(--gray-600); max-width: 800px; margin: var(--spacing-lg) auto 0;">
               Tu tienda de confianza en Ecuador
             </p>
           </div>
           <div class="footer-grid">
             <article class="feature-item" style="text-align: center">
-              <div
-                style="
-                  font-size: 48px;
-                  margin-bottom: var(--spacing-md);
-                  color: var(--primary-700);
-                "
-                aria-hidden="true"
-              >
-                <svg
-                  width="48"
-                  height="48"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                >
+              <div style="font-size: 48px; margin-bottom: var(--spacing-md); color: var(--primary-700)" aria-hidden="true">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 </svg>
               </div>
               <h3 class="footer-section-title">Pago Seguro</h3>
-              <p style="color: var(--gray-600)">
-                Transacciones 100% protegidas con PayPal y encriptación SSL
-              </p>
+              <p style="color: var(--gray-600)">Transacciones 100% protegidas con PayPal y encriptación SSL</p>
             </article>
             <article class="feature-item" style="text-align: center">
-              <div
-                style="
-                  font-size: 48px;
-                  margin-bottom: var(--spacing-md);
-                  color: var(--primary-700);
-                "
-                aria-hidden="true"
-              >
-                <svg
-                  width="48"
-                  height="48"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                >
+              <div style="font-size: 48px; margin-bottom: var(--spacing-md); color: var(--primary-700)" aria-hidden="true">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                   <rect x="1" y="3" width="15" height="13"></rect>
                   <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
                   <circle cx="5.5" cy="18.5" r="2.5"></circle>
                   <circle cx="18.5" cy="18.5" r="2.5"></circle>
                 </svg>
               </div>
-              <h3 class="footer-section-title">Envío Gratis sobre $50</h3>
-              <p style="color: var(--gray-600)">
-                Entrega rápida en todo Ecuador. Rastreo en tiempo real
-              </p>
+              <h3 class="footer-section-title">Envío Gratis sobre $60</h3>
+              <!-- ✅ FIX: $50 → $60 -->
+              <p style="color: var(--gray-600)">Entrega rápida en todo Ecuador. Rastreo en tiempo real</p>
             </article>
             <article class="feature-item" style="text-align: center">
-              <div
-                style="
-                  font-size: 48px;
-                  margin-bottom: var(--spacing-md);
-                  color: var(--primary-700);
-                "
-                aria-hidden="true"
-              >
-                <svg
-                  width="48"
-                  height="48"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                >
-                  <path
-                    d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-                  />
+              <div style="font-size: 48px; margin-bottom: var(--spacing-md); color: var(--primary-700)" aria-hidden="true">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
               </div>
               <h3 class="footer-section-title">Atención al Cliente</h3>
-              <p style="color: var(--gray-600)">
-                Soporte rápido y amigable. Estamos aquí para ayudarte
-              </p>
+              <p style="color: var(--gray-600)">Soporte rápido y amigable. Estamos aquí para ayudarte</p>
             </article>
           </div>
         </div>
       </section>
+
+      <!-- TRUST BADGES -->
       <section class="section trust-section" aria-labelledby="trust-heading">
         <div class="container">
-          <h2 id="trust-heading" class="visually-hidden">
-            Garantías y Certificaciones
-          </h2>
+          <h2 id="trust-heading" class="visually-hidden">Garantías y Certificaciones</h2>
           <div class="trust-badges">
             <div class="trust-badge">
-              <svg
-                width="32"
-                height="32"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M20 6L9 17l-5-5" />
-              </svg>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5" /></svg>
               <span>Productos Auténticos</span>
             </div>
             <div class="trust-badge">
-              <svg
-                width="32"
-                height="32"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M20 6L9 17l-5-5" />
-              </svg>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5" /></svg>
               <span>Garantía de Satisfacción</span>
             </div>
             <div class="trust-badge">
-              <svg
-                width="32"
-                height="32"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M20 6L9 17l-5-5" />
-              </svg>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5" /></svg>
               <span>Devoluciones Fáciles</span>
             </div>
             <div class="trust-badge">
-              <svg
-                width="32"
-                height="32"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M20 6L9 17l-5-5" />
-              </svg>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5" /></svg>
               <span>Embalaje Seguro</span>
             </div>
           </div>
         </div>
       </section>
     </main>
+
+    <!-- WhatsApp Float -->
     <a
       href="https://wa.me/593981832313?text=Hola,%20estoy%20interesado%20en%20sus%20productos"
       class="whatsapp-float"
@@ -466,20 +312,12 @@
       rel="noopener noreferrer"
       aria-label="Contactar por WhatsApp"
     >
-      <svg
-        width="60"
-        height="60"
-        viewBox="0 0 60 60"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
+      <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="30" cy="30" r="30" fill="#25D366" />
-        <path
-          d="M30.5 15C22.5 15 16 21.5 16 29.5C16 32.3 16.9 34.9 18.4 37L16.5 44L23.7 42.1C25.7 43.4 28.1 44.2 30.7 44.2C38.7 44.2 45.2 37.7 45.2 29.7C45.2 21.7 38.5 15 30.5 15ZM38.5 35.2C38.1 36.4 36.4 37.4 35.2 37.6C34.4 37.7 33.4 37.8 30.1 36.4C25.6 34.6 22.8 30 22.6 29.7C22.4 29.5 20.8 27.3 20.8 25C20.8 22.7 22 21.6 22.5 21.1C22.9 20.6 23.5 20.5 23.9 20.5C24.1 20.5 24.3 20.5 24.5 20.5C24.7 20.5 25 20.5 25.3 21.1C25.7 21.8 26.6 24.1 26.7 24.3C26.8 24.5 26.9 24.7 26.8 24.9C26.7 25.2 26.6 25.3 26.4 25.5C26.2 25.7 26 26 25.8 26.2C25.6 26.4 25.4 26.6 25.6 27C25.8 27.3 26.6 28.6 27.7 29.6C29.1 30.8 30.3 31.2 30.7 31.4C31 31.6 31.2 31.5 31.4 31.3C31.6 31.1 32.4 30.2 32.7 29.8C32.9 29.5 33.2 29.5 33.5 29.7C33.8 29.8 36.1 30.9 36.5 31.1C36.8 31.3 37 31.4 37.1 31.6C37.2 31.9 37.2 32.9 38.5 35.2Z"
-          fill="white"
-        />
+        <path d="M30.5 15C22.5 15 16 21.5 16 29.5C16 32.3 16.9 34.9 18.4 37L16.5 44L23.7 42.1C25.7 43.4 28.1 44.2 30.7 44.2C38.7 44.2 45.2 37.7 45.2 29.7C45.2 21.7 38.5 15 30.5 15ZM38.5 35.2C38.1 36.4 36.4 37.4 35.2 37.6C34.4 37.7 33.4 37.8 30.1 36.4C25.6 34.6 22.8 30 22.6 29.7C22.4 29.5 20.8 27.3 20.8 25C20.8 22.7 22 21.6 22.5 21.1C22.9 20.6 23.5 20.5 23.9 20.5C24.1 20.5 24.3 20.5 24.5 20.5C24.7 20.5 25 20.5 25.3 21.1C25.7 21.8 26.6 24.1 26.7 24.3C26.8 24.5 26.9 24.7 26.8 24.9C26.7 25.2 26.6 25.3 26.4 25.5C26.2 25.7 26 26 25.8 26.2C25.6 26.4 25.4 26.6 25.6 27C25.8 27.3 26.6 28.6 27.7 29.6C29.1 30.8 30.3 31.2 30.7 31.4C31 31.6 31.2 31.5 31.4 31.3C31.6 31.1 32.4 30.2 32.7 29.8C32.9 29.5 33.2 29.5 33.5 29.7C33.8 29.8 36.1 30.9 36.5 31.1C36.8 31.3 37 31.4 37.1 31.6C37.2 31.9 37.2 32.9 38.5 35.2Z" fill="white" />
       </svg>
     </a>
+
     <!-- FOOTER -->
     <footer class="site-footer" role="contentinfo">
       <div class="container">
@@ -492,49 +330,26 @@
             </p>
             <div class="social-links" style="margin-top: var(--spacing-lg)">
               <a href="#" aria-label="Facebook" class="social-link">
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path
-                    d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"
-                  />
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
                 </svg>
               </a>
               <a href="#" aria-label="Instagram" class="social-link">
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
                   <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
                   <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
                 </svg>
               </a>
               <a href="#" aria-label="WhatsApp" class="social-link">
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path
-                    d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"
-                  />
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
                 </svg>
               </a>
             </div>
           </div>
           <nav aria-labelledby="footer-nav-categories">
-            <h3 class="footer-section-inferior" id="footer-nav-categories">
-              Categorías
-            </h3>
+            <h3 class="footer-section-inferior" id="footer-nav-categories">Categorías</h3>
             <ul class="footer-links">
               <li><a href="#ropa">Ropa</a></li>
               <li><a href="#peluches">Peluches</a></li>
@@ -547,9 +362,7 @@
             </ul>
           </nav>
           <nav aria-labelledby="footer-nav-support">
-            <h3 class="footer-section-inferior" id="footer-nav-support">
-              Servicio al Cliente
-            </h3>
+            <h3 class="footer-section-inferior" id="footer-nav-support">Servicio al Cliente</h3>
             <ul class="footer-links">
               <li><a href="#envios">Información de Envíos</a></li>
               <li><a href="#devoluciones">Política de Devoluciones</a></li>
@@ -561,50 +374,16 @@
           </nav>
           <div>
             <h3 class="footer-section-inferior">Contacto</h3>
-            <address
-              style="
-                font-style: normal;
-                color: var(--gray-400);
-                line-height: 1.75;
-              "
-            >
-              <p>
-                <strong>Dirección:</strong><br />
-                Jorge Añazco y 12 de Febrero<br />
-                Lago Agrio, Sucumbíos, Ecuador
-              </p>
-              <p>
-                <strong>Teléfono:</strong><br />
-                <a
-                  href="tel:+593981832313"
-                  style="color: var(--gray-400); text-decoration: none"
-                  >+593 98 183 2313</a
-                >
-              </p>
-              <p>
-                <strong>Email:</strong><br />
-                <a
-                  href="/cdn-cgi/l/email-protection#c7aea9a1a887aaa6b0a2b0a2e9a4a8aae9a2a4"
-                  style="color: var(--gray-400); text-decoration: none"
-                  ><span
-                    class="__cf_email__"
-                    data-cfemail="462f282029062b27312331236825292b682325"
-                    >[email&#160;protected]</span
-                  ></a
-                >
-              </p>
-              <p>
-                <strong>Horario:</strong><br />
-                Lun - Dom: 24/7 (Online)
-              </p>
+            <address style="font-style: normal; color: var(--gray-400); line-height: 1.75;">
+              <p><strong>Dirección:</strong><br />Jorge Añazco y 12 de Febrero<br />Lago Agrio, Sucumbíos, Ecuador</p>
+              <p><strong>Teléfono:</strong><br /><a href="tel:+593981832313" style="color: var(--gray-400); text-decoration: none;">+593 98 183 2313</a></p>
+              <p><strong>Email:</strong><br /><a href="mailto:info@mawewe.com.ec" style="color: var(--gray-400); text-decoration: none;">info@mawewe.com.ec</a></p>
+              <p><strong>Horario:</strong><br />Lun - Dom: 24/7 (Online)</p>
             </address>
           </div>
         </div>
         <div class="footer-bottom">
-          <p>
-            © 2024-2026 Mawewe. Todos los derechos reservados. | Desarrollado
-            con ❤️ en Ecuador
-          </p>
+          <p>© 2024-2026 Mawewe. Todos los derechos reservados. | Desarrollado con ❤️ en Ecuador</p>
           <div class="payment-methods" style="margin-top: var(--spacing-md)">
             <img
               src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_37x23.jpg"
@@ -616,123 +395,60 @@
         </div>
       </div>
     </footer>
+
     <!-- CART MODAL -->
     <div class="cart-overlay" id="cart-overlay" role="presentation"></div>
-    <aside
-      class="cart-modal"
-      id="cart-modal"
-      role="dialog"
-      aria-labelledby="cart-title"
-      aria-modal="true"
-    >
+    <aside class="cart-modal" id="cart-modal" role="dialog" aria-labelledby="cart-title" aria-modal="true">
       <header class="cart-header">
         <h2 class="cart-title" id="cart-title">Tu Carrito</h2>
-        <button
-          class="btn-close-cart"
-          onclick="mawewe.ui.toggleCart()"
-          aria-label="Cerrar carrito"
-        >
-          &times;
-        </button>
+        <button class="btn-close-cart" onclick="mawewe.ui.toggleCart()" aria-label="Cerrar carrito">&times;</button>
       </header>
-      <div
-        class="cart-items"
-        id="cart-items"
-        role="list"
-        aria-label="Productos en el carrito"
-      ></div>
-      <div
-        id="checkout-form-container"
-        style="display: none; flex: 1; overflow-y: auto"
-      ></div>
+      <div class="cart-items" id="cart-items" role="list" aria-label="Productos en el carrito"></div>
+      <div id="checkout-form-container" style="display: none; flex: 1; overflow-y: auto"></div>
       <footer class="cart-footer" id="cart-footer">
         <div class="cart-summary" id="cart-summary"></div>
-        <button
-          class="checkout-btn"
-          onclick="mawewe.checkout.openCheckout()"
-          aria-label="Proceder al pago"
-        >
+        <button class="checkout-btn" onclick="mawewe.checkout.openCheckout()" aria-label="Proceder al pago">
           Proceder al Pago
         </button>
-        <p
-          style="
-            text-align: center;
-            font-size: var(--font-size-xs);
-            color: var(--gray-600);
-            margin-top: var(--spacing-md);
-          "
-        >
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            style="vertical-align: middle; margin-right: 4px"
-          >
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-          </svg>
+        <p style="text-align: center; font-size: var(--font-size-xs); color: var(--gray-600); margin-top: var(--spacing-md);">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
           Pago 100% seguro con PayPal
         </p>
       </footer>
     </aside>
-    <div
-      id="loading-spinner"
-      class="loading-spinner"
-      style="display: none"
-      role="status"
-      aria-live="polite"
-    >
+
+    <div id="loading-spinner" class="loading-spinner" style="display: none" role="status" aria-live="polite">
       <div class="spinner"></div>
       <p>Cargando productos...</p>
     </div>
-    <script
-      data-cfasync="false"
-      src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"
-    ></script>
+
     <script>
       const observer = new MutationObserver(() => {
-        const checkoutContainer = document.getElementById(
-          "checkout-form-container",
-        );
-        const cartFooter = document.getElementById("cart-footer");
-        const cartItems = document.getElementById("cart-items");
+        const checkoutContainer = document.getElementById('checkout-form-container');
+        const cartFooter        = document.getElementById('cart-footer');
+        const cartItems         = document.getElementById('cart-items');
         if (checkoutContainer && cartFooter && cartItems) {
-          const isCheckoutVisible = checkoutContainer.style.display !== "none";
-          cartFooter.style.display = isCheckoutVisible ? "none" : "block";
-          cartItems.style.display = isCheckoutVisible ? "none" : "block";
-          const cartBtn = document.querySelector(".btn-cart");
-          if (cartBtn) {
-            cartBtn.setAttribute(
-              "aria-expanded",
-              isCheckoutVisible ? "true" : "false",
-            );
-          }
+          const isCheckoutVisible = checkoutContainer.style.display !== 'none';
+          cartFooter.style.display = isCheckoutVisible ? 'none' : 'block';
+          cartItems.style.display  = isCheckoutVisible ? 'none' : 'block';
         }
       });
-      const checkoutContainer = document.getElementById(
-        "checkout-form-container",
-      );
+      const checkoutContainer = document.getElementById('checkout-form-container');
       if (checkoutContainer) {
-        observer.observe(checkoutContainer, {
-          attributes: true,
-          attributeFilter: ["style"],
-        });
+        observer.observe(checkoutContainer, { attributes: true, attributeFilter: ['style'] });
       }
     </script>
     <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker
-            .register("./sw.js")
-            .then((reg) => console.log("✅ Service Worker registrado"))
-            .catch((err) =>
-              console.log("❌ Error al registrar Service Worker:", err),
-            );
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js')
+            .then(() => console.log('✅ SW registrado'))
+            .catch(err => console.log('❌ SW error:', err));
         });
       }
     </script>
+
+    <!-- ✅ Scripts en el orden correcto -->
     <script src="./assets/js/app.js"></script>
     <script src="./assets/js/routing.js"></script>
     <script src="./assets/js/checkout.js"></script>
