@@ -10,8 +10,9 @@
   <link rel="stylesheet" href="assets/css/variables.css">
   <link rel="stylesheet" href="assets/css/main.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
+  <!-- SheetJS para exportar Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
-    /* Tabs */
     .rep-tabs { display:flex; gap:4px; border-bottom:2px solid var(--border); margin-bottom:var(--spacing-lg); }
     .rep-tab {
       padding:10px 20px; border:none; background:none; cursor:pointer;
@@ -23,23 +24,20 @@
     .rep-panel { display:none; }
     .rep-panel.active { display:block; }
 
-    /* Date range bar */
     .date-range-bar {
       display:flex; gap:12px; align-items:center; flex-wrap:wrap;
-      background:var(--bg); border:1px solid var(--border); border-radius:var(--radius);
+      background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-md);
       padding:12px 16px; margin-bottom:var(--spacing-lg);
     }
     .date-range-bar label { font-size:13px; font-weight:600; color:var(--text-secondary); }
     .date-range-bar .sep { color:var(--text-muted); }
 
-    /* KPI cards */
     .kpi-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:var(--spacing-lg); }
-    .kpi-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px; }
+    .kpi-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px 20px; }
     .kpi-label { font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.6px; margin-bottom:4px; }
     .kpi-value { font-size:26px; font-weight:800; color:var(--text-primary); line-height:1.1; }
     .kpi-sub   { font-size:11px; color:var(--text-muted); margin-top:2px; }
 
-    /* Tabla compacta */
     .compact-table { width:100%; border-collapse:collapse; font-size:13px; }
     .compact-table th { background:var(--bg); font-weight:600; font-size:11px; text-transform:uppercase;
       letter-spacing:.5px; color:var(--text-muted); padding:8px 12px; text-align:left;
@@ -48,7 +46,17 @@
     .compact-table tr:last-child td { border-bottom:none; }
     .compact-table tr:hover td { background:var(--bg); }
 
-    /* PDF hidden frame — para PDFs por seccion */
+    /* Botón Excel verde */
+    .btn-excel {
+      display:inline-flex; align-items:center; gap:6px;
+      padding:7px 14px; border-radius:var(--radius-md);
+      font-size:13px; font-weight:600; cursor:pointer; border:none;
+      background:#16a34a; color:white;
+      transition:all .15s;
+      box-shadow:0 2px 8px rgba(22,163,74,.25);
+    }
+    .btn-excel:hover { background:#15803d; box-shadow:0 4px 16px rgba(22,163,74,.35); transform:translateY(-1px); }
+
     #pdfFrame { display:none; }
   </style>
 </head>
@@ -63,9 +71,6 @@
   const user = Auth.guard();
   if (!user) return;
 
-  /* ═════════════════════════════════════
-     TEMPLATE DE LAYOUT
-  ═════════════════════════════════════ */
   document.getElementById('appLayout').innerHTML = `
     ${SidebarHTML.render('reports.html')}
     <div class="main-content" id="mainContent">
@@ -77,14 +82,13 @@
       </header>
       <main class="page-content">
 
-        <!-- TABS -->
         <div class="rep-tabs" id="repTabs">
           <button class="rep-tab active" data-tab="ventas">Ventas</button>
           <button class="rep-tab" data-tab="productos">Inventario</button>
           <button class="rep-tab" data-tab="empleados">Empleados</button>
         </div>
 
-        <!-- ══ TAB VENTAS ══ -->
+        <!-- ══ VENTAS ══ -->
         <div class="rep-panel active" id="panel-ventas">
           <div class="date-range-bar">
             <label>Periodo:</label>
@@ -93,10 +97,12 @@
             <input type="date" class="form-control" id="vTo" style="width:auto;">
             <button class="btn btn-primary btn-sm" id="vLoad">Buscar</button>
             <button class="btn btn-secondary btn-sm" id="vPDF">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-              Exportar PDF
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              PDF
+            </button>
+            <button class="btn-excel" id="vXLSX">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              Excel
             </button>
           </div>
           <div id="ventasContent">
@@ -104,20 +110,20 @@
           </div>
         </div>
 
-        <!-- ══ TAB PRODUCTOS ══ -->
+        <!-- ══ INVENTARIO ══ -->
         <div class="rep-panel" id="panel-productos">
           <div class="date-range-bar">
             <button class="btn btn-secondary btn-sm" id="pLoad">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
-              </svg>
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
               Actualizar
             </button>
             <button class="btn btn-secondary btn-sm" id="pPDF">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-              Exportar PDF
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              PDF
+            </button>
+            <button class="btn-excel" id="pXLSX">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              Excel
             </button>
           </div>
           <div id="productosContent">
@@ -125,17 +131,19 @@
           </div>
         </div>
 
-        <!-- ══ TAB EMPLEADOS ══ -->
+        <!-- ══ EMPLEADOS ══ -->
         <div class="rep-panel" id="panel-empleados">
           <div class="date-range-bar">
             <label>Mes:</label>
             <input type="month" class="form-control" id="eMonth" style="width:auto;">
             <button class="btn btn-primary btn-sm" id="eLoad">Buscar</button>
             <button class="btn btn-secondary btn-sm" id="ePDF">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-              Exportar PDF
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              PDF
+            </button>
+            <button class="btn-excel" id="eXLSX">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              Excel
             </button>
           </div>
           <div id="empleadosContent">
@@ -149,7 +157,7 @@
 
   Sidebar.init();
 
-  /* ══════════════════ TABS ══════════════════ */
+  /* ══ TABS ══ */
   document.querySelectorAll('.rep-tab').forEach(btn => {
     btn.addEventListener('click', function() {
       document.querySelectorAll('.rep-tab').forEach(b => b.classList.remove('active'));
@@ -159,17 +167,17 @@
     });
   });
 
-  /* ══════════════════ DEFAULTS DE FECHAS ══════════════════ */
-  const today   = new Date();
+  /* ══ FECHAS DEFAULT ══ */
+  const today    = new Date();
   const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0,10);
   const lastDay  = new Date(today.getFullYear(), today.getMonth()+1, 0).toISOString().slice(0,10);
   document.getElementById('vFrom').value  = firstDay;
   document.getElementById('vTo').value    = lastDay;
   document.getElementById('eMonth').value = today.toISOString().slice(0,7);
 
-  /* ═══════════════════════════════════════════
-     REPORTE DE VENTAS
-  ═══════════════════════════════════════════ */
+  /* ══════════════════════════════════════════
+     VENTAS
+  ══════════════════════════════════════════ */
   let ventasData = null;
 
   async function loadVentas() {
@@ -179,69 +187,35 @@
     try {
       const d = await API.get('reports.php', { action:'sales', start_date:from, end_date:to });
       ventasData = { ...d, from, to };
-
-      const t = d.totals || {};
-      const daily = d.daily || [];
-      const top   = d.top_products || [];
+      const t = d.totals || {}, daily = d.daily || [], top = d.top_products || [];
 
       document.getElementById('ventasContent').innerHTML = `
         <div class="kpi-row">
-          <div class="kpi-card">
-            <div class="kpi-label">Total Ingresos</div>
-            <div class="kpi-value">${Fmt.money(t.total_revenue || 0)}</div>
-            <div class="kpi-sub">${t.total_orders || 0} ordenes</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Ticket Promedio</div>
-            <div class="kpi-value">${Fmt.money(t.avg_order_value || 0)}</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Completadas</div>
-            <div class="kpi-value" style="color:var(--success);">${t.completed_orders || 0}</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Pendientes</div>
-            <div class="kpi-value" style="color:var(--warning);">${t.pending_orders || 0}</div>
-          </div>
+          <div class="kpi-card"><div class="kpi-label">Total Ingresos</div><div class="kpi-value">${Fmt.money(t.total_revenue||0)}</div><div class="kpi-sub">${t.total_orders||0} ordenes</div></div>
+          <div class="kpi-card"><div class="kpi-label">Ticket Promedio</div><div class="kpi-value">${Fmt.money(t.avg_order_value||0)}</div></div>
+          <div class="kpi-card"><div class="kpi-label">Completadas</div><div class="kpi-value" style="color:var(--success);">${t.completed_orders||0}</div></div>
+          <div class="kpi-card"><div class="kpi-label">Pendientes</div><div class="kpi-value" style="color:var(--warning);">${t.pending_orders||0}</div></div>
         </div>
-
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
           <div class="card">
             <div class="card-header"><div class="card-title">Ventas por dia</div></div>
             <div class="card-body" style="padding:0;">
-              ${daily.length === 0
-                ? `<div class="empty-state" style="padding:32px;"><div class="empty-state-title">Sin ventas en el periodo</div></div>`
-                : `<table class="compact-table">
-                    <thead><tr><th>Fecha</th><th>Ordenes</th><th>Ingresos</th></tr></thead>
-                    <tbody>${daily.map(r => `
-                      <tr>
-                        <td>${Fmt.date(r.date)}</td>
-                        <td>${r.orders}</td>
-                        <td style="font-family:var(--font-mono);font-weight:600;">${Fmt.money(r.revenue)}</td>
-                      </tr>`).join('')}
-                    </tbody>
-                  </table>`}
+              ${daily.length===0 ? `<div class="empty-state" style="padding:32px;"><div class="empty-state-title">Sin ventas en el periodo</div></div>` :
+              `<table class="compact-table"><thead><tr><th>Fecha</th><th>Ordenes</th><th>Ingresos</th></tr></thead><tbody>
+              ${daily.map(r=>`<tr><td>${Fmt.date(r.date)}</td><td>${r.orders}</td><td style="font-family:var(--font-mono);font-weight:600;">${Fmt.money(r.revenue)}</td></tr>`).join('')}
+              </tbody></table>`}
             </div>
           </div>
           <div class="card">
             <div class="card-header"><div class="card-title">Productos mas vendidos</div></div>
             <div class="card-body" style="padding:0;">
-              ${top.length === 0
-                ? `<div class="empty-state" style="padding:32px;"><div class="empty-state-title">Sin datos</div></div>`
-                : `<table class="compact-table">
-                    <thead><tr><th>Producto</th><th>Uds</th><th>Total</th></tr></thead>
-                    <tbody>${top.map(r => `
-                      <tr>
-                        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.product_name}</td>
-                        <td>${r.total_sold}</td>
-                        <td style="font-family:var(--font-mono);font-weight:600;">${Fmt.money(r.total_revenue)}</td>
-                      </tr>`).join('')}
-                    </tbody>
-                  </table>`}
+              ${top.length===0 ? `<div class="empty-state" style="padding:32px;"><div class="empty-state-title">Sin datos</div></div>` :
+              `<table class="compact-table"><thead><tr><th>Producto</th><th>Uds</th><th>Total</th></tr></thead><tbody>
+              ${top.map(r=>`<tr><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.product_name}</td><td>${r.total_sold}</td><td style="font-family:var(--font-mono);font-weight:600;">${Fmt.money(r.total_revenue)}</td></tr>`).join('')}
+              </tbody></table>`}
             </div>
           </div>
-        </div>
-      `;
+        </div>`;
     } catch(e) {
       document.getElementById('ventasContent').innerHTML = `<div class="empty-state"><div class="empty-state-title">Error al cargar</div><div class="empty-state-desc">${e.message}</div></div>`;
       Toast.error('Error al cargar reporte de ventas');
@@ -249,12 +223,13 @@
   }
 
   document.getElementById('vLoad').addEventListener('click', loadVentas);
-  document.getElementById('vPDF').addEventListener('click', () => exportPDF('ventas'));
+  document.getElementById('vPDF').addEventListener('click',  () => exportPDF('ventas'));
+  document.getElementById('vXLSX').addEventListener('click', () => exportExcel('ventas'));
   loadVentas();
 
-  /* ═══════════════════════════════════════════
-     REPORTE DE INVENTARIO
-  ═══════════════════════════════════════════ */
+  /* ══════════════════════════════════════════
+     INVENTARIO
+  ══════════════════════════════════════════ */
   let productosData = null;
 
   async function loadProductos() {
@@ -262,94 +237,41 @@
     try {
       const d = await API.get('reports.php', { action:'products' });
       productosData = d;
-
-      const inv      = d.inventory   || {};
-      const lowStock = d.low_stock   || [];
-      const outStock = d.out_of_stock || [];
-      const byCat    = d.by_category || [];
+      const inv = d.inventory||{}, lowStock = d.low_stock||[], outStock = d.out_of_stock||[], byCat = d.by_category||[];
 
       document.getElementById('productosContent').innerHTML = `
         <div class="kpi-row">
-          <div class="kpi-card">
-            <div class="kpi-label">Total Productos</div>
-            <div class="kpi-value">${inv.total_products || 0}</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">En Stock</div>
-            <div class="kpi-value" style="color:var(--success);">${inv.in_stock || 0}</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Bajo Stock</div>
-            <div class="kpi-value" style="color:var(--warning);">${inv.low_stock || 0}</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Sin Stock</div>
-            <div class="kpi-value" style="color:var(--danger);">${inv.out_of_stock || 0}</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Unidades Totales</div>
-            <div class="kpi-value">${inv.total_items || 0}</div>
-          </div>
+          <div class="kpi-card"><div class="kpi-label">Total Productos</div><div class="kpi-value">${inv.total_products||0}</div></div>
+          <div class="kpi-card"><div class="kpi-label">En Stock</div><div class="kpi-value" style="color:var(--success);">${inv.in_stock||0}</div></div>
+          <div class="kpi-card"><div class="kpi-label">Bajo Stock</div><div class="kpi-value" style="color:var(--warning);">${inv.low_stock||0}</div></div>
+          <div class="kpi-card"><div class="kpi-label">Sin Stock</div><div class="kpi-value" style="color:var(--danger);">${inv.out_of_stock||0}</div></div>
+          <div class="kpi-card"><div class="kpi-label">Unidades Totales</div><div class="kpi-value">${inv.total_items||0}</div></div>
         </div>
-
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
           <div class="card">
             <div class="card-header"><div class="card-title">Por categoria</div></div>
             <div class="card-body" style="padding:0;">
-              <table class="compact-table">
-                <thead><tr><th>Categoria</th><th>Productos</th><th>Stock</th></tr></thead>
-                <tbody>${byCat.map(r => `
-                  <tr>
-                    <td style="text-transform:capitalize;">${r.category || '—'}</td>
-                    <td>${r.count}</td>
-                    <td>${r.total_stock}</td>
-                  </tr>`).join('')}
-                </tbody>
-              </table>
+              <table class="compact-table"><thead><tr><th>Categoria</th><th>Productos</th><th>Stock</th></tr></thead>
+              <tbody>${byCat.map(r=>`<tr><td style="text-transform:capitalize;">${r.category||'—'}</td><td>${r.count}</td><td>${r.total_stock}</td></tr>`).join('')}</tbody></table>
             </div>
           </div>
           <div class="card">
-            <div class="card-header" style="background:rgba(234,179,8,.08);">
-              <div class="card-title" style="color:var(--warning);">⚠ Bajo stock (&lt;10 uds)</div>
-            </div>
+            <div class="card-header" style="background:rgba(234,179,8,.08);"><div class="card-title" style="color:var(--warning);">⚠ Bajo stock (&lt;10 uds)</div></div>
             <div class="card-body" style="padding:0;">
-              ${lowStock.length === 0
-                ? `<div class="empty-state" style="padding:24px;"><div class="empty-state-title" style="font-size:13px;">Todo bien</div></div>`
-                : `<table class="compact-table">
-                    <thead><tr><th>SKU</th><th>Producto</th><th>Stock</th><th>Precio</th></tr></thead>
-                    <tbody>${lowStock.map(r => `
-                      <tr>
-                        <td style="font-family:var(--font-mono);font-size:11px;">${r.sku}</td>
-                        <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.name}</td>
-                        <td><span class="badge ${r.stock===0?'badge-danger':'badge-warning'}">${r.stock}</span></td>
-                        <td style="font-family:var(--font-mono);">${Fmt.money(r.price)}</td>
-                      </tr>`).join('')}
-                    </tbody>
-                  </table>`}
+              ${lowStock.length===0 ? `<div class="empty-state" style="padding:24px;"><div class="empty-state-title" style="font-size:13px;">Todo bien</div></div>` :
+              `<table class="compact-table"><thead><tr><th>SKU</th><th>Producto</th><th>Stock</th><th>Precio</th></tr></thead>
+              <tbody>${lowStock.map(r=>`<tr><td style="font-family:var(--font-mono);font-size:11px;">${r.sku}</td><td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.name}</td><td><span class="badge ${r.stock===0?'badge-danger':'badge-warning'}">${r.stock}</span></td><td style="font-family:var(--font-mono);">${Fmt.money(r.price)}</td></tr>`).join('')}</tbody></table>`}
             </div>
           </div>
         </div>
-
-        ${outStock.length > 0 ? `
+        ${outStock.length>0 ? `
         <div class="card">
-          <div class="card-header" style="background:rgba(239,68,68,.06);">
-            <div class="card-title" style="color:var(--danger);">🚫 Sin stock (${outStock.length} productos)</div>
-          </div>
+          <div class="card-header" style="background:rgba(239,68,68,.06);"><div class="card-title" style="color:var(--danger);">🚫 Sin stock (${outStock.length} productos)</div></div>
           <div class="card-body" style="padding:0;">
-            <table class="compact-table">
-              <thead><tr><th>SKU</th><th>Producto</th><th>Categoria</th><th>Precio</th></tr></thead>
-              <tbody>${outStock.map(r => `
-                <tr>
-                  <td style="font-family:var(--font-mono);font-size:11px;">${r.sku}</td>
-                  <td>${r.name}</td>
-                  <td style="text-transform:capitalize;">${r.category}</td>
-                  <td style="font-family:var(--font-mono);">${Fmt.money(r.price)}</td>
-                </tr>`).join('')}
-              </tbody>
-            </table>
+            <table class="compact-table"><thead><tr><th>SKU</th><th>Producto</th><th>Categoria</th><th>Precio</th></tr></thead>
+            <tbody>${outStock.map(r=>`<tr><td style="font-family:var(--font-mono);font-size:11px;">${r.sku}</td><td>${r.name}</td><td style="text-transform:capitalize;">${r.category}</td><td style="font-family:var(--font-mono);">${Fmt.money(r.price)}</td></tr>`).join('')}</tbody></table>
           </div>
-        </div>` : ''}
-      `;
+        </div>` : ''}`;
     } catch(e) {
       document.getElementById('productosContent').innerHTML = `<div class="empty-state"><div class="empty-state-title">Error al cargar</div><div class="empty-state-desc">${e.message}</div></div>`;
       Toast.error('Error al cargar reporte de inventario');
@@ -357,11 +279,12 @@
   }
 
   document.getElementById('pLoad').addEventListener('click', loadProductos);
-  document.getElementById('pPDF').addEventListener('click', () => exportPDF('productos'));
+  document.getElementById('pPDF').addEventListener('click',  () => exportPDF('productos'));
+  document.getElementById('pXLSX').addEventListener('click', () => exportExcel('productos'));
 
-  /* ═══════════════════════════════════════════
-     REPORTE DE EMPLEADOS
-  ═══════════════════════════════════════════ */
+  /* ══════════════════════════════════════════
+     EMPLEADOS
+  ══════════════════════════════════════════ */
   let empleadosData = null;
 
   async function loadEmpleados() {
@@ -370,54 +293,22 @@
     try {
       const d = await API.get('reports.php', { action:'employees', month });
       empleadosData = { ...d, month };
-
-      const s  = d.summary    || {};
-      const at = d.attendance || [];
+      const s = d.summary||{}, at = d.attendance||[];
 
       document.getElementById('empleadosContent').innerHTML = `
         <div class="kpi-row">
-          <div class="kpi-card">
-            <div class="kpi-label">Total Empleados</div>
-            <div class="kpi-value">${s.total_employees || 0}</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Activos</div>
-            <div class="kpi-value" style="color:var(--success);">${s.active_employees || 0}</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Administradores</div>
-            <div class="kpi-value">${s.admins || 0}</div>
-          </div>
+          <div class="kpi-card"><div class="kpi-label">Total Empleados</div><div class="kpi-value">${s.total_employees||0}</div></div>
+          <div class="kpi-card"><div class="kpi-label">Activos</div><div class="kpi-value" style="color:var(--success);">${s.active_employees||0}</div></div>
+          <div class="kpi-card"><div class="kpi-label">Administradores</div><div class="kpi-value">${s.admins||0}</div></div>
         </div>
-
         <div class="card">
-          <div class="card-header">
-            <div class="card-title">Asistencia del mes — ${month}</div>
-          </div>
+          <div class="card-header"><div class="card-title">Asistencia del mes — ${month}</div></div>
           <div class="card-body" style="padding:0;">
-            ${at.length === 0
-              ? `<div class="empty-state" style="padding:32px;"><div class="empty-state-title">Sin registros de asistencia</div></div>`
-              : `<table class="compact-table">
-                  <thead>
-                    <tr>
-                      <th>Empleado</th><th>Cargo</th><th>Dias trabajados</th>
-                      <th>Horas totales</th><th>Promedio/dia</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${at.map(r => `
-                      <tr>
-                        <td style="font-weight:600;">${r.nombre}</td>
-                        <td style="color:var(--text-muted);">${r.cargo || '—'}</td>
-                        <td style="text-align:center;">${r.days_worked}</td>
-                        <td style="font-family:var(--font-mono);">${r.total_hours} h</td>
-                        <td style="font-family:var(--font-mono);color:var(--text-muted);">${r.avg_hours} h</td>
-                      </tr>`).join('')}
-                  </tbody>
-                </table>`}
+            ${at.length===0 ? `<div class="empty-state" style="padding:32px;"><div class="empty-state-title">Sin registros de asistencia</div></div>` :
+            `<table class="compact-table"><thead><tr><th>Empleado</th><th>Cargo</th><th>Dias trabajados</th><th>Horas totales</th><th>Promedio/dia</th></tr></thead>
+            <tbody>${at.map(r=>`<tr><td style="font-weight:600;">${r.nombre}</td><td style="color:var(--text-muted);">${r.cargo||'—'}</td><td style="text-align:center;">${r.days_worked}</td><td style="font-family:var(--font-mono);">${r.total_hours} h</td><td style="font-family:var(--font-mono);color:var(--text-muted);">${r.avg_hours} h</td></tr>`).join('')}</tbody></table>`}
           </div>
-        </div>
-      `;
+        </div>`;
     } catch(e) {
       document.getElementById('empleadosContent').innerHTML = `<div class="empty-state"><div class="empty-state-title">Error al cargar</div><div class="empty-state-desc">${e.message}</div></div>`;
       Toast.error('Error al cargar reporte de empleados');
@@ -425,24 +316,142 @@
   }
 
   document.getElementById('eLoad').addEventListener('click', loadEmpleados);
-  document.getElementById('ePDF').addEventListener('click', () => exportPDF('empleados'));
+  document.getElementById('ePDF').addEventListener('click',  () => exportPDF('empleados'));
+  document.getElementById('eXLSX').addEventListener('click', () => exportExcel('empleados'));
 
-  /* ══════════════════════════════════════════════════════════════
-     EXPORTAR PDF — Genera HTML limpio y lo imprime en nueva ventana
-  ══════════════════════════════════════════════════════════════ */
+  /* ══════════════════════════════════════════
+     EXPORTAR EXCEL — SheetJS (client-side)
+  ══════════════════════════════════════════ */
+  function exportExcel(tipo) {
+    if (typeof XLSX === 'undefined') { Toast.error('Libreria Excel no disponible'); return; }
+
+    const wb  = XLSX.utils.book_new();
+    const now = new Date();
+    let filename = '';
+
+    if (tipo === 'ventas') {
+      if (!ventasData) { Toast.warning('Carga el reporte primero'); return; }
+      const t = ventasData.totals||{}, daily = ventasData.daily||[], top = ventasData.top_products||[];
+
+      /* Hoja 1: Resumen KPIs */
+      const wsRes = XLSX.utils.aoa_to_sheet([
+        ['REPORTE DE VENTAS'],
+        [`Periodo: ${ventasData.from}  →  ${ventasData.to}`],
+        [`Generado: ${now.toLocaleString('es-EC')}`],
+        [],
+        ['Indicador',            'Valor'],
+        ['Total Ingresos (USD)', parseFloat(t.total_revenue   || 0)],
+        ['Total Ordenes',        parseInt(t.total_orders      || 0)],
+        ['Ticket Promedio (USD)',parseFloat(t.avg_order_value || 0)],
+        ['Ordenes Completadas',  parseInt(t.completed_orders  || 0)],
+        ['Ordenes Pendientes',   parseInt(t.pending_orders    || 0)],
+      ]);
+      wsRes['!cols'] = [{ wch: 26 }, { wch: 18 }];
+      XLSX.utils.book_append_sheet(wb, wsRes, 'Resumen');
+
+      /* Hoja 2: Ventas por día */
+      const wsDaily = XLSX.utils.aoa_to_sheet([
+        ['Fecha', 'Ordenes', 'Ingresos (USD)'],
+        ...daily.map(r => [r.date, parseInt(r.orders), parseFloat(r.revenue)])
+      ]);
+      wsDaily['!cols'] = [{ wch: 14 }, { wch: 10 }, { wch: 16 }];
+      XLSX.utils.book_append_sheet(wb, wsDaily, 'Ventas por Dia');
+
+      /* Hoja 3: Top productos */
+      const wsTop = XLSX.utils.aoa_to_sheet([
+        ['#', 'Producto', 'SKU', 'Unidades Vendidas', 'Ingresos (USD)'],
+        ...top.map((r, i) => [i+1, r.product_name, r.product_sku||'—', parseInt(r.total_sold), parseFloat(r.total_revenue)])
+      ]);
+      wsTop['!cols'] = [{ wch: 4 }, { wch: 36 }, { wch: 18 }, { wch: 18 }, { wch: 16 }];
+      XLSX.utils.book_append_sheet(wb, wsTop, 'Top Productos');
+
+      filename = `Reporte_Ventas_${ventasData.from}_${ventasData.to}.xlsx`;
+
+    } else if (tipo === 'productos') {
+      if (!productosData) { Toast.warning('Carga el reporte primero'); return; }
+      const inv = productosData.inventory||{}, low = productosData.low_stock||[], out = productosData.out_of_stock||[], cat = productosData.by_category||[];
+
+      /* Hoja 1: Resumen + categorías */
+      const wsRes = XLSX.utils.aoa_to_sheet([
+        ['REPORTE DE INVENTARIO'],
+        [`Generado: ${now.toLocaleString('es-EC')}`],
+        [],
+        ['Indicador',                'Valor'],
+        ['Total Productos Activos',  parseInt(inv.total_products || 0)],
+        ['En Stock',                 parseInt(inv.in_stock       || 0)],
+        ['Stock Bajo (<10 uds)',     parseInt(inv.low_stock      || 0)],
+        ['Sin Stock',                parseInt(inv.out_of_stock   || 0)],
+        ['Unidades Totales',         parseInt(inv.total_items    || 0)],
+        [],
+        ['Categoria', 'Productos', 'Stock Total'],
+        ...cat.map(r => [r.category||'—', parseInt(r.count), parseInt(r.total_stock)])
+      ]);
+      wsRes['!cols'] = [{ wch: 28 }, { wch: 12 }, { wch: 14 }];
+      XLSX.utils.book_append_sheet(wb, wsRes, 'Resumen');
+
+      /* Hoja 2: Bajo stock */
+      const wsLow = XLSX.utils.aoa_to_sheet([
+        ['SKU', 'Producto', 'Categoria', 'Stock', 'Precio (USD)'],
+        ...low.map(r => [r.sku, r.name, r.category, parseInt(r.stock), parseFloat(r.price)])
+      ]);
+      wsLow['!cols'] = [{ wch: 18 }, { wch: 36 }, { wch: 16 }, { wch: 8 }, { wch: 14 }];
+      XLSX.utils.book_append_sheet(wb, wsLow, 'Bajo Stock');
+
+      /* Hoja 3: Sin stock */
+      const wsOut = XLSX.utils.aoa_to_sheet([
+        ['SKU', 'Producto', 'Categoria', 'Precio (USD)'],
+        ...out.map(r => [r.sku, r.name, r.category, parseFloat(r.price)])
+      ]);
+      wsOut['!cols'] = [{ wch: 18 }, { wch: 36 }, { wch: 16 }, { wch: 14 }];
+      XLSX.utils.book_append_sheet(wb, wsOut, 'Sin Stock');
+
+      filename = `Reporte_Inventario_${now.toISOString().slice(0,10)}.xlsx`;
+
+    } else if (tipo === 'empleados') {
+      if (!empleadosData) { Toast.warning('Carga el reporte primero'); return; }
+      const s = empleadosData.summary||{}, at = empleadosData.attendance||[];
+
+      /* Hoja 1: Resumen */
+      const wsRes = XLSX.utils.aoa_to_sheet([
+        ['REPORTE DE EMPLEADOS'],
+        [`Mes: ${empleadosData.month}`],
+        [`Generado: ${now.toLocaleString('es-EC')}`],
+        [],
+        ['Indicador',       'Valor'],
+        ['Total Empleados', parseInt(s.total_employees  || 0)],
+        ['Activos',         parseInt(s.active_employees || 0)],
+        ['Administradores', parseInt(s.admins           || 0)],
+      ]);
+      wsRes['!cols'] = [{ wch: 22 }, { wch: 12 }];
+      XLSX.utils.book_append_sheet(wb, wsRes, 'Resumen');
+
+      /* Hoja 2: Asistencia mensual */
+      const wsAt = XLSX.utils.aoa_to_sheet([
+        ['Empleado', 'Cargo', 'Dias Trabajados', 'Horas Totales (h)', 'Promedio por Dia (h)'],
+        ...at.map(r => [r.nombre, r.cargo||'—', parseInt(r.days_worked), parseFloat(r.total_hours), parseFloat(r.avg_hours)])
+      ]);
+      wsAt['!cols'] = [{ wch: 28 }, { wch: 18 }, { wch: 16 }, { wch: 18 }, { wch: 20 }];
+      XLSX.utils.book_append_sheet(wb, wsAt, 'Asistencia');
+
+      filename = `Reporte_Empleados_${empleadosData.month}.xlsx`;
+    }
+
+    XLSX.writeFile(wb, filename);
+    Toast.success(`Excel exportado: ${filename}`);
+  }
+
+  /* ══════════════════════════════════════════
+     EXPORTAR PDF
+  ══════════════════════════════════════════ */
   function exportPDF(tipo) {
     let titulo = '', subtitulo = '', bodyHTML = '';
     const now = Fmt.datetime(new Date());
 
     if (tipo === 'ventas') {
       if (!ventasData) { Toast.warning('Carga el reporte primero'); return; }
-      const t   = ventasData.totals || {};
-      const daily= ventasData.daily || [];
-      const top  = ventasData.top_products || [];
-
-      titulo    = 'Reporte de Ventas';
+      const t = ventasData.totals||{}, daily = ventasData.daily||[], top = ventasData.top_products||[];
+      titulo = 'Reporte de Ventas';
       subtitulo = `Periodo: ${Fmt.date(ventasData.from)} — ${Fmt.date(ventasData.to)}`;
-
       bodyHTML = `
         <h2 style="margin:0 0 16px;font-size:15px;color:#0D1B3E;">Resumen General</h2>
         <table class="kpi-table">
@@ -452,32 +461,18 @@
           <tr><td>Ordenes Completadas</td><td class="val green">${t.completed_orders||0}</td></tr>
           <tr><td>Ordenes Pendientes</td><td class="val orange">${t.pending_orders||0}</td></tr>
         </table>
-
-        ${daily.length > 0 ? `
-        <h2 style="margin:24px 0 12px;font-size:15px;color:#0D1B3E;">Detalle por Dia</h2>
-        <table class="data-table">
-          <thead><tr><th>Fecha</th><th>Ordenes</th><th>Ingresos</th></tr></thead>
-          <tbody>${daily.map(r=>`<tr><td>${Fmt.date(r.date)}</td><td>${r.orders}</td><td class="mono">${Fmt.money(r.revenue)}</td></tr>`).join('')}</tbody>
-        </table>` : ''}
-
-        ${top.length > 0 ? `
-        <h2 style="margin:24px 0 12px;font-size:15px;color:#0D1B3E;">Productos Mas Vendidos</h2>
-        <table class="data-table">
-          <thead><tr><th>#</th><th>Producto</th><th>SKU</th><th>Unidades</th><th>Total</th></tr></thead>
-          <tbody>${top.map((r,i)=>`<tr><td>${i+1}</td><td>${r.product_name}</td><td class="mono">${r.product_sku||'—'}</td><td>${r.total_sold}</td><td class="mono">${Fmt.money(r.total_revenue)}</td></tr>`).join('')}</tbody>
-        </table>` : '<p style="color:#94a3b8;text-align:center;padding:24px 0;">Sin datos de productos vendidos en este periodo</p>'}
-      `;
+        ${daily.length>0?`<h2 style="margin:24px 0 12px;font-size:15px;color:#0D1B3E;">Detalle por Dia</h2>
+        <table class="data-table"><thead><tr><th>Fecha</th><th>Ordenes</th><th>Ingresos</th></tr></thead>
+        <tbody>${daily.map(r=>`<tr><td>${Fmt.date(r.date)}</td><td>${r.orders}</td><td class="mono">${Fmt.money(r.revenue)}</td></tr>`).join('')}</tbody></table>`:''}
+        ${top.length>0?`<h2 style="margin:24px 0 12px;font-size:15px;color:#0D1B3E;">Productos Mas Vendidos</h2>
+        <table class="data-table"><thead><tr><th>#</th><th>Producto</th><th>SKU</th><th>Unidades</th><th>Total</th></tr></thead>
+        <tbody>${top.map((r,i)=>`<tr><td>${i+1}</td><td>${r.product_name}</td><td class="mono">${r.product_sku||'—'}</td><td>${r.total_sold}</td><td class="mono">${Fmt.money(r.total_revenue)}</td></tr>`).join('')}</tbody></table>`:'<p style="color:#94a3b8;text-align:center;padding:24px 0;">Sin datos de productos vendidos</p>'}`;
 
     } else if (tipo === 'productos') {
       if (!productosData) { Toast.warning('Carga el reporte primero'); return; }
-      const inv      = productosData.inventory   || {};
-      const lowStock = productosData.low_stock    || [];
-      const outStock = productosData.out_of_stock || [];
-      const byCat    = productosData.by_category  || [];
-
-      titulo    = 'Reporte de Inventario';
+      const inv = productosData.inventory||{}, low = productosData.low_stock||[], out = productosData.out_of_stock||[], cat = productosData.by_category||[];
+      titulo = 'Reporte de Inventario';
       subtitulo = `Generado: ${now}`;
-
       bodyHTML = `
         <h2 style="margin:0 0 16px;font-size:15px;color:#0D1B3E;">Estado del Inventario</h2>
         <table class="kpi-table">
@@ -487,37 +482,21 @@
           <tr><td>Sin Stock</td><td class="val red">${inv.out_of_stock||0}</td></tr>
           <tr><td>Unidades Totales</td><td class="val">${inv.total_items||0}</td></tr>
         </table>
-
-        ${byCat.length > 0 ? `
-        <h2 style="margin:24px 0 12px;font-size:15px;color:#0D1B3E;">Por Categoria</h2>
-        <table class="data-table">
-          <thead><tr><th>Categoria</th><th>Productos</th><th>Stock Total</th></tr></thead>
-          <tbody>${byCat.map(r=>`<tr><td style="text-transform:capitalize;">${r.category||'—'}</td><td>${r.count}</td><td>${r.total_stock}</td></tr>`).join('')}</tbody>
-        </table>` : ''}
-
-        ${lowStock.length > 0 ? `
-        <h2 style="margin:24px 0 12px;font-size:15px;color:#b45309;">⚠ Productos con Bajo Stock</h2>
-        <table class="data-table">
-          <thead><tr><th>SKU</th><th>Producto</th><th>Categoria</th><th>Stock</th><th>Precio</th></tr></thead>
-          <tbody>${lowStock.map(r=>`<tr><td class="mono">${r.sku}</td><td>${r.name}</td><td style="text-transform:capitalize;">${r.category}</td><td><span style="color:${r.stock===0?'#ef4444':'#f59e0b'};font-weight:700;">${r.stock}</span></td><td class="mono">${Fmt.money(r.price)}</td></tr>`).join('')}</tbody>
-        </table>` : ''}
-
-        ${outStock.length > 0 ? `
-        <h2 style="margin:24px 0 12px;font-size:15px;color:#dc2626;">🚫 Productos Sin Stock</h2>
-        <table class="data-table">
-          <thead><tr><th>SKU</th><th>Producto</th><th>Categoria</th><th>Precio</th></tr></thead>
-          <tbody>${outStock.map(r=>`<tr><td class="mono">${r.sku}</td><td>${r.name}</td><td style="text-transform:capitalize;">${r.category}</td><td class="mono">${Fmt.money(r.price)}</td></tr>`).join('')}</tbody>
-        </table>` : ''}
-      `;
+        ${cat.length>0?`<h2 style="margin:24px 0 12px;font-size:15px;color:#0D1B3E;">Por Categoria</h2>
+        <table class="data-table"><thead><tr><th>Categoria</th><th>Productos</th><th>Stock Total</th></tr></thead>
+        <tbody>${cat.map(r=>`<tr><td style="text-transform:capitalize;">${r.category||'—'}</td><td>${r.count}</td><td>${r.total_stock}</td></tr>`).join('')}</tbody></table>`:''}
+        ${low.length>0?`<h2 style="margin:24px 0 12px;font-size:15px;color:#b45309;">⚠ Bajo Stock</h2>
+        <table class="data-table"><thead><tr><th>SKU</th><th>Producto</th><th>Categoria</th><th>Stock</th><th>Precio</th></tr></thead>
+        <tbody>${low.map(r=>`<tr><td class="mono">${r.sku}</td><td>${r.name}</td><td style="text-transform:capitalize;">${r.category}</td><td><span style="color:${r.stock===0?'#ef4444':'#f59e0b'};font-weight:700;">${r.stock}</span></td><td class="mono">${Fmt.money(r.price)}</td></tr>`).join('')}</tbody></table>`:''}
+        ${out.length>0?`<h2 style="margin:24px 0 12px;font-size:15px;color:#dc2626;">🚫 Sin Stock</h2>
+        <table class="data-table"><thead><tr><th>SKU</th><th>Producto</th><th>Categoria</th><th>Precio</th></tr></thead>
+        <tbody>${out.map(r=>`<tr><td class="mono">${r.sku}</td><td>${r.name}</td><td style="text-transform:capitalize;">${r.category}</td><td class="mono">${Fmt.money(r.price)}</td></tr>`).join('')}</tbody></table>`:''}`;
 
     } else if (tipo === 'empleados') {
       if (!empleadosData) { Toast.warning('Carga el reporte primero'); return; }
-      const s  = empleadosData.summary    || {};
-      const at = empleadosData.attendance || [];
-
-      titulo    = 'Reporte de Empleados';
+      const s = empleadosData.summary||{}, at = empleadosData.attendance||[];
+      titulo = 'Reporte de Empleados';
       subtitulo = `Mes: ${empleadosData.month}`;
-
       bodyHTML = `
         <h2 style="margin:0 0 16px;font-size:15px;color:#0D1B3E;">Resumen de Personal</h2>
         <table class="kpi-table">
@@ -525,112 +504,35 @@
           <tr><td>Activos</td><td class="val green">${s.active_employees||0}</td></tr>
           <tr><td>Administradores</td><td class="val">${s.admins||0}</td></tr>
         </table>
-
-        ${at.length > 0 ? `
-        <h2 style="margin:24px 0 12px;font-size:15px;color:#0D1B3E;">Asistencia — ${empleadosData.month}</h2>
-        <table class="data-table">
-          <thead><tr><th>Empleado</th><th>Cargo</th><th>Dias Trabajados</th><th>Horas Totales</th><th>Prom. / Dia</th></tr></thead>
-          <tbody>${at.map(r=>`<tr><td style="font-weight:600;">${r.nombre}</td><td>${r.cargo||'—'}</td><td style="text-align:center;">${r.days_worked}</td><td class="mono">${r.total_hours} h</td><td class="mono">${r.avg_hours} h</td></tr>`).join('')}</tbody>
-        </table>` : '<p style="color:#94a3b8;text-align:center;padding:24px 0;">Sin registros de asistencia en este mes</p>'}
-      `;
+        ${at.length>0?`<h2 style="margin:24px 0 12px;font-size:15px;color:#0D1B3E;">Asistencia — ${empleadosData.month}</h2>
+        <table class="data-table"><thead><tr><th>Empleado</th><th>Cargo</th><th>Dias Trabajados</th><th>Horas Totales</th><th>Prom./Dia</th></tr></thead>
+        <tbody>${at.map(r=>`<tr><td style="font-weight:600;">${r.nombre}</td><td>${r.cargo||'—'}</td><td style="text-align:center;">${r.days_worked}</td><td class="mono">${r.total_hours} h</td><td class="mono">${r.avg_hours} h</td></tr>`).join('')}</tbody></table>`:'<p style="color:#94a3b8;text-align:center;padding:24px 0;">Sin registros de asistencia</p>'}`;
     }
 
-    /* ──────── Abrir ventana PDF ──────── */
     const win = window.open('', '_blank', 'width=900,height=650');
-    win.document.write(`<!DOCTYPE html>
-<html lang="es"><head>
-  <meta charset="UTF-8">
-  <title>${titulo} — Mawewe</title>
-  <style>
-    * { box-sizing:border-box; margin:0; padding:0; }
-    body { font-family:'Helvetica Neue',Arial,sans-serif; font-size:13px; color:#1e293b; background:#fff; padding:0; }
-
-    /* ── Portada / header ── */
-    .cover {
-      background:linear-gradient(135deg,#0D1B3E 0%,#1e3a6e 100%);
-      color:#fff; padding:32px 40px; display:flex; align-items:center;
-      justify-content:space-between;
-    }
-    .cover-title { font-size:22px; font-weight:800; letter-spacing:-.3px; }
-    .cover-sub   { font-size:12px; opacity:.7; margin-top:4px; }
-    .cover-logo  { font-size:26px; font-weight:900; letter-spacing:-.5px; }
-    .cover-logo span { color:#2563EB; }
-
-    /* ── Cuerpo ── */
-    .body-wrap { padding:32px 40px; }
-
-    /* ── Tablas KPI ── */
-    .kpi-table { width:100%; border-collapse:collapse; margin-bottom:8px; }
-    .kpi-table td { padding:9px 14px; border-bottom:1px solid #e2e8f0; font-size:13px; }
-    .kpi-table td:first-child { color:#475569; }
-    .kpi-table td.val { text-align:right; font-weight:700; font-family:monospace; }
-    .kpi-table td.green  { color:#16a34a; }
-    .kpi-table td.orange { color:#d97706; }
-    .kpi-table td.red    { color:#dc2626; }
-    .kpi-table tr:last-child td { border-bottom:none; }
-    .kpi-table { background:#f8fafc; border-radius:8px; overflow:hidden; border:1px solid #e2e8f0; }
-
-    /* ── Data tables ── */
-    .data-table { width:100%; border-collapse:collapse; font-size:12px; }
-    .data-table th { background:#0D1B3E; color:#fff; padding:8px 12px; text-align:left;
-                     font-size:10px; text-transform:uppercase; letter-spacing:.5px; font-weight:700; }
-    .data-table td { padding:8px 12px; border-bottom:1px solid #e2e8f0; color:#334155; }
-    .data-table tr:last-child td { border-bottom:none; }
-    .data-table tr:nth-child(even) td { background:#f8fafc; }
-    .mono { font-family:monospace; }
-
-    /* ── Footer ── */
-    .footer {
-      margin-top:32px; padding:16px 40px; border-top:1px solid #e2e8f0;
-      display:flex; justify-content:space-between; font-size:11px; color:#94a3b8;
-    }
-
-    @media print {
-      body { margin:0; }
-      .no-print { display:none !important; }
-      @page { margin: 15mm 12mm; }
-    }
-  </style>
-</head>
-<body>
-  <!-- HEADER -->
-  <div class="cover">
-    <div>
-      <div class="cover-title">${titulo}</div>
-      <div class="cover-sub">${subtitulo}</div>
-    </div>
-    <div class="cover-logo">MAW<span>EWE</span></div>
-  </div>
-
-  <!-- CONTENIDO -->
-  <div class="body-wrap">
-    ${bodyHTML}
-  </div>
-
-  <!-- FOOTER -->
-  <div class="footer">
-    <span>Mawewe CRM — Sistema de Seguimiento</span>
-    <span>Generado: ${now}</span>
-  </div>
-
-  <!-- BOTÓN IMPRIMIR -->
-  <div class="no-print" style="text-align:center;padding:20px;">
-    <button onclick="window.print()"
-      style="background:#2563EB;color:#fff;border:none;padding:10px 28px;border-radius:8px;
-             font-size:14px;font-weight:700;cursor:pointer;">
-      🖨 Imprimir / Guardar PDF
-    </button>
-  </div>
-
-  <script>
-    // Auto-abrir dialogo de impresion despues de cargar
-    window.addEventListener('load', () => setTimeout(() => window.print(), 600));
-  <\/script>
+    win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${titulo}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Helvetica Neue',Arial,sans-serif;font-size:13px;color:#1e293b;background:#fff}
+.cover{background:linear-gradient(135deg,#0D1B3E 0%,#1e3a6e 100%);color:#fff;padding:32px 40px;display:flex;align-items:center;justify-content:space-between}
+.cover-title{font-size:22px;font-weight:800}.cover-sub{font-size:12px;opacity:.7;margin-top:4px}.cover-logo{font-size:26px;font-weight:900}
+.body-wrap{padding:32px 40px}
+.kpi-table{width:100%;border-collapse:collapse;background:#f8fafc;border-radius:8px;overflow:hidden;border:1px solid #e2e8f0;margin-bottom:8px}
+.kpi-table td{padding:9px 14px;border-bottom:1px solid #e2e8f0;font-size:13px}.kpi-table td:first-child{color:#475569}.kpi-table td.val{text-align:right;font-weight:700;font-family:monospace}
+.kpi-table td.green{color:#16a34a}.kpi-table td.orange{color:#d97706}.kpi-table td.red{color:#dc2626}.kpi-table tr:last-child td{border-bottom:none}
+.data-table{width:100%;border-collapse:collapse;font-size:12px}.data-table th{background:#0D1B3E;color:#fff;padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+.data-table td{padding:8px 12px;border-bottom:1px solid #e2e8f0;color:#334155}.data-table tr:last-child td{border-bottom:none}.data-table tr:nth-child(even) td{background:#f8fafc}.mono{font-family:monospace}
+.footer{margin-top:32px;padding:16px 40px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:11px;color:#94a3b8}
+@media print{.no-print{display:none!important}@page{margin:15mm 12mm}}
+</style></head><body>
+<div class="cover"><div><div class="cover-title">${titulo}</div><div class="cover-sub">${subtitulo}</div></div><div class="cover-logo">CRM</div></div>
+<div class="body-wrap">${bodyHTML}</div>
+<div class="footer"><span>Sistema de Seguimiento CRM</span><span>Generado: ${now}</span></div>
+<div class="no-print" style="text-align:center;padding:20px;"><button onclick="window.print()" style="background:#2563EB;color:#fff;border:none;padding:10px 28px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">🖨 Imprimir / Guardar PDF</button></div>
+<script>window.addEventListener('load',()=>setTimeout(()=>window.print(),600));<\/script>
 </body></html>`);
     win.document.close();
   }
 
-  /* ── Cargar paneles al inicio ── */
   loadProductos();
   loadEmpleados();
 

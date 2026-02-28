@@ -19,9 +19,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once __DIR__ . '/config/database.php';
 
-$method = $_SERVER['REQUEST_METHOD'];
-$action = $_GET['action'] ?? 'list';
-
 /* ── Auth helper (solo para escritura) ── */
 function getAuthUser($db) {
     $headers = function_exists('getallheaders') ? getallheaders() : [];
@@ -81,17 +78,20 @@ try {
     $db = $database->getConnection();
     if (!$db) throw new Exception('Error de conexion a BD');
 
+    $method = $_SERVER['REQUEST_METHOD'];
+    $action = $_GET['action'] ?? 'list';
+
     /* ═══════ LISTAR — SIN AUTH ═══════ */
     if ($method === 'GET' && in_array($action, ['list',''])) {
         $page   = max(1, (int)($_GET['page']  ?? 1));
         $limit  = max(1, (int)($_GET['limit'] ?? 50));
         $offset = ($page - 1) * $limit;
 
-        $filters = ['active = 1']; // default: solo activos
+        $filters = ['active = 1'];
         $params  = [];
 
         if (isset($_GET['active']) && $_GET['active'] !== '') {
-            $filters = []; // quitar default
+            $filters = [];
             $filters[] = "active = :active";
             $params[':active'] = (int)$_GET['active'];
         }
@@ -166,6 +166,120 @@ try {
         exit();
     }
 
+    /* ═══════ GET CATEGORIAS CON SUBCATEGORIAS — SIN AUTH ═══════ */
+    if ($method === 'GET' && $action === 'categories') {
+        $stmt = $db->query("SELECT DISTINCT category, subcategory FROM products WHERE active=1 AND category != '' ORDER BY category, subcategory");
+        $rows = $stmt->fetchAll();
+
+        $cats = [];
+        foreach ($rows as $row) {
+            $cat = $row['category'];
+            $sub = $row['subcategory'];
+            if (!isset($cats[$cat])) $cats[$cat] = [];
+            if ($sub && !in_array($sub, $cats[$cat])) $cats[$cat][] = $sub;
+        }
+
+        // También traer inactivos para no perder datos
+        $stmt2 = $db->query("SELECT DISTINCT category, subcategory FROM products WHERE category != '' ORDER BY category, subcategory");
+        $rows2 = $stmt2->fetchAll();
+        foreach ($rows2 as $row) {
+            $cat = $row['category'];
+            $sub = $row['subcategory'];
+            if (!isset($cats[$cat])) $cats[$cat] = [];
+            if ($sub && !in_array($sub, $cats[$cat])) $cats[$cat][] = $sub;
+        }
+
+        echo json_encode(['success'=>true,'categories'=>$cats]);
+        exit();
+    }
+
+    /* ═══════ UPLOAD IMAGE — requiere auth ═══════ */
+    if ($method === 'POST' && $action === 'upload-image') {
+        // Para multipart/form-data el token puede venir en POST
+        $token = $_POST['token'] ?? null;
+        if (!$token) {
+            $hdrs = function_exists('getallheaders') ? getallheaders() : [];
+            if (isset($hdrs['Authorization']) && preg_match('/Bearer\s+(.+)$/i', $hdrs['Authorization'], $m)) {
+                $token = $m[1];
+            }
+        }
+        if (!$token) {
+            http_response_code(401);
+            echo json_encode(['success'=>false,'message'=>'Token requerido']);
+            exit;
+        }
+        // Verificar usuario
+        $decoded = base64_decode($token);
+        $parts   = explode(':', $decoded);
+        if (count($parts) >= 1) {
+            $userId = (int)$parts[0];
+            $chk = $db->prepare("SELECT id FROM employees WHERE id=:id AND active=1");
+            $chk->execute([':id'=>$userId]);
+            if (!$chk->fetch()) {
+                http_response_code(401);
+                echo json_encode(['success'=>false,'message'=>'Sesion invalida']);
+                exit;
+            }
+        }
+
+        if (empty($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
+            $errCode = $_FILES['image']['error'] ?? -1;
+            http_response_code(400);
+            echo json_encode(['success'=>false,'message'=>'No se recibio imagen valida (error '.$errCode.')']);
+            exit;
+        }
+
+        $file = $_FILES['image'];
+
+        // Validar tipo MIME real
+        $finfo    = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+
+        $allowed = ['image/jpeg'=>'jpg','image/jpg'=>'jpg','image/png'=>'png','image/webp'=>'webp','image/gif'=>'gif'];
+        if (!array_key_exists($mimeType, $allowed)) {
+            http_response_code(400);
+            echo json_encode(['success'=>false,'message'=>'Tipo de archivo no permitido: '.$mimeType]);
+            exit;
+        }
+
+        // Tamaño máximo 5 MB
+        if ($file['size'] > 5 * 1024 * 1024) {
+            http_response_code(400);
+            echo json_encode(['success'=>false,'message'=>'Imagen demasiado grande (max 5 MB)']);
+            exit;
+        }
+
+        $category  = preg_replace('/[^a-zA-Z0-9_\-]/', '_', trim($_POST['category'] ?? 'general'));
+        $sku       = preg_replace('/[^a-zA-Z0-9_\-]/', '_', trim($_POST['sku']      ?? 'prod'));
+        $ext       = $allowed[$mimeType];
+
+        // Directorio destino: public_html/images/productos/{category}/{sku}/
+        $publicHtml = dirname(__DIR__);   // /home/usuario/public_html
+        $uploadDir  = $publicHtml . '/images/productos/' . $category . '/' . $sku . '/';
+
+        if (!is_dir($uploadDir)) {
+            if (!mkdir($uploadDir, 0755, true)) {
+                http_response_code(500);
+                echo json_encode(['success'=>false,'message'=>'No se pudo crear el directorio de subida']);
+                exit;
+            }
+        }
+
+        $filename     = $sku . '_' . time() . '_' . rand(100,999) . '.' . $ext;
+        $destination  = $uploadDir . $filename;
+
+        if (!move_uploaded_file($file['tmp_name'], $destination)) {
+            http_response_code(500);
+            echo json_encode(['success'=>false,'message'=>'Error al mover el archivo al servidor']);
+            exit;
+        }
+
+        $relativePath = 'images/productos/' . $category . '/' . $sku . '/' . $filename;
+        echo json_encode(['success'=>true, 'path'=>$relativePath, 'url'=>'https://mawewe.com.ec/'.$relativePath]);
+        exit();
+    }
+
     /* ═══════ CREAR — requiere auth ═══════ */
     if ($method === 'POST' && $action === 'create') {
         $user  = getAuthUser($db);
@@ -177,11 +291,18 @@ try {
 
         $chk = $db->prepare("SELECT id FROM products WHERE sku=:sku");
         $chk->execute([':sku'=>trim($input['sku'])]);
-        if ($chk->fetch()) { http_response_code(409); echo json_encode(['success'=>false,'message'=>'SKU ya existe']); exit; }
+        if ($chk->fetch()) { http_response_code(409); echo json_encode(['success'=>false,'message'=>'SKU ya existe. Usa un SKU diferente.']); exit; }
 
         $imgsJson = null;
         if (!empty($input['images']) && is_array($input['images'])) {
             $imgsJson = json_encode($input['images'], JSON_UNESCAPED_SLASHES);
+        }
+
+        $mainImage = '';
+        if (!empty($input['images']) && is_array($input['images']) && count($input['images']) > 0) {
+            $mainImage = $input['images'][0];
+        } elseif (!empty($input['image'])) {
+            $mainImage = trim($input['image']);
         }
 
         $sql = "INSERT INTO products (sku,name,category,subcategory,price,description,image,images,stock,active)
@@ -193,7 +314,7 @@ try {
             ':sub'    => trim($input['subcategory'] ?? ''),
             ':price'  => (float)$input['price'],
             ':desc'   => trim($input['description'] ?? ''),
-            ':img'    => trim($input['image'] ?? ''),
+            ':img'    => $mainImage,
             ':imgs'   => $imgsJson,
             ':stock'  => (int)($input['stock'] ?? 0),
             ':active' => (int)($input['active'] ?? 1)
@@ -228,6 +349,13 @@ try {
             $imgsJson = is_array($input['images']) ? json_encode($input['images'],JSON_UNESCAPED_SLASHES) : null;
         }
 
+        $mainImage = $old['image'];
+        if (!empty($input['images']) && is_array($input['images']) && count($input['images']) > 0) {
+            $mainImage = $input['images'][0];
+        } elseif (isset($input['image'])) {
+            $mainImage = trim($input['image']);
+        }
+
         $sql = "UPDATE products SET sku=:sku,name=:name,category=:cat,subcategory=:sub,price=:price,
                 description=:desc,image=:img,images=:imgs,stock=:stock,active=:active WHERE id=:id";
         $db->prepare($sql)->execute([
@@ -237,7 +365,7 @@ try {
             ':sub'    => trim($input['subcategory'] ?? $old['subcategory']),
             ':price'  => (float)($input['price']   ?? $old['price']),
             ':desc'   => trim($input['description'] ?? $old['description']),
-            ':img'    => trim($input['image']       ?? $old['image']),
+            ':img'    => $mainImage,
             ':imgs'   => $imgsJson,
             ':stock'  => (int)($input['stock']     ?? $old['stock']),
             ':active' => (int)($input['active']    ?? $old['active']),
