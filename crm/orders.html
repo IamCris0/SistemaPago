@@ -11,9 +11,9 @@
   <link rel="stylesheet" href="assets/css/main.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
   <style>
-    .modal-xl { max-width: 880px; }
+    .modal-xl { max-width: 900px; }
 
-    /* Buscador de productos */
+    /* ── Buscador de productos ── */
     .prod-search-wrap { position: relative; }
     .prod-results {
       position: absolute; top: 100%; left: 0; right: 0; z-index: 300;
@@ -33,7 +33,7 @@
       object-fit: cover; background: var(--bg); flex-shrink: 0;
     }
 
-    /* Tabla items carrito */
+    /* ── Tabla items carrito ── */
     .items-tbl { width: 100%; border-collapse: collapse; }
     .items-tbl th {
       font-size: 10px; font-weight: 700; text-transform: uppercase;
@@ -43,7 +43,7 @@
     .items-tbl td { padding: 8px 10px; border-bottom: 1px solid var(--border); font-size: 13px; }
     .items-tbl tr:last-child td { border-bottom: none; }
 
-    /* Control cantidad */
+    /* ── Control cantidad ── */
     .qty-wrap { display: flex; align-items: center; gap: 5px; }
     .qty-btn {
       width: 26px; height: 26px; border-radius: 6px;
@@ -59,12 +59,12 @@
       font-family: var(--font-mono);
     }
 
-    /* Totales */
+    /* ── Totales ── */
     .tot-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
     .tot-row.final { border-top: 2px solid var(--border); margin-top: 8px; padding-top: 10px; }
     .tot-row.final .val { font-size: 22px; font-weight: 800; color: var(--accent); }
 
-    /* Timeline estado */
+    /* ── Timeline de estado (barra horizontal) ── */
     .stt-line { display: flex; margin: 12px 0 4px; }
     .stt-step { flex: 1; text-align: center; position: relative; padding-top: 26px; }
     .stt-step::before {
@@ -84,7 +84,50 @@
     .stt-lbl { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
     .stt-step.done .stt-lbl, .stt-step.cur .stt-lbl { color: var(--text-primary); font-weight: 600; }
 
-    /* Detalle grid */
+    /* ── Timeline vertical de historial ── */
+    .history-timeline { display: flex; flex-direction: column; gap: 0; }
+    .history-item {
+      display: flex; gap: 14px; padding: 12px 0;
+      border-bottom: 1px solid var(--border); position: relative;
+    }
+    .history-item:last-child { border-bottom: none; }
+    .history-dot-wrap {
+      display: flex; flex-direction: column; align-items: center;
+      flex-shrink: 0; width: 32px;
+    }
+    .history-dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: var(--accent); flex-shrink: 0; margin-top: 3px;
+      box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+    }
+    .history-dot.initial { background: var(--text-muted); box-shadow: none; }
+    .history-dot.completed { background: var(--success); box-shadow: 0 0 0 3px rgba(16,185,129,.15); }
+    .history-dot.cancelled { background: var(--danger);  box-shadow: 0 0 0 3px rgba(239,68,68,.15); }
+    .history-line {
+      width: 2px; flex: 1; background: var(--border); margin-top: 4px;
+      min-height: 24px;
+    }
+    .history-item:last-child .history-line { display: none; }
+    .history-content { flex: 1; min-width: 0; }
+    .history-header {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;
+    }
+    .history-arrow {
+      display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+    }
+    .history-badge {
+      padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;
+    }
+    .history-arrow-icon { color: var(--text-muted); font-size: 12px; }
+    .history-meta { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+    .history-note {
+      background: var(--bg); border-left: 3px solid var(--accent);
+      border-radius: 0 6px 6px 0; padding: 6px 10px;
+      font-size: 12px; color: var(--text-secondary); font-style: italic;
+      margin-top: 6px;
+    }
+
+    /* ── Detalle grid ── */
     .det-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
     @media(max-width:600px){ .det-grid { grid-template-columns: 1fr; } }
     .det-block { background: var(--bg); border-radius: var(--radius); padding: 14px 16px; }
@@ -96,6 +139,17 @@
       font-size: 11px; font-weight: 700; text-transform: uppercase;
       letter-spacing: 1px; color: var(--text-muted); margin-bottom: 10px;
     }
+
+    /* ── Selector de estado con nota ── */
+    .status-change-wrap {
+      background: var(--bg); border-radius: var(--radius); padding: 14px 16px;
+      border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px;
+    }
+    .status-change-wrap .status-row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+    .status-change-wrap select { flex: 1; min-width: 160px; }
+    .status-note-wrap { display: flex; flex-direction: column; gap: 4px; }
+    .status-note-wrap label { font-size: 11px; font-weight: 600; color: var(--text-muted); }
+    .char-count { font-size: 10px; color: var(--text-muted); text-align: right; }
   </style>
 </head>
 <body>
@@ -110,7 +164,7 @@
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
-    <div class="modal-body" id="modalDetailBody" style="max-height:72vh;overflow-y:auto;"></div>
+    <div class="modal-body" id="modalDetailBody" style="max-height:76vh;overflow-y:auto;"></div>
     <div class="modal-footer" id="modalDetailFooter"></div>
   </div>
 </div>
@@ -130,8 +184,6 @@
         <!-- CLIENTE -->
         <div style="background:var(--bg);border-radius:var(--radius);padding:16px 18px;margin-bottom:14px;">
           <div class="section-label">👤 Datos del cliente</div>
-
-          <!-- Buscar cliente existente -->
           <div style="margin-bottom:12px;position:relative;">
             <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
               <svg width="13" height="13" fill="none" stroke="var(--text-muted)" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -143,7 +195,6 @@
               border-radius:0 0 var(--radius) var(--radius);box-shadow:var(--shadow-md);max-height:180px;overflow-y:auto;">
             </div>
           </div>
-
           <div class="form-row">
             <div class="form-group">
               <label class="form-label required">Nombre</label>
@@ -194,15 +245,12 @@
             </div>
             <div id="prodResults" class="prod-results" style="display:none;"></div>
           </div>
-
           <div style="margin-top:12px;">
             <div id="cartEmpty" style="text-align:center;padding:18px;color:var(--text-muted);font-size:13px;">
               Sin productos — busca arriba para agregar
             </div>
             <table class="items-tbl" id="cartTable" style="display:none;">
-              <thead>
-                <tr><th>Producto</th><th>Precio</th><th>Cantidad</th><th>Subtotal</th><th></th></tr>
-              </thead>
+              <thead><tr><th>Producto</th><th>Precio</th><th>Cantidad</th><th>Subtotal</th><th></th></tr></thead>
               <tbody id="cartBody"></tbody>
             </table>
           </div>
@@ -254,21 +302,54 @@
   const user = Auth.guard();
   if (!user) return;
 
-  /* ═══════════════════════════════ CONSTANTES ═══════════════════════════════ */
+  /* ══════════════════════════════════════════════════════
+     CONSTANTES
+  ══════════════════════════════════════════════════════ */
   const IMG  = 'https://tienda.mawewe.com.ec/';
-  const SL   = { pending_payment:'Pendiente de pago', processing:'Procesando', shipped:'Enviado', completed:'Completado', cancelled:'Cancelado', pending:'Pendiente' };
-  const SC   = { pending_payment:'var(--warning)', processing:'var(--info)', shipped:'#8B5CF6', completed:'var(--success)', cancelled:'var(--danger)', pending:'var(--warning)' };
+  const SL   = {
+    pending_payment: 'Pendiente de pago',
+    processing:      'Procesando',
+    shipped:         'Enviado',
+    completed:       'Completado',
+    cancelled:       'Cancelado',
+    pending:         'Pendiente'
+  };
+  const SC = {
+    pending_payment: 'var(--warning)',
+    processing:      'var(--info)',
+    shipped:         '#8B5CF6',
+    completed:       'var(--success)',
+    cancelled:       'var(--danger)',
+    pending:         'var(--warning)'
+  };
   const PL   = { transfer:'Transferencia', cash:'Efectivo', card:'Tarjeta', paypal:'PayPal' };
   const SORD = ['pending_payment','processing','shipped','completed'];
 
-  /* ═══════════════════════════════ LAYOUT ═══════════════════════════════ */
+  // Colores de badge por estado
+  const STATUS_STYLES = {
+    pending_payment: { bg: 'rgba(245,158,11,.15)', color: 'var(--warning)' },
+    processing:      { bg: 'rgba(59,130,246,.15)',  color: 'var(--info)' },
+    shipped:         { bg: 'rgba(139,92,246,.15)',  color: '#8B5CF6' },
+    completed:       { bg: 'rgba(16,185,129,.15)',  color: 'var(--success)' },
+    cancelled:       { bg: 'rgba(239,68,68,.15)',   color: 'var(--danger)' },
+    pending:         { bg: 'rgba(245,158,11,.15)',  color: 'var(--warning)' }
+  };
+
+  function statusBadgeInline(status) {
+    const st = STATUS_STYLES[status] || { bg:'var(--bg)', color:'var(--text-muted)' };
+    return `<span class="history-badge" style="background:${st.bg};color:${st.color};">${SL[status]||status}</span>`;
+  }
+
+  /* ══════════════════════════════════════════════════════
+     LAYOUT
+  ══════════════════════════════════════════════════════ */
   document.getElementById('appLayout').innerHTML = `
     ${SidebarHTML.render('orders.html')}
     <div class="main-content" id="mainContent">
       <header class="topbar">
         <div class="topbar-left">
           <div class="topbar-title">Ordenes</div>
-          <div class="topbar-subtitle">Seguimiento y gestion de ventas</div>
+          <div class="topbar-subtitle">Seguimiento y gestión de ventas</div>
         </div>
         <div class="topbar-actions">
           <button class="btn btn-secondary btn-sm" id="btnRefresh">
@@ -291,7 +372,7 @@
         <!-- FILTROS -->
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
           <div>
-            <div class="page-title">Historial de Ordenes</div>
+            <div class="page-title">Historial de Órdenes</div>
             <div class="page-subtitle" id="subCount">Cargando...</div>
           </div>
         </div>
@@ -341,14 +422,12 @@
 
   Sidebar.init();
 
-  /* ═══════════════════════════════ ESTADO ═══════════════════════════════ */
+  /* ══════════════════════════════════════════════════════
+     ESTADO
+  ══════════════════════════════════════════════════════ */
   let orders = [], page = 1;
   const PER  = 20;
 
-  /* ═══════════════════════════════ NORMALIZAR ═══════════════════════════════
-     La tabla orders usa: first_name, last_name, email, phone, address, city,
-     postal_code, apartment — NO customer_name / customer_email
-  ══════════════════════════════════════════════════════════════════════════ */
   function norm(o) {
     const nom = [o.first_name, o.last_name].filter(Boolean).join(' ').trim() || o.customer_name || '—';
     const items = (() => {
@@ -360,11 +439,11 @@
     })();
     return {
       ...o,
-      _nom:   nom,
-      _email: o.email    || o.customer_email   || '',
-      _phone: o.phone    || o.customer_phone   || '',
-      _addr:  o.address  || o.customer_address || '',
-      _city:  o.city     || o.customer_city    || '',
+      _nom:          nom,
+      _email:        o.email    || o.customer_email   || '',
+      _phone:        o.phone    || o.customer_phone   || '',
+      _addr:         o.address  || o.customer_address || '',
+      _city:         o.city     || o.customer_city    || '',
       total:         parseFloat(o.total         || 0),
       subtotal:      parseFloat(o.subtotal      || 0),
       shipping_cost: parseFloat(o.shipping_cost || 0),
@@ -372,7 +451,9 @@
     };
   }
 
-  /* ═══════════════════════════════ CARGAR ═══════════════════════════════ */
+  /* ══════════════════════════════════════════════════════
+     CARGAR ÓRDENES
+  ══════════════════════════════════════════════════════ */
   async function load() {
     document.getElementById('ordBody').innerHTML =
       `<tr><td colspan="8" style="text-align:center;padding:40px;"><div class="spinner spinner-dark" style="margin:auto;"></div></td></tr>`;
@@ -388,8 +469,6 @@
       if (t) p.date_to   = t;
 
       const data = await API.get('orders.php', p);
-
-      /* Acepta data.data, data.orders, data.results, o array directo */
       let raw = data.data || data.orders || data.results || [];
       if (!Array.isArray(raw)) raw = [];
 
@@ -403,27 +482,26 @@
         <tr><td colspan="8">
           <div class="empty-state">
             <div class="empty-state-title">Error al conectar con el servidor</div>
-            <div class="empty-state-desc">No se pudo cargar las ordenes.<br>
-              <small style="font-family:monospace;color:var(--danger);">${e.message}</small></div>
+            <div class="empty-state-desc"><small style="font-family:monospace;color:var(--danger);">${e.message}</small></div>
             <button class="btn btn-primary" onclick="load()" style="margin-top:14px;">Reintentar</button>
           </div>
         </td></tr>`;
-      Toast.error('Error al cargar ordenes');
     }
   }
 
-  /* ═══════════════════════════════ STATS ═══════════════════════════════ */
+  /* ══════════════════════════════════════════════════════
+     STATS
+  ══════════════════════════════════════════════════════ */
   function renderStats() {
     const total    = orders.reduce((s,o) => s + o.total, 0);
     const pend     = orders.filter(o => o.status === 'pending_payment' || o.status === 'pending').length;
     const comp     = orders.filter(o => o.status === 'completed').length;
     const today    = new Date().toISOString().slice(0,10);
-    const todayRev = orders.filter(o => (o.created_at||'').slice(0,10) === today)
-                           .reduce((s,o) => s + o.total, 0);
+    const todayRev = orders.filter(o => (o.created_at||'').slice(0,10) === today).reduce((s,o) => s + o.total, 0);
     document.getElementById('statsGrid').innerHTML = `
       <div class="stat-card" style="--stat-color:var(--accent)">
         <div><div class="stat-label">Total Ingresos</div><div class="stat-value">${Fmt.money(total)}</div>
-          <div style="font-size:11px;color:var(--text-muted);">${orders.length} ordenes</div></div>
+          <div style="font-size:11px;color:var(--text-muted);">${orders.length} órdenes</div></div>
         <div class="stat-icon" style="background:var(--accent-soft);color:var(--accent);">
           <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div></div>
       <div class="stat-card" style="--stat-color:var(--warning)">
@@ -443,7 +521,9 @@
           <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg></div></div>`;
   }
 
-  /* ═══════════════════════════════ TABLA ═══════════════════════════════ */
+  /* ══════════════════════════════════════════════════════
+     TABLA
+  ══════════════════════════════════════════════════════ */
   function renderTable() {
     const start = (page - 1) * PER;
     const slice = orders.slice(start, start + PER);
@@ -459,8 +539,8 @@
       document.getElementById('ordBody').innerHTML = `
         <tr><td colspan="8">
           <div class="empty-state">
-            <div class="empty-state-title">Sin ordenes</div>
-            <div class="empty-state-desc">No hay ordenes que coincidan con los filtros</div>
+            <div class="empty-state-title">Sin órdenes</div>
+            <div class="empty-state-desc">No hay órdenes que coincidan con los filtros</div>
           </div>
         </td></tr>`;
       return;
@@ -500,8 +580,10 @@
     }).join('');
   }
 
-  /* ═══════════════════════════════ VER DETALLE ═══════════════════════════════ */
-  window.viewOrder = function(id) {
+  /* ══════════════════════════════════════════════════════
+     VER DETALLE  — carga historial incluido
+  ══════════════════════════════════════════════════════ */
+  window.viewOrder = async function(id) {
     const o = orders.find(x => x.id == id);
     if (!o) return;
 
@@ -509,7 +591,7 @@
     const sl   = SL[o.status] || o.status;
     const isCancelled = o.status === 'cancelled';
 
-    // Timeline
+    // Timeline barra horizontal
     const tl = SORD.map(s => {
       const oi = SORD.indexOf(o.status), si = SORD.indexOf(s);
       let cls = '';
@@ -534,6 +616,7 @@
     document.getElementById('modalDetailTitle').textContent = `Orden ${o.order_number||'#'+o.id}`;
     document.getElementById('modalDetailBody').innerHTML = `
 
+      <!-- Estado actual + barra timeline -->
       <div style="background:var(--bg);border-radius:var(--radius);padding:12px 16px;margin-bottom:14px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
           <span class="section-label" style="margin:0;">Estado actual</span>
@@ -544,6 +627,7 @@
         ${!isCancelled ? `<div class="stt-line">${tl}</div>` : ''}
       </div>
 
+      <!-- Datos cliente y pago -->
       <div class="det-grid">
         <div class="det-block">
           <div class="det-label">Cliente</div>
@@ -563,42 +647,157 @@
         </div>
       </div>
 
+      <!-- Productos -->
       <div style="margin-bottom:14px;">
         <div class="section-label">Productos</div>
         ${itemsHtml}
       </div>
 
-      <div style="background:var(--bg);border-radius:var(--radius);padding:12px 16px;">
+      <!-- Totales -->
+      <div style="background:var(--bg);border-radius:var(--radius);padding:12px 16px;margin-bottom:14px;">
         ${o.subtotal > 0 ? `<div class="tot-row"><span style="font-size:13px;color:var(--text-muted);">Subtotal</span><span style="font-family:var(--font-mono);">${Fmt.money(o.subtotal)}</span></div>` : ''}
         ${o.shipping_cost > 0 ? `<div class="tot-row"><span style="font-size:13px;color:var(--text-muted);">Envío</span><span style="font-family:var(--font-mono);">${Fmt.money(o.shipping_cost)}</span></div>` : ''}
         <div class="tot-row final"><span style="font-size:15px;font-weight:700;">Total</span><span class="val">${Fmt.money(o.total)}</span></div>
       </div>
+
+      <!-- Historial de estados -->
+      <div>
+        <div class="section-label">
+          📋 Historial de estados
+          <span id="historyLoadingBadge" style="font-weight:400;color:var(--text-muted);text-transform:none;letter-spacing:0;"> — cargando...</span>
+        </div>
+        <div id="historyTimeline" class="history-timeline">
+          <div style="text-align:center;padding:16px;color:var(--text-muted);">
+            <div class="spinner spinner-dark" style="margin:auto;width:20px;height:20px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cambiar estado (empleados Y admins) -->
+      ${!isCancelled ? `
+      <div style="margin-top:16px;">
+        <div class="section-label">✏️ Cambiar estado</div>
+        <div class="status-change-wrap">
+          <div class="status-row">
+            <select id="newStatusSel" class="form-control">
+              ${Object.entries(SL).map(([v,l]) => `<option value="${v}" ${v===o.status?'selected':''}>${l}</option>`).join('')}
+            </select>
+            <button class="btn btn-primary" onclick="applyStatus(${o.id})">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              Aplicar
+            </button>
+          </div>
+          <div class="status-note-wrap">
+            <label>Nota del cambio <span style="color:var(--danger);font-weight:700;">*</span> <span style="font-weight:400;color:var(--text-muted);">obligatoria · máx. 300 caracteres</span></label>
+            <textarea id="statusNote" class="form-control" rows="2"
+              maxlength="300" required
+              placeholder="Escribe el motivo del cambio de estado... (requerido)"
+              oninput="document.getElementById('statusNoteCount').textContent=this.value.length+'/300';this.style.borderColor=this.value.trim()?'var(--success)':'var(--danger)'"></textarea>
+            <div class="char-count" id="statusNoteCount">0/300</div>
+          </div>
+        </div>
+      </div>` : ''}
     `;
 
+    Modal.open('modalDetail');
+
+    // Pie del modal
     document.getElementById('modalDetailFooter').innerHTML = `
       <button class="btn btn-secondary" onclick="Modal.closeAll()">Cerrar</button>
-      ${user.is_admin && !isCancelled ? `
-        <div style="display:flex;gap:8px;align-items:center;">
-          <select id="newStatusSel" class="form-control" style="width:auto;">
-            ${Object.entries(SL).map(([v,l]) => `<option value="${v}" ${v===o.status?'selected':''}>${l}</option>`).join('')}
-          </select>
-          <button class="btn btn-primary" onclick="applyStatus(${o.id})">Aplicar Estado</button>
-        </div>` : ''}
     `;
-    Modal.open('modalDetail');
+
+    // Cargar historial async
+    loadHistory(o.id);
   };
 
-  /* ═══════════════════════════════ CAMBIAR ESTADO ═══════════════════════════════ */
-  window.applyStatus = async function(id) {
-    const ns = document.getElementById('newStatusSel').value;
+  /* ══════════════════════════════════════════════════════
+     CARGAR HISTORIAL DE ESTADOS
+  ══════════════════════════════════════════════════════ */
+  async function loadHistory(orderId) {
     try {
-      const d = await API.put('orders.php', { id, status: ns });
-      if (d.success) { Toast.success('Estado actualizado'); Modal.closeAll(); load(); }
-      else Toast.error(d.message || 'Error');
+      const data = await API.get(`orders.php?action=history&order_id=${orderId}`);
+      const badge = document.getElementById('historyLoadingBadge');
+      if (badge) badge.remove();
+
+      const container = document.getElementById('historyTimeline');
+      if (!container) return;
+
+      const history = data.history || [];
+
+      if (!history.length) {
+        container.innerHTML = `<div style="text-align:center;padding:16px;color:var(--text-muted);font-size:13px;">Sin historial registrado</div>`;
+        return;
+      }
+
+      container.innerHTML = history.map((h, idx) => {
+        const isLast = idx === history.length - 1;
+        const dotClass = h.status_from === null ? 'initial'
+          : h.status_to === 'completed' ? 'completed'
+          : h.status_to === 'cancelled' ? 'cancelled'
+          : '';
+
+        const arrowHtml = h.status_from
+          ? `${statusBadgeInline(h.status_from)}
+             <span class="history-arrow-icon">→</span>
+             ${statusBadgeInline(h.status_to)}`
+          : `${statusBadgeInline(h.status_to)} <span style="font-size:11px;color:var(--text-muted);">(estado inicial)</span>`;
+
+        return `
+          <div class="history-item">
+            <div class="history-dot-wrap">
+              <div class="history-dot ${dotClass}"></div>
+              ${!isLast ? '<div class="history-line"></div>' : ''}
+            </div>
+            <div class="history-content">
+              <div class="history-header">
+                <div class="history-arrow">${arrowHtml}</div>
+              </div>
+              <div class="history-meta">
+                👤 <strong>${h.changed_by_name}</strong>${h.changed_by_role ? ' · ' + h.changed_by_role : ''} &bull; ${Fmt.datetime(h.changed_at)}
+              </div>
+              ${h.note ? `<div class="history-note">💬 ${h.note}</div>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+    } catch(e) {
+      const container = document.getElementById('historyTimeline');
+      if (container) container.innerHTML = `<div style="color:var(--danger);font-size:12px;padding:8px;">Error al cargar historial</div>`;
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════
+     APLICAR ESTADO
+     ✅ Disponible para empleados Y admins
+  ══════════════════════════════════════════════════════ */
+  window.applyStatus = async function(id) {
+    const ns   = document.getElementById('newStatusSel').value;
+    const note = document.getElementById('statusNote')?.value?.trim() || '';
+
+    const o = orders.find(x => x.id == id);
+    if (o && ns === o.status) { Toast.warning('Selecciona un estado diferente al actual'); return; }
+
+    if (!note) {
+      const ta = document.getElementById('statusNote');
+      if (ta) { ta.style.borderColor = 'var(--danger)'; ta.focus(); }
+      Toast.warning('La nota es obligatoria para registrar el cambio de estado');
+      return;
+    }
+
+    try {
+      const d = await API.put('orders.php', { id, status: ns, note: note || null });
+      if (d.success) {
+        Toast.success('Estado actualizado correctamente');
+        Modal.closeAll();
+        load();
+      } else {
+        Toast.error(d.message || 'Error al actualizar');
+      }
     } catch { Toast.error('Error de conexión'); }
   };
 
-  /* ═══════════════════════════════ CANCELAR ═══════════════════════════════ */
+  /* ══════════════════════════════════════════════════════
+     CANCELAR ORDEN
+  ══════════════════════════════════════════════════════ */
   window.cancelOrder = function(id, num) {
     Modal.confirm(
       `¿Cancelar orden ${num}?`,
@@ -613,7 +812,9 @@
     );
   };
 
-  /* ═══════════════════════════════ NUEVA ORDEN ═══════════════════════════════ */
+  /* ══════════════════════════════════════════════════════
+     NUEVA ORDEN
+  ══════════════════════════════════════════════════════ */
   let cart = [], allProds = [], allClients = [], searchTimeout;
 
   async function preloadData() {
@@ -631,14 +832,13 @@
   document.getElementById('btnNew').addEventListener('click', () => {
     cart = [];
     document.getElementById('createForm').reset();
-    renderCart();
-    recalc();
+    renderCart(); recalc();
     document.getElementById('c_ship').value = '0';
     Modal.open('modalCreate');
     setTimeout(() => document.getElementById('c_fn').focus(), 200);
   });
 
-  /* Buscar cliente guardado */
+  /* Buscar cliente */
   let clientTimeout;
   document.getElementById('clientSearch').addEventListener('input', function() {
     clearTimeout(clientTimeout);
@@ -664,13 +864,13 @@
   window.fillClient = function(id) {
     const c = allClients.find(x => x.id == id);
     if (!c) return;
-    document.getElementById('c_fn').value    = c.first_name || '';
-    document.getElementById('c_ln').value    = c.last_name  || '';
-    document.getElementById('c_email').value = c.email      || '';
-    document.getElementById('c_phone').value = c.phone      || '';
-    document.getElementById('c_addr').value  = c.address    || '';
-    document.getElementById('c_city').value  = c.city       || '';
-    document.getElementById('c_postal').value= c.postal_code|| '';
+    document.getElementById('c_fn').value     = c.first_name || '';
+    document.getElementById('c_ln').value     = c.last_name  || '';
+    document.getElementById('c_email').value  = c.email      || '';
+    document.getElementById('c_phone').value  = c.phone      || '';
+    document.getElementById('c_addr').value   = c.address    || '';
+    document.getElementById('c_city').value   = c.city       || '';
+    document.getElementById('c_postal').value = c.postal_code|| '';
     document.getElementById('clientSearch').value = `${c.first_name} ${c.last_name}`;
     document.getElementById('clientResults').style.display = 'none';
     Toast.success(`Cliente ${c.first_name} cargado`);
@@ -687,7 +887,6 @@
         p.name.toLowerCase().includes(q) || (p.sku||'').toLowerCase().includes(q)
       ).slice(0, 8);
       if (!m.length) { res.style.display = 'none'; return; }
-
       res.innerHTML = m.map(p => {
         const imgs = (() => { try { return JSON.parse(p.images||'[]'); } catch { return []; } })();
         const img  = imgs[0] || p.image || '';
@@ -784,7 +983,9 @@
   }
   document.getElementById('c_ship').addEventListener('input', recalc);
 
-  /* ═══════════════════════════════ GUARDAR ORDEN ═══════════════════════════════ */
+  /* ══════════════════════════════════════════════════════
+     GUARDAR ORDEN
+  ══════════════════════════════════════════════════════ */
   document.getElementById('btnSaveOrder').addEventListener('click', async () => {
     const fn     = document.getElementById('c_fn').value.trim();
     const ln     = document.getElementById('c_ln').value.trim();
@@ -801,14 +1002,13 @@
     if (!fn || !ln || !email) { Toast.warning('Completa nombre, apellido y email'); return; }
     if (!cart.length) { Toast.warning('Agrega al menos un producto'); return; }
 
-    const sub  = cart.reduce((s,x) => s + x.price * x.qty, 0);
-    const tot  = sub + ship;
+    const sub = cart.reduce((s,x) => s + x.price * x.qty, 0);
+    const tot = sub + ship;
 
     const btn = document.getElementById('btnSaveOrder');
     btn.disabled = true; btn.textContent = 'Guardando...';
 
     try {
-      /* save-order.php espera los campos exactos así */
       const body = {
         firstName: fn, lastName: ln,
         email, phone,
@@ -826,8 +1026,6 @@
 
       if (d.success) {
         Toast.success(`Orden ${d.orderNumber} creada exitosamente`);
-
-        /* Guardar cliente si se pidió */
         if (save) {
           try {
             await API.post('customers.php?action=create', {
@@ -838,7 +1036,6 @@
             Toast.success('Cliente guardado en la base de datos');
           } catch {}
         }
-
         Modal.closeAll();
         load();
       } else {
@@ -852,7 +1049,9 @@
     }
   });
 
-  /* ═══════════════════════════════ EVENTOS FILTROS ═══════════════════════════════ */
+  /* ══════════════════════════════════════════════════════
+     FILTROS
+  ══════════════════════════════════════════════════════ */
   document.getElementById('btnRefresh').addEventListener('click', load);
   document.getElementById('fStatus').addEventListener('change', load);
   document.getElementById('fFrom').addEventListener('change', load);
@@ -863,7 +1062,6 @@
     load();
   });
 
-  /* Carga inicial */
   load();
 })();
 </script>
