@@ -11,7 +11,6 @@
   <link rel="stylesheet" href="assets/css/main.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
   <style>
-    /* ── Slots de imagen ── */
     .img-slots-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -41,10 +40,7 @@
       font-size: 9px; font-weight: 700; padding: 2px 6px;
       border-radius: 4px; letter-spacing: .5px; text-transform: uppercase; z-index: 2;
     }
-    .img-slot img {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%; object-fit: cover;
-    }
+    .img-slot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
     .img-slot-placeholder {
       display: flex; flex-direction: column;
       align-items: center; gap: 6px;
@@ -68,30 +64,18 @@
       display: flex; align-items: center; justify-content: center; z-index: 4;
     }
     .img-file-input { display: none; }
-
-    /* ── SKU auto-gen ── */
     .sku-row { display: flex; gap: 6px; align-items: flex-end; }
     .sku-row .form-control { flex: 1; }
     .btn-sku-gen {
-      flex-shrink: 0;
-      height: 40px;
-      padding: 0 12px;
-      background: var(--accent-soft);
-      color: var(--accent);
-      border: 1.5px solid var(--accent);
-      border-radius: var(--radius-md);
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all .15s;
-      display: flex; align-items: center; gap: 4px;
+      flex-shrink: 0; height: 40px; padding: 0 12px;
+      background: var(--accent-soft); color: var(--accent);
+      border: 1.5px solid var(--accent); border-radius: var(--radius-md);
+      font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap;
+      transition: all .15s; display: flex; align-items: center; gap: 4px;
     }
     .btn-sku-gen:hover { background: var(--accent); color: white; }
     .btn-sku-gen:disabled { opacity: .4; pointer-events: none; }
     .btn-sku-gen svg { width: 13px; height: 13px; }
-
-    /* ── hints ── */
     .cat-hint { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
   </style>
 </head>
@@ -112,8 +96,6 @@
     <div class="modal-body">
       <form id="productForm" autocomplete="off">
         <input type="hidden" id="prodId" name="id">
-
-        <!-- SKU + botón auto-generar -->
         <div class="form-row">
           <div class="form-group">
             <label class="form-label required">SKU</label>
@@ -136,37 +118,31 @@
                    placeholder="0.00" step="0.01" min="0" required>
           </div>
         </div>
-
         <div class="form-group">
           <label class="form-label required" for="prodName">Nombre del Producto</label>
           <input type="text" id="prodName" name="name" class="form-control"
                  placeholder="Nombre completo del producto" required>
         </div>
-
         <div class="form-row">
           <div class="form-group">
             <label class="form-label required">Categoría</label>
             <input type="text" id="prodCategory" name="category" class="form-control"
-                   list="categoriesList" placeholder="ropa, peluches, juguetes..."
-                   autocomplete="off">
+                   list="categoriesList" placeholder="ropa, peluches, juguetes..." autocomplete="off">
             <datalist id="categoriesList"></datalist>
             <div class="cat-hint">Selecciona una existente o escribe una nueva</div>
           </div>
           <div class="form-group">
             <label class="form-label">Subcategoría</label>
             <input type="text" id="prodSubcategory" name="subcategory" class="form-control"
-                   list="subcategoriesList" placeholder="americanino, chevignon..."
-                   autocomplete="off">
+                   list="subcategoriesList" placeholder="americanino, chevignon..." autocomplete="off">
             <datalist id="subcategoriesList"></datalist>
             <div class="cat-hint">Selecciona una existente o escribe una nueva</div>
           </div>
         </div>
-
         <div class="form-row">
           <div class="form-group">
             <label class="form-label" for="prodStock">Stock</label>
-            <input type="number" id="prodStock" name="stock" class="form-control"
-                   placeholder="0" min="0">
+            <input type="number" id="prodStock" name="stock" class="form-control" placeholder="0" min="0">
           </div>
           <div class="form-group">
             <label class="form-label" for="prodActive">Estado</label>
@@ -176,8 +152,6 @@
             </select>
           </div>
         </div>
-
-        <!-- Slots de imagen -->
         <div class="form-group">
           <label class="form-label">
             Imágenes del producto
@@ -188,7 +162,6 @@
             Haz clic en cada slot para subir una imagen desde tu dispositivo. La primera es la imagen principal.
           </div>
         </div>
-
         <div class="form-group">
           <label class="form-label" for="prodDescription">Descripción</label>
           <textarea id="prodDescription" name="description" class="form-control" rows="3"
@@ -231,13 +204,11 @@
   const user = Auth.guard();
   if (!user) return;
 
-  // Imágenes antiguas: assets/img/... → tienda.mawewe.com.ec
-  // Imágenes nuevas:   images/productos/... → mawewe.com.ec
   function imgSrc(path) {
     if (!path) return '';
-    if (path.startsWith('http')) return path;                         // ya es URL completa
+    if (path.startsWith('http')) return path;
     if (path.startsWith('images/')) return 'https://mawewe.com.ec/' + path;
-    return 'https://tienda.mawewe.com.ec/' + path;                   // assets/img/...
+    return 'https://tienda.mawewe.com.ec/' + path;
   }
 
   /* ══════════════════════════════════════════════════════
@@ -266,13 +237,12 @@
               </svg>
             </button>
           </div>
-          ${user.is_admin ? `
           <button class="btn btn-primary" id="newProductBtn">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
             Nuevo Producto
-          </button>` : ''}
+          </button>
         </div>
       </header>
       <main class="page-content">
@@ -335,48 +305,33 @@
 
   Sidebar.init();
 
-  /* ══════════════════════════════════════════════════════
-     ESTADO GLOBAL
-  ══════════════════════════════════════════════════════ */
   let products    = [];
   let filtered    = [];
   let currentPage = 1;
   const perPage   = 15;
   let viewMode    = 'table';
   let imgSlotData = [null, null, null];
-  let catMap      = {};   // { ropa: ['americanino','chevignon'], ... }
+  let catMap      = {};
 
   /* ══════════════════════════════════════════════════════
-     CATEGORÍAS — datalists dinámicos
+     CATEGORÍAS
   ══════════════════════════════════════════════════════ */
   async function loadCategories() {
     try {
       const data = await API.get('products_crud.php', { action: 'categories' });
       if (!data.success) return;
-
-      // data.categories es un OBJETO { cat: [subs] }
-      // data.categoryList es un ARRAY de nombres de categoría
       catMap = data.categories || {};
       const catList = data.categoryList || Object.keys(catMap);
-
-      // Datalist del modal — categorías
       document.getElementById('categoriesList').innerHTML =
         catList.map(c => `<option value="${c}">`).join('');
-
-      // Filtro de la lista
       const sel = document.getElementById('prodCategoryFilter');
       const cur = sel.value;
       sel.innerHTML = '<option value="">Todas las categorías</option>' +
         catList.map(c => `<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('');
-
-      // Actualizar subcategorías si ya hay categoría seleccionada en modal
       updateSubcategoryList();
-    } catch(e) {
-      console.error('Error cargando categorías:', e);
-    }
+    } catch(e) { console.error('Error cargando categorías:', e); }
   }
 
-  /* Actualiza el datalist de subcategorías según la categoría actual del modal */
   function updateSubcategoryList() {
     const cat  = document.getElementById('prodCategory')?.value?.trim() || '';
     const subs = catMap[cat] || [];
@@ -390,40 +345,23 @@
   async function generateSku() {
     const cat = document.getElementById('prodCategory').value.trim();
     const sub = document.getElementById('prodSubcategory').value.trim();
-
-    if (!cat) {
-      Toast.warning('Escribe primero la categoría');
-      document.getElementById('prodCategory').focus();
-      return;
-    }
-
+    if (!cat) { Toast.warning('Escribe primero la categoría'); document.getElementById('prodCategory').focus(); return; }
     const btn = document.getElementById('btnGenSku');
     btn.disabled = true;
     btn.innerHTML = `<svg class="spinner spinner-dark" style="width:13px;height:13px;border-width:2px;"></svg> Generando...`;
-
     try {
       const params = { action: 'next-sku', category: cat };
       if (sub) params.subcategory = sub;
-
       const data = await API.get('products_crud.php', params);
       if (data.success) {
         document.getElementById('prodSku').value = data.sku;
         document.getElementById('skuHint').textContent = `SKU generado: ${data.sku} (prefijo: ${data.prefix})`;
         Toast.success(`SKU generado: ${data.sku}`);
-      } else {
-        Toast.error(data.message || 'No se pudo generar el SKU');
-      }
-    } catch(e) {
-      Toast.error('Error al generar SKU');
-    }
-
+      } else { Toast.error(data.message || 'No se pudo generar el SKU'); }
+    } catch(e) { Toast.error('Error al generar SKU'); }
     btn.disabled = false;
-    btn.innerHTML = `
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="13" height="13">
-        <polyline points="23 4 23 10 17 10"/>
-        <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
-      </svg>
-      Auto SKU`;
+    btn.innerHTML = `<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="13" height="13">
+      <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Auto SKU`;
   }
 
   /* ══════════════════════════════════════════════════════
@@ -436,47 +374,24 @@
       const slot = document.createElement('div');
       slot.className = 'img-slot' + (imgSlotData[i] ? ' has-img' : '');
       slot.id = `imgSlot_${i}`;
-
-      // Badge en el slot 0
       if (i === 0) slot.innerHTML += `<div class="img-slot-badge">Principal</div>`;
-
-      // Input file oculto
-      slot.innerHTML += `<input type="file" class="img-file-input" id="imgFile_${i}"
-               accept="image/jpeg,image/png,image/webp,image/gif">`;
-
+      slot.innerHTML += `<input type="file" class="img-file-input" id="imgFile_${i}" accept="image/jpeg,image/png,image/webp,image/gif">`;
       if (imgSlotData[i]) {
-        slot.innerHTML += `
-          <img src="${imgSrc(imgSlotData[i])}" id="imgPreview_${i}"
-               onerror="this.style.display='none'">
+        slot.innerHTML += `<img src="${imgSrc(imgSlotData[i])}" id="imgPreview_${i}" onerror="this.style.display='none'">
           <div class="img-slot-clear" title="Quitar imagen" id="imgClear_${i}">&times;</div>`;
       } else {
-        slot.innerHTML += `
-          <div class="img-slot-placeholder">
-            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-              <rect x="3" y="3" width="18" height="18" rx="2"/>
-              <circle cx="8.5" cy="8.5" r="1.5"/>
-              <polyline points="21 15 16 10 5 21"/>
-            </svg>
-            <span>Haz clic para subir</span>
-          </div>`;
+        slot.innerHTML += `<div class="img-slot-placeholder">
+          <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+          </svg><span>Haz clic para subir</span></div>`;
       }
-
-      slot.innerHTML += `
-        <div class="img-slot-spinner hidden" id="imgSpinner_${i}">
-          <div class="spinner spinner-dark"></div>
-        </div>`;
-
+      slot.innerHTML += `<div class="img-slot-spinner hidden" id="imgSpinner_${i}">
+        <div class="spinner spinner-dark"></div></div>`;
       grid.appendChild(slot);
-
-      slot.addEventListener('click', e => {
-        if (e.target.closest('.img-slot-clear')) return;
-        document.getElementById(`imgFile_${i}`).click();
-      });
-      document.getElementById(`imgFile_${i}`)
-        .addEventListener('change', e => handleFileSelect(i, e.target));
+      slot.addEventListener('click', e => { if (e.target.closest('.img-slot-clear')) return; document.getElementById(`imgFile_${i}`).click(); });
+      document.getElementById(`imgFile_${i}`).addEventListener('change', e => handleFileSelect(i, e.target));
     }
-
-    // Botones de borrar
     for (let i = 0; i < 3; i++) {
       const cb = document.getElementById(`imgClear_${i}`);
       if (cb) cb.addEventListener('click', e => { e.stopPropagation(); clearSlot(i); });
@@ -488,56 +403,32 @@
   async function handleFileSelect(i, input) {
     const file = input.files[0];
     if (!file) return;
-
-    const slot    = document.getElementById(`imgSlot_${i}`);
+    const slot = document.getElementById(`imgSlot_${i}`);
     const spinner = document.getElementById(`imgSpinner_${i}`);
     slot.classList.add('uploading');
     spinner.classList.remove('hidden');
-
     const category = document.getElementById('prodCategory').value.trim() || 'general';
     const sku      = document.getElementById('prodSku').value.trim() || 'PROD';
-
     const fd = new FormData();
-    fd.append('image',    file);
-    fd.append('category', category);
-    fd.append('sku',      sku);
-    fd.append('token',    Auth.getToken() || '');
-
+    fd.append('image', file); fd.append('category', category);
+    fd.append('sku', sku); fd.append('token', Auth.getToken() || '');
     try {
-      const res = await fetch(
-        `${CONFIG.API_BASE}/products_crud.php?action=upload-image`,
-        {
-          method: 'POST',
-          // No pongas Content-Type aquí — fetch lo establece con el boundary correcto
-          headers: { 'Authorization': `Bearer ${Auth.getToken()}` },
-          body: fd
-        }
-      );
-
+      const res = await fetch(`${CONFIG.API_BASE}/products_crud.php?action=upload-image`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${Auth.getToken()}` },
+        body: fd
+      });
       let data;
       try { data = await res.json(); } catch(e) {
         Toast.error('Respuesta inesperada del servidor (no JSON)');
-        slot.classList.remove('uploading');
-        spinner.classList.add('hidden');
-        input.value = '';
-        return;
+        slot.classList.remove('uploading'); spinner.classList.add('hidden'); input.value = ''; return;
       }
-
-      if (data.success) {
-        imgSlotData[i] = data.path;
-        Toast.success(`Imagen ${i + 1} subida`);
-        buildImgSlots();
-      } else {
-        Toast.error(data.message || 'Error al subir la imagen');
-        slot.classList.remove('uploading');
-        spinner.classList.add('hidden');
-      }
+      if (data.success) { imgSlotData[i] = data.path; Toast.success(`Imagen ${i + 1} subida`); buildImgSlots(); }
+      else { Toast.error(data.message || 'Error al subir la imagen'); slot.classList.remove('uploading'); spinner.classList.add('hidden'); }
     } catch(e) {
       Toast.error('Sin respuesta del servidor. Verifica la conexión.');
-      slot.classList.remove('uploading');
-      spinner.classList.add('hidden');
+      slot.classList.remove('uploading'); spinner.classList.add('hidden');
     }
-
     input.value = '';
   }
 
@@ -557,7 +448,7 @@
   }
 
   /* ══════════════════════════════════════════════════════
-     CARGA DE PRODUCTOS
+     CARGA
   ══════════════════════════════════════════════════════ */
   async function load() {
     try {
@@ -581,12 +472,10 @@
       const mC = !cat || p.category === cat;
       const mS = !stock ? true :
                   stock==='out' ? p.stock===0 :
-                  stock==='low' ? (p.stock>0 && p.stock<5) :
-                  p.stock>=5;
+                  stock==='low' ? (p.stock>0 && p.stock<5) : p.stock>=5;
       return mQ && mC && mS;
     });
-    document.getElementById('prodSubtitle').textContent =
-      `${filtered.length} producto${filtered.length!==1?'s':''}`;
+    document.getElementById('prodSubtitle').textContent = `${filtered.length} producto${filtered.length!==1?'s':''}`;
     currentPage = 1;
     renderProducts();
   }
@@ -596,23 +485,18 @@
     const page  = filtered.slice(start, start+perPage);
     const total = Math.ceil(filtered.length/perPage);
     document.getElementById('prodPaginationInfo').textContent =
-      filtered.length
-        ? `Mostrando ${start+1}–${Math.min(start+perPage, filtered.length)} de ${filtered.length}`
-        : '';
+      filtered.length ? `Mostrando ${start+1}–${Math.min(start+perPage, filtered.length)} de ${filtered.length}` : '';
     renderPagination('prodPagination', currentPage, total, p => { currentPage=p; renderProducts(); });
     if (viewMode==='table') renderTable(page); else renderGrid(page);
   }
 
   function imgTag(p) {
-    if (p.image) return `<img src="${imgSrc(p.image)}"
-      style="width:40px;height:40px;border-radius:8px;object-fit:cover;"
-      onerror="this.style.display='none'">`;
-    return `<div style="width:40px;height:40px;border-radius:8px;background:var(--bg);
-              display:flex;align-items:center;justify-content:center;color:var(--text-muted);">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <rect x="2" y="2" width="20" height="20" rx="2"/></svg></div>`;
+    if (p.image) return `<img src="${imgSrc(p.image)}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;" onerror="this.style.display='none'">`;
+    return `<div style="width:40px;height:40px;border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center;color:var(--text-muted);">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2"/></svg></div>`;
   }
 
+  /* ── TABLA ── */
   function renderTable(page) {
     const tbody = document.getElementById('productTableBody');
     if (!page.length) {
@@ -645,7 +529,6 @@
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
               </svg>
             </button>
-            ${user.is_admin ? `
             <button class="btn btn-secondary btn-sm btn-icon" onclick="editProduct(${p.id})" title="Editar">
               <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
@@ -665,17 +548,17 @@
                 <polyline points="3 6 5 6 21 6"/>
                 <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/>
               </svg>
-            </button>` : ''}
+            </button>
           </div>
         </td>
       </tr>`).join('');
   }
 
+  /* ── GRID ── */
   function renderGrid(page) {
     const c = document.getElementById('productGridView');
     if (!page.length) {
-      c.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
-        <div class="empty-state-title">Sin productos</div></div>`;
+      c.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="empty-state-title">Sin productos</div></div>`;
       return;
     }
     c.innerHTML = page.map(p => `
@@ -699,9 +582,7 @@
         </div>
         <div class="product-card-actions">
           <button class="btn btn-secondary btn-sm" style="flex:1;" onclick="viewProduct(${p.id})">Ver</button>
-          ${user.is_admin
-            ? `<button class="btn btn-primary btn-sm" style="flex:1;" onclick="editProduct(${p.id})">Editar</button>`
-            : ''}
+          <button class="btn btn-primary btn-sm" style="flex:1;" onclick="editProduct(${p.id})">Editar</button>
         </div>
       </div>`).join('');
   }
@@ -709,9 +590,6 @@
   /* ══════════════════════════════════════════════════════
      EVENTOS MODAL — categoría / subcategoría / sku
   ══════════════════════════════════════════════════════ */
-  document.addEventListener('DOMContentLoaded', () => {});
-
-  // Cuando cambia la categoría → actualizar subcategorías disponibles
   document.getElementById('prodCategory').addEventListener('input', () => {
     updateSubcategoryList();
     document.getElementById('prodSubcategory').value = '';
@@ -756,18 +634,16 @@
   });
 
   /* ══════════════════════════════════════════════════════
-     NUEVO PRODUCTO
+     NUEVO PRODUCTO — disponible para todos los empleados
   ══════════════════════════════════════════════════════ */
-  if (user.is_admin) {
-    document.getElementById('newProductBtn')?.addEventListener('click', () => {
-      document.getElementById('productModalTitle').textContent = 'Nuevo Producto';
-      document.getElementById('productForm').reset();
-      document.getElementById('prodId').value = '';
-      document.getElementById('skuHint').textContent = 'Escribe la categoría y subcategoría primero para auto-generar';
-      resetSlots();
-      Modal.open('productModal');
-    });
-  }
+  document.getElementById('newProductBtn').addEventListener('click', () => {
+    document.getElementById('productModalTitle').textContent = 'Nuevo Producto';
+    document.getElementById('productForm').reset();
+    document.getElementById('prodId').value = '';
+    document.getElementById('skuHint').textContent = 'Escribe la categoría y subcategoría primero para auto-generar';
+    resetSlots();
+    Modal.open('productModal');
+  });
 
   /* ══════════════════════════════════════════════════════
      GUARDAR PRODUCTO
@@ -778,12 +654,10 @@
     const sku      = document.getElementById('prodSku').value.trim();
     const category = document.getElementById('prodCategory').value.trim();
     const price    = document.getElementById('prodPrice').value;
-
     if (!name || !sku || !price || !category) {
       Toast.warning('Completa los campos requeridos: SKU, Nombre, Categoría y Precio');
       return;
     }
-
     const { image, images } = getSlotsResult();
     const body = {
       id:          id ? parseInt(id) : undefined,
@@ -795,26 +669,20 @@
       image, images,
       description: document.getElementById('prodDescription').value.trim()
     };
-
     try {
       const data = id
         ? await API.put('products_crud.php?action=update', body)
         : await API.post('products_crud.php?action=create', body);
-
       if (data.success) {
         Toast.success(id ? 'Producto actualizado' : 'Producto creado');
         Modal.closeAll();
         await load();
-      } else {
-        Toast.error(data.message || 'Error al guardar');
-      }
-    } catch(e) {
-      Toast.error('Error de conexión');
-    }
+      } else { Toast.error(data.message || 'Error al guardar'); }
+    } catch(e) { Toast.error('Error de conexión'); }
   });
 
   /* ══════════════════════════════════════════════════════
-     EDITAR PRODUCTO
+     EDITAR
   ══════════════════════════════════════════════════════ */
   window.editProduct = async function(id) {
     try {
@@ -839,7 +707,7 @@
   };
 
   /* ══════════════════════════════════════════════════════
-     VER PRODUCTO
+     VER
   ══════════════════════════════════════════════════════ */
   window.viewProduct = async function(id) {
     try {
@@ -866,22 +734,15 @@
               </div>` : ''}
           </div>
           <div>
-            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);
-                        letter-spacing:1px;margin-bottom:4px;">${p.category} / ${p.subcategory||'-'}</div>
-            <div style="font-family:var(--font-display);font-size:20px;font-weight:800;
-                        color:var(--text-primary);margin-bottom:8px;">${p.name}</div>
-            <div style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);
-                        margin-bottom:16px;">${p.sku}</div>
-            <div style="font-size:28px;font-weight:800;color:var(--accent);margin-bottom:16px;">
-              ${Fmt.money(p.price)}</div>
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:1px;margin-bottom:4px;">${p.category} / ${p.subcategory||'-'}</div>
+            <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:var(--text-primary);margin-bottom:8px;">${p.name}</div>
+            <div style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);margin-bottom:16px;">${p.sku}</div>
+            <div style="font-size:28px;font-weight:800;color:var(--accent);margin-bottom:16px;">${Fmt.money(p.price)}</div>
             <div style="display:flex;gap:8px;margin-bottom:20px;">
               ${Fmt.stockBadge(p.stock)}
-              <span class="badge ${p.active?'badge-success':'badge-danger'}">
-                ${p.active?'Activo':'Inactivo'}</span>
+              <span class="badge ${p.active?'badge-success':'badge-danger'}">${p.active?'Activo':'Inactivo'}</span>
             </div>
-            ${p.description
-              ? `<div style="font-size:13px;color:var(--text-secondary);line-height:1.7;">${p.description}</div>`
-              : ''}
+            ${p.description ? `<div style="font-size:13px;color:var(--text-secondary);line-height:1.7;">${p.description}</div>` : ''}
           </div>
         </div>`;
       Modal.open('productViewModal');
@@ -903,27 +764,22 @@
   };
 
   /* ══════════════════════════════════════════════════════
-     ELIMINAR / TOGGLE STATUS
+     ELIMINAR / TOGGLE
   ══════════════════════════════════════════════════════ */
   window.deleteProduct = function(id, name, isActive) {
     if (isActive) {
-      Modal.confirm(
-        'Desactivar producto',
-        `"${name}" será desactivado y no aparecerá en la tienda.`,
+      Modal.confirm('Desactivar producto', `"${name}" será desactivado y no aparecerá en la tienda.`,
         async () => {
           const data = await API.put('products_crud.php?action=toggle-status', { id });
           if (data.success) { Toast.success('Producto desactivado'); load(); }
         }
       );
     } else {
-      Modal.confirm(
-        'Activar producto',
-        `"${name}" volverá a estar disponible en la tienda.`,
+      Modal.confirm('Activar producto', `"${name}" volverá a estar disponible en la tienda.`,
         async () => {
           const data = await API.put('products_crud.php?action=toggle-status', { id });
           if (data.success) { Toast.success('Producto activado'); load(); }
-        },
-        false
+        }, false
       );
     }
   };

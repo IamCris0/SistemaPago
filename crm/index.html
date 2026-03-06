@@ -10,6 +10,92 @@
   <link rel="stylesheet" href="assets/css/variables.css">
   <link rel="stylesheet" href="assets/css/main.css">
   <link rel="stylesheet" href="assets/css/login.css">
+  <style>
+    /* ── Pasos ── */
+    .steps-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+    .step-dot {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.35);
+      transition: color .3s;
+    }
+    .step-dot.active { color: #60A5FA; }
+    .step-dot.done   { color: #10B981; }
+    .step-num {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700;
+      transition: background .3s, color .3s;
+      color: rgba(255,255,255,0.4);
+    }
+    .step-dot.active .step-num { background: #2563EB; color: #fff; }
+    .step-dot.done   .step-num { background: #10B981; color: #fff; }
+    .step-sep { flex: 1; height: 2px; background: rgba(255,255,255,0.1); border-radius: 1px; }
+
+    /* ── Paneles ── */
+    .login-panel-step { display: none; }
+    .login-panel-step.active { display: block; }
+
+    /* Fuerza / barra */
+    .strength-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+    .strength-fill { height: 100%; border-radius: 2px; transition: width .3s, background .3s; width: 0%; }
+    .strength-text { font-size: 11px; margin-top: 4px; color: rgba(255,255,255,0.4); }
+
+    /* Input wrapper con ojo */
+    .pass-wrapper { position: relative; }
+    .pass-wrapper .login-input { padding-right: 44px; }
+    .eye-btn {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: rgba(255,255,255,0.4); font-size: 16px; line-height: 1;
+      transition: color .15s;
+    }
+    .eye-btn:hover { color: rgba(255,255,255,0.8); }
+
+    /* Botón volver */
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      color: rgba(255,255,255,0.45); font-size: 12px; font-weight: 600;
+      background: none; border: none; cursor: pointer;
+      margin-bottom: 20px; padding: 0;
+      transition: color .15s;
+    }
+    .back-btn:hover { color: rgba(255,255,255,0.8); }
+
+    /* En móvil los textos están en blanco */
+    @media (max-width: 1023px) {
+      .step-dot { color: rgba(255,255,255,0.35); }
+      .back-btn { color: rgba(255,255,255,0.5); }
+      .strength-text { color: rgba(255,255,255,0.5); }
+    }
+
+    /* Ajuste panel en escritorio (fondo blanco) */
+    @media (min-width: 1024px) {
+      .step-dot { color: var(--text-muted); }
+      .step-dot.active { color: var(--accent); }
+      .step-dot.done   { color: var(--success); }
+      .step-num { background: var(--border); color: var(--text-muted); }
+      .step-dot.active .step-num { background: var(--accent); color: #fff; }
+      .step-dot.done   .step-num { background: var(--success); color: #fff; }
+      .step-sep { background: var(--border); }
+      .back-btn { color: var(--text-muted); }
+      .back-btn:hover { color: var(--text-primary); }
+      .eye-btn { color: var(--text-muted); }
+      .eye-btn:hover { color: var(--text-primary); }
+      .strength-bar { background: var(--border); }
+      .strength-text { color: var(--text-muted); }
+    }
+  </style>
 </head>
 <body>
 <div class="login-page">
@@ -29,25 +115,17 @@
       </div>
       <div class="login-brand-name">Sistema de<span>Seguimiento</span></div>
     </div>
-
-    <h1 class="login-brand-headline">
-      Sistema de
-      <span>Gestion CRM</span>
-    </h1>
-
+    <h1 class="login-brand-headline">Sistema de<span>Gestion CRM</span></h1>
     <p class="login-brand-desc">
       Plataforma integral para la administracion de empleados,
       productos, ordenes y seguimiento de ventas en tiempo real.
     </p>
-
     <div class="login-brand-features">
       <div class="login-feature">
         <div class="login-feature-icon">
           <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 00-3-3.87"/>
-            <path d="M16 3.13a4 4 0 010 7.75"/>
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
           </svg>
         </div>
         <span>Gestion de empleados y roles</span>
@@ -56,8 +134,7 @@
         <div class="login-feature-icon">
           <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
-            <line x1="3" y1="6" x2="21" y2="6"/>
-            <path d="M16 10a4 4 0 01-8 0"/>
+            <line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
           </svg>
         </div>
         <span>Inventario y catalogo de productos</span>
@@ -65,8 +142,7 @@
       <div class="login-feature">
         <div class="login-feature-icon">
           <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-            <line x1="1" y1="10" x2="23" y2="10"/>
+            <rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>
           </svg>
         </div>
         <span>Control de ordenes y pagos</span>
@@ -82,149 +158,377 @@
     </div>
   </div>
 
-  <!-- Panel derecho - Formulario -->
+  <!-- Panel derecho -->
   <div class="login-panel">
     <div class="login-panel-inner">
 
-      <!-- Logo movil -->
+      <!-- Logo móvil -->
       <div class="login-mobile-logo">
         <div class="login-mobile-logomark"><img src="assets/img/logos.jpeg" alt="Logo"/></div>
         <div class="login-mobile-name">Sistema de<span>Seguimiento</span></div>
       </div>
 
-      <h2 class="login-welcome">Bienvenido</h2>
-      <p class="login-sub">Ingresa tu numero de cedula para acceder al sistema</p>
-
-      <div class="form-group">
-        <label class="form-label required" for="cedula">Numero de Cedula</label>
-        <div class="login-input-wrapper">
-          <span class="login-input-icon">
-            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <rect x="2" y="3" width="20" height="18" rx="2"/>
-              <path d="M8 11.5a2.5 2.5 0 105 0 2.5 2.5 0 00-5 0z"/>
-              <path d="M6 17c0-2.21 2.24-4 4.5-4h3c2.26 0 4.5 1.79 4.5 4"/>
-            </svg>
-          </span>
-          <input
-            type="text"
-            id="cedula"
-            class="login-input"
-            placeholder="Ej: 1710034065"
-            maxlength="10"
-            inputmode="numeric"
-            pattern="[0-9]*"
-            autocomplete="off"
-          >
+      <!-- Indicador de pasos -->
+      <div class="steps-bar" id="stepsBar">
+        <div class="step-dot active" id="dot1">
+          <div class="step-num">1</div>
+          <span>Identificacion</span>
+        </div>
+        <div class="step-sep"></div>
+        <div class="step-dot" id="dot2">
+          <div class="step-num">2</div>
+          <span>Contrasena</span>
         </div>
       </div>
 
-      <div class="login-error" id="loginError">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="12"/>
-          <line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        <span id="loginErrorMsg">Cedula no encontrada o empleado inactivo</span>
+      <!-- ══ PASO 1: Cédula ══ -->
+      <div class="login-panel-step active" id="stepCedula">
+        <h2 class="login-welcome">Bienvenido</h2>
+        <p class="login-sub">Ingresa tu numero de cedula para acceder al sistema</p>
+
+        <div class="form-group">
+          <label class="form-label required" for="cedula">Numero de Cedula</label>
+          <div class="login-input-wrapper">
+            <span class="login-input-icon">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <rect x="2" y="3" width="20" height="18" rx="2"/>
+                <path d="M8 11.5a2.5 2.5 0 105 0 2.5 2.5 0 00-5 0z"/>
+                <path d="M6 17c0-2.21 2.24-4 4.5-4h3c2.26 0 4.5 1.79 4.5 4"/>
+              </svg>
+            </span>
+            <input type="text" id="cedula" class="login-input"
+              placeholder="Ej: 1710034065" maxlength="10"
+              inputmode="numeric" pattern="[0-9]*" autocomplete="off"/>
+          </div>
+        </div>
+
+        <div class="login-error" id="errorCedula">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span id="errorCedulaMsg">Cedula no encontrada</span>
+        </div>
+
+        <button class="login-btn" id="btnCedula">
+          <span id="btnCedulaText">Continuar</span>
+          <span id="spinnerCedula" class="spinner hidden"></span>
+          <svg id="arrowCedula" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </button>
+
+        <div class="login-footer">
+          Solo el personal autorizado puede acceder a este sistema.<br>
+          Si tienes problemas para ingresar, contacta al administrador.
+        </div>
       </div>
 
-      <button class="login-btn" id="loginBtn">
-        <span id="loginBtnText">Ingresar</span>
-        <span id="loginSpinner" class="spinner hidden"></span>
-        <svg id="loginArrow" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <line x1="5" y1="12" x2="19" y2="12"/>
-          <polyline points="12 5 19 12 12 19"/>
-        </svg>
-      </button>
+      <!-- ══ PASO 2a: Ingresar contraseña ══ -->
+      <div class="login-panel-step" id="stepPassword">
+        <button class="back-btn" id="btnBackFromPass">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Cambiar cedula
+        </button>
+        <h2 class="login-welcome" id="welcomePass">Hola,</h2>
+        <p class="login-sub">Ingresa tu contrasena para acceder</p>
 
-      <div class="login-footer">
-        Solo el personal autorizado puede acceder a este sistema.<br>
-        Si tienes problemas para ingresar, contacta al administrador.
+        <div class="form-group">
+          <label class="form-label required">Contrasena</label>
+          <div class="pass-wrapper">
+            <input type="password" id="inputPassword" class="login-input"
+              placeholder="••••••••" autocomplete="current-password"/>
+            <button class="eye-btn" type="button" onclick="toggleEye('inputPassword',this)">👁</button>
+          </div>
+        </div>
+
+        <div class="login-error" id="errorPass">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span id="errorPassMsg">Contrasena incorrecta</span>
+        </div>
+
+        <button class="login-btn" id="btnLogin">
+          <span id="btnLoginText">Ingresar</span>
+          <span id="spinnerLogin" class="spinner hidden"></span>
+          <svg id="arrowLogin" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </button>
       </div>
+
+      <!-- ══ PASO 2b: Crear contraseña ══ -->
+      <div class="login-panel-step" id="stepCreate">
+        <button class="back-btn" id="btnBackFromCreate">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Cambiar cedula
+        </button>
+        <h2 class="login-welcome" id="welcomeCreate">Primer ingreso</h2>
+        <p class="login-sub">Es tu primera vez. Crea una contrasena para tu cuenta.</p>
+
+        <div class="form-group">
+          <label class="form-label required">Nueva contrasena</label>
+          <div class="pass-wrapper">
+            <input type="password" id="inputNewPass" class="login-input"
+              placeholder="••••••••" oninput="updateStrength()"/>
+            <button class="eye-btn" type="button" onclick="toggleEye('inputNewPass',this)">👁</button>
+          </div>
+          <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+          <div class="strength-text" id="strengthText"></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required">Confirmar contrasena</label>
+          <div class="pass-wrapper">
+            <input type="password" id="inputConfirm" class="login-input" placeholder="••••••••"/>
+            <button class="eye-btn" type="button" onclick="toggleEye('inputConfirm',this)">👁</button>
+          </div>
+        </div>
+
+        <div class="login-error" id="errorCreate">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span id="errorCreateMsg">Error</span>
+        </div>
+
+        <button class="login-btn" id="btnCreate">
+          <span id="btnCreateText">Crear contrasena e ingresar</span>
+          <span id="spinnerCreate" class="spinner hidden"></span>
+        </button>
+      </div>
+
     </div>
-
     <div class="login-version">v3.0 &copy; 2026 Mawewe</div>
   </div>
 </div>
 
 <script src="assets/js/core.js"></script>
 <script>
-(function() {
-  // Si ya esta logueado, redirigir
-  if (Auth.isLoggedIn()) {
-    window.location.href = 'dashboard.html';
-    return;
+(function () {
+  'use strict';
+
+  // ── Redirigir si ya está logueado ──
+  if (Auth.isLoggedIn()) { window.location.href = 'dashboard.html'; return; }
+
+  // ── Estado ──
+  let cedulaActual = '';
+  const API_PASS = `${CONFIG.API_BASE}/password.php`;
+
+  // ── Helpers UI ──
+  function showStep(id) {
+    document.querySelectorAll('.login-panel-step').forEach(el => el.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
   }
 
-  const cedulaInput = document.getElementById('cedula');
-  const loginBtn    = document.getElementById('loginBtn');
-  const loginError  = document.getElementById('loginError');
-  const loginErrMsg = document.getElementById('loginErrorMsg');
-  const btnText     = document.getElementById('loginBtnText');
-  const spinner     = document.getElementById('loginSpinner');
-  const arrow       = document.getElementById('loginArrow');
-
-  function setLoading(v) {
-    loginBtn.disabled = v;
-    spinner.classList.toggle('hidden', !v);
-    arrow.classList.toggle('hidden', v);
-    btnText.textContent = v ? 'Verificando...' : 'Ingresar';
+  function setDots(step) {
+    ['dot1','dot2'].forEach((id, i) => {
+      const el = document.getElementById(id);
+      el.className = 'step-dot' +
+        (i + 1 < step ? ' done' : i + 1 === step ? ' active' : '');
+    });
   }
 
-  function showError(msg) {
-    loginErrMsg.textContent = msg;
-    loginError.classList.add('visible');
-    cedulaInput.classList.add('is-invalid');
-    cedulaInput.focus();
+  function showError(id, msg) {
+    const el = document.getElementById(id);
+    document.getElementById(id + 'Msg').textContent = msg;
+    el.classList.add('visible');
+  }
+  function hideError(id) { document.getElementById(id).classList.remove('visible'); }
+
+  function setLoading(prefix, on) {
+    document.getElementById('btn' + prefix).disabled = on;
+    document.getElementById('spinner' + prefix).classList.toggle('hidden', !on);
+    const arr = document.getElementById('arrow' + prefix);
+    if (arr) arr.classList.toggle('hidden', on);
   }
 
-  function hideError() {
-    loginError.classList.remove('visible');
-    cedulaInput.classList.remove('is-invalid');
+  function toggleEye(inputId, btn) {
+    const inp = document.getElementById(inputId);
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+  }
+  window.toggleEye = toggleEye;
+
+  function updateStrength() {
+    const val = document.getElementById('inputNewPass').value;
+    const fill = document.getElementById('strengthFill');
+    const text = document.getElementById('strengthText');
+    let score = 0;
+    if (val.length >= 4) score++;
+    if (val.length >= 8) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^a-zA-Z0-9]/.test(val)) score++;
+    const levels = [
+      { pct: 0,   bg: '',        label: '' },
+      { pct: 20,  bg: '#EF4444', label: 'Muy debil' },
+      { pct: 40,  bg: '#F97316', label: 'Debil' },
+      { pct: 60,  bg: '#EAB308', label: 'Regular' },
+      { pct: 80,  bg: '#22C55E', label: 'Fuerte' },
+      { pct: 100, bg: '#16A34A', label: 'Muy fuerte' },
+    ];
+    const lvl = levels[Math.min(score, 5)];
+    fill.style.width = lvl.pct + '%';
+    fill.style.background = lvl.bg;
+    text.textContent = lvl.label;
+  }
+  window.updateStrength = updateStrength;
+
+  // ── PASO 1: Verificar cédula ──
+  async function checkCedula() {
+    const cedula = document.getElementById('cedula').value.trim();
+    hideError('errorCedula');
+
+    if (!cedula || cedula.length < 8 || !/^\d+$/.test(cedula)) {
+      showError('errorCedula', 'Ingresa un numero de cedula valido');
+      return;
+    }
+
+    setLoading('Cedula', true);
+    try {
+      const res  = await fetch(`${API_PASS}?action=check&cedula=${encodeURIComponent(cedula)}`);
+      const data = await res.json();
+
+      if (!data.success) {
+        showError('errorCedula', data.message || 'Cedula no encontrada');
+        return;
+      }
+
+      cedulaActual = cedula;
+      setDots(2);
+
+      if (data.has_password) {
+        document.getElementById('welcomePass').textContent = `Hola, ${data.nombre.split(' ')[0]} 👋`;
+        showStep('stepPassword');
+        setTimeout(() => document.getElementById('inputPassword').focus(), 80);
+      } else {
+        document.getElementById('welcomeCreate').textContent = `Hola, ${data.nombre.split(' ')[0]}`;
+        showStep('stepCreate');
+        setTimeout(() => document.getElementById('inputNewPass').focus(), 80);
+      }
+    } catch (e) {
+      showError('errorCedula', 'Error de conexion. Intenta de nuevo.');
+    } finally {
+      setLoading('Cedula', false);
+    }
   }
 
+  // ── PASO 2a: Login con contraseña ──
   async function doLogin() {
-    const cedula = cedulaInput.value.trim();
-    hideError();
+    const pass = document.getElementById('inputPassword').value;
+    hideError('errorPass');
 
-    if (!cedula || cedula.length < 8) {
-      showError('Ingresa un numero de cedula valido (min. 8 digitos)');
-      return;
+    if (!pass) { showError('errorPass', 'Ingresa tu contrasena'); return; }
+
+    setLoading('Login', true);
+    try {
+      const res  = await fetch(`${API_PASS}?action=login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cedula: cedulaActual, password: pass })
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        document.getElementById('inputPassword').classList.add('is-invalid');
+        showError('errorPass', data.message || 'Contrasena incorrecta');
+        return;
+      }
+
+      // Guardar sesión con el mismo formato que usa core.js
+      Auth.save(data.token, data.employee);
+      Toast.success('Sesion iniciada. Redirigiendo...');
+      setTimeout(() => { window.location.href = 'dashboard.html'; }, 700);
+
+    } catch (e) {
+      showError('errorPass', 'Error de conexion. Intenta de nuevo.');
+    } finally {
+      setLoading('Login', false);
     }
+  }
 
-    if (!/^\d+$/.test(cedula)) {
-      showError('La cedula solo debe contener numeros');
-      return;
-    }
+  // ── PASO 2b: Crear contraseña ──
+  async function doCreate() {
+    const pass    = document.getElementById('inputNewPass').value;
+    const confirm = document.getElementById('inputConfirm').value;
+    hideError('errorCreate');
 
-    setLoading(true);
+    if (pass.length < 4) { showError('errorCreate', 'La contrasena debe tener al menos 4 caracteres'); return; }
+    if (pass !== confirm) { showError('errorCreate', 'Las contrasenass no coinciden'); return; }
+
+    document.getElementById('btnCreate').disabled = true;
+    document.getElementById('spinnerCreate').classList.remove('hidden');
+    document.getElementById('btnCreateText').textContent = 'Creando...';
 
     try {
-      const data = await Auth.login(cedula);
+      const res  = await fetch(`${API_PASS}?action=create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cedula: cedulaActual, password: pass, password_confirm: confirm })
+      });
+      const data = await res.json();
 
-      if (data.success) {
-        Toast.success('Sesion iniciada. Redirigiendo...');
+      if (!data.success) { showError('errorCreate', data.message); return; }
+
+      // Tras crear, hacer login automático
+      const loginRes  = await fetch(`${API_PASS}?action=login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cedula: cedulaActual, password: pass })
+      });
+      const loginData = await loginRes.json();
+
+      if (loginData.success) {
+        Auth.save(loginData.token, loginData.employee);
+        Toast.success('Contrasena creada. Bienvenido!');
         setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
       } else {
-        showError(data.message || 'Cedula no encontrada o empleado inactivo');
+        showError('errorCreate', 'Contrasena creada, pero error al iniciar sesion. Intenta de nuevo.');
       }
-    } catch (err) {
-      showError('Error de conexion. Verifica tu internet e intenta de nuevo.');
+    } catch (e) {
+      showError('errorCreate', 'Error de conexion. Intenta de nuevo.');
     } finally {
-      setLoading(false);
+      document.getElementById('btnCreate').disabled = false;
+      document.getElementById('spinnerCreate').classList.add('hidden');
+      document.getElementById('btnCreateText').textContent = 'Crear contrasena e ingresar';
     }
   }
 
-  loginBtn.addEventListener('click', doLogin);
+  function goBack() {
+    setDots(1);
+    showStep('stepCedula');
+    hideError('errorPass');
+    hideError('errorCreate');
+    document.getElementById('inputPassword').value = '';
+    document.getElementById('inputNewPass').value  = '';
+    document.getElementById('inputConfirm').value  = '';
+    setTimeout(() => document.getElementById('cedula').focus(), 80);
+  }
 
-  cedulaInput.addEventListener('keydown', e => {
+  // ── Event listeners ──
+  document.getElementById('btnCedula').addEventListener('click', checkCedula);
+  document.getElementById('btnLogin').addEventListener('click', doLogin);
+  document.getElementById('btnCreate').addEventListener('click', doCreate);
+  document.getElementById('btnBackFromPass').addEventListener('click', goBack);
+  document.getElementById('btnBackFromCreate').addEventListener('click', goBack);
+
+  document.getElementById('cedula').addEventListener('input', () => {
+    document.getElementById('cedula').value = document.getElementById('cedula').value.replace(/\D/g, '');
+    hideError('errorCedula');
+  });
+  document.getElementById('cedula').addEventListener('keydown', e => { if (e.key === 'Enter') checkCedula(); });
+  document.getElementById('inputPassword').addEventListener('keydown', e => {
     if (e.key === 'Enter') doLogin();
-    hideError();
+    document.getElementById('inputPassword').classList.remove('is-invalid');
+    hideError('errorPass');
   });
+  document.getElementById('inputConfirm').addEventListener('keydown', e => { if (e.key === 'Enter') doCreate(); });
 
-  // Solo numeros
-  cedulaInput.addEventListener('input', () => {
-    cedulaInput.value = cedulaInput.value.replace(/\D/g, '');
-  });
 })();
 </script>
 </body>

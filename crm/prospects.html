@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Seguimiento - Prospectos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/variables.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+  <style>
+    /* ── Plataforma badges ── */
+    .plat { display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:var(--radius-full);font-size:11px;font-weight:700; }
+    .plat-facebook   { background:#e7f0fd;color:#1877f2; }
+    .plat-instagram  { background:#fce4ec;color:#e1306c; }
+    .plat-tiktok     { background:#f1f1f1;color:#111; }
+    .plat-whatsapp   { background:#e8f5e9;color:#1a7339; }
+    .plat-otro       { background:var(--bg);color:var(--text-muted); }
+
+    /* ── Estado badges ── */
+    .est-nuevo       { background:var(--info-soft);color:var(--info); }
+    .est-contactado  { background:var(--warning-soft);color:var(--warning); }
+    .est-seguimiento { background:var(--accent-soft);color:var(--accent); }
+    .est-perdido     { background:var(--danger-soft);color:var(--danger); }
+
+    /* ── Stat cards prospectos ── */
+    .pstat-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:var(--spacing-md);margin-bottom:var(--spacing-xl); }
+    .pstat { background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--spacing-lg);border-left:4px solid var(--accent); }
+    .pstat.fb { border-color:#1877f2; }
+    .pstat.ig { border-color:#e1306c; }
+    .pstat.tt { border-color:#010101; }
+    .pstat.wa { border-color:#25d366; }
+    .pstat-label { font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);margin-bottom:4px; }
+    .pstat-val   { font-family:var(--font-display);font-size:26px;font-weight:800;color:var(--text-primary);line-height:1; }
+
+    /* ── Acciones botones ── */
+    .act-btn { width:30px;height:30px;border-radius:var(--radius-md);display:inline-flex;align-items:center;justify-content:center;font-size:14px;border:1px solid var(--border);background:var(--bg-card);cursor:pointer;transition:all .15s; }
+    .act-btn:hover { background:var(--bg); }
+
+    /* ── Form grid ── */
+    .fgrid { display:grid;grid-template-columns:1fr 1fr;gap:var(--spacing-md); }
+    .fgrid .full { grid-column:1/-1; }
+    @media(max-width:600px){ .fgrid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<div class="app-layout" id="appLayout"></div>
+
+<!-- ══════════ MODAL PROSPECTO ══════════ -->
+<div class="modal-overlay" id="modalProspecto">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Nuevo Prospecto</div>
+      <button class="modal-close" onclick="Modal.close('modalProspecto')">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="fId"/>
+      <div class="fgrid">
+        <div class="form-group full">
+          <label class="form-label required">Nombre completo</label>
+          <input id="fNombre" class="form-control" placeholder="Juan Pérez"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cedula</label>
+          <input id="fCedula" class="form-control" placeholder="0912345678"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Telefono</label>
+          <input id="fTelefono" class="form-control" placeholder="0991234567"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input id="fEmail" type="email" class="form-control" placeholder="correo@ejemplo.com"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label required">Plataforma de origen</label>
+          <select id="fPlataforma" class="form-control">
+            <option value="facebook">📘 Facebook</option>
+            <option value="instagram">📷 Instagram</option>
+            <option value="tiktok">🎵 TikTok</option>
+            <option value="whatsapp">💬 WhatsApp</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select id="fEstado" class="form-control">
+            <option value="nuevo">Nuevo</option>
+            <option value="contactado">Contactado</option>
+            <option value="seguimiento">En seguimiento</option>
+            <option value="perdido">Perdido</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Que producto/servicio le interesa?</label>
+          <input id="fInteres" class="form-control" placeholder="Ej: Instalación eléctrica, mantenimiento..."/>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Notas</label>
+          <textarea id="fNotas" class="form-control" rows="3" placeholder="Observaciones, horario de contacto, etc."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="Modal.close('modalProspecto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveProspecto()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MODAL CONFIRMAR ══════════ -->
+<div class="modal-overlay" id="modalConfirm">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-body" style="text-align:center;padding-top:32px;">
+      <div class="confirm-icon confirm-icon-danger" id="confirmIcon" style="margin-bottom:16px;">
+        <span id="confirmEmoji" style="font-size:28px;">⚠️</span>
+      </div>
+      <div class="confirm-title" id="confirmTitle"></div>
+      <p class="confirm-desc" id="confirmDesc" style="margin-top:8px;"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="Modal.close('modalConfirm')">Cancelar</button>
+      <button class="btn" id="confirmOkBtn" onclick="runConfirmAction()"></button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/core.js"></script>
+<script src="assets/js/sidebar.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  const user = Auth.guard();
+  if (!user) return;
+
+  // ── Render layout ──
+  document.getElementById('appLayout').innerHTML = `
+    ${SidebarHTML.render('prospects.html')}
+    <div class="main-content" id="mainContent">
+
+      <!-- TOPBAR -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">Prospectos</div>
+          <div class="topbar-subtitle">Leads de redes sociales y canales digitales</div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-primary" onclick="openCreate()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Nuevo Prospecto
+          </button>
+        </div>
+      </header>
+
+      <!-- PAGE CONTENT -->
+      <main class="page-content">
+
+        <!-- STATS -->
+        <div class="pstat-grid" id="statGrid">
+          <div class="pstat"><div class="pstat-label">Total</div><div class="pstat-val" id="statTotal">—</div></div>
+          <div class="pstat fb"><div class="pstat-label">📘 Facebook</div><div class="pstat-val" id="statFb">0</div></div>
+          <div class="pstat ig"><div class="pstat-label">📷 Instagram</div><div class="pstat-val" id="statIg">0</div></div>
+          <div class="pstat tt"><div class="pstat-label">🎵 TikTok</div><div class="pstat-val" id="statTt">0</div></div>
+          <div class="pstat wa"><div class="pstat-label">💬 WhatsApp</div><div class="pstat-val" id="statWa">0</div></div>
+        </div>
+
+        <!-- FILTROS -->
+        <div class="card" style="margin-bottom:var(--spacing-lg);">
+          <div class="card-body" style="padding:var(--spacing-md) var(--spacing-xl);display:flex;gap:var(--spacing-md);flex-wrap:wrap;align-items:flex-end;">
+            <div class="form-group" style="margin:0;flex:1;min-width:180px;">
+              <label class="form-label" style="margin-bottom:4px;">Buscar</label>
+              <div class="search-box">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input id="fBuscar" class="form-control" style="padding-left:36px;" placeholder="Nombre, cédula, teléfono…" oninput="loadProspectos()"/>
+              </div>
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label class="form-label" style="margin-bottom:4px;">Plataforma</label>
+              <select id="fFiltroPlat" class="form-control" onchange="loadProspectos()">
+                <option value="">Todas</option>
+                <option value="facebook">📘 Facebook</option>
+                <option value="instagram">📷 Instagram</option>
+                <option value="tiktok">🎵 TikTok</option>
+                <option value="whatsapp">💬 WhatsApp</option>
+                <option value="otro">Otro</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label class="form-label" style="margin-bottom:4px;">Estado</label>
+              <select id="fFiltroEst" class="form-control" onchange="loadProspectos()">
+                <option value="">Todos</option>
+                <option value="nuevo">Nuevo</option>
+                <option value="contactado">Contactado</option>
+                <option value="seguimiento">Seguimiento</option>
+                <option value="perdido">Perdido</option>
+              </select>
+            </div>
+            <button class="btn btn-secondary" onclick="clearFiltros()">✕ Limpiar</button>
+          </div>
+        </div>
+
+        <!-- TABLA -->
+        <div class="card">
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Telefono</th>
+                  <th>Plataforma</th>
+                  <th>Interes</th>
+                  <th>Estado</th>
+                  <th>Registrado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody">
+                <tr><td colspan="7" class="empty-state" style="padding:40px;text-align:center;color:var(--text-muted);">
+                  <div class="spinner spinner-dark" style="margin:auto;"></div>
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  `;
+
+  Sidebar.init();
+
+  // ── Constantes ──
+  const API = `${CONFIG.API_BASE}/prospects_crud.php`;
+  const platIcon  = { facebook:'📘', instagram:'📷', tiktok:'🎵', whatsapp:'💬', otro:'🔗' };
+  const platLabel = { facebook:'Facebook', instagram:'Instagram', tiktok:'TikTok', whatsapp:'WhatsApp', otro:'Otro' };
+  const estLabel  = { nuevo:'Nuevo', contactado:'Contactado', seguimiento:'Seguimiento', perdido:'Perdido' };
+
+  // ── Cargar prospectos ──
+  window.loadProspectos = async function () {
+    const params = new URLSearchParams({ action: 'list' });
+    const s = document.getElementById('fBuscar').value.trim();
+    const p = document.getElementById('fFiltroPlat').value;
+    const e = document.getElementById('fFiltroEst').value;
+    if (s) params.set('search', s);
+    if (p) params.set('plataforma', p);
+    if (e) params.set('estado', e);
+
+    try {
+      const res  = await fetch(`${API}?${params}`, { headers: { 'Authorization': `Bearer ${Auth.getToken()}` } });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message);
+
+      renderStats(data.data.length, data.counts_by_platform || []);
+      renderTable(data.data);
+    } catch (err) {
+      document.getElementById('tableBody').innerHTML =
+        `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--danger);">⚠️ ${err.message}</td></tr>`;
+    }
+  };
+
+  function renderStats(total, counts) {
+    document.getElementById('statTotal').textContent = total;
+    const m = {};
+    counts.forEach(c => m[c.plataforma] = c.total);
+    document.getElementById('statFb').textContent = m.facebook   || 0;
+    document.getElementById('statIg').textContent = m.instagram  || 0;
+    document.getElementById('statTt').textContent = m.tiktok     || 0;
+    document.getElementById('statWa').textContent = m.whatsapp   || 0;
+  }
+
+  function renderTable(rows) {
+    if (!rows.length) {
+      document.getElementById('tableBody').innerHTML =
+        `<tr><td colspan="7"><div class="empty-state"><div class="empty-state-icon">🎯</div><div class="empty-state-title">Sin prospectos</div><p class="empty-state-desc">Agrega tu primer prospecto con el boton de arriba</p></div></td></tr>`;
+      return;
+    }
+    document.getElementById('tableBody').innerHTML = rows.map(p => `
+      <tr>
+        <td>
+          <strong>${esc(p.nombre)}</strong>
+          ${p.cedula ? `<br><span style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);">${esc(p.cedula)}</span>` : ''}
+        </td>
+        <td>${p.telefono ? `<a href="tel:${esc(p.telefono)}" style="color:var(--accent);">${esc(p.telefono)}</a>` : '<span style="color:var(--text-muted)">—</span>'}</td>
+        <td><span class="plat plat-${p.plataforma}">${platIcon[p.plataforma]||'🔗'} ${platLabel[p.plataforma]||p.plataforma}</span></td>
+        <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(p.interes||'')}">
+          ${p.interes ? esc(p.interes) : '<span style="color:var(--text-muted)">—</span>'}
+        </td>
+        <td><span class="badge est-${p.estado}">${estLabel[p.estado]||p.estado}</span></td>
+        <td style="font-size:12px;color:var(--text-muted);">${Fmt.date(p.created_at)}</td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <button class="act-btn" title="Editar" onclick="openEdit(${p.id})">✏️</button>
+            <button class="act-btn" title="Convertir a cliente" onclick="askConvert(${p.id},'${esc(p.nombre)}')">✅</button>
+            <button class="act-btn" title="Eliminar" onclick="askDelete(${p.id},'${esc(p.nombre)}')">🗑️</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // ── CRUD ──
+  window.openCreate = function () {
+    document.getElementById('modalTitle').textContent = 'Nuevo Prospecto';
+    document.getElementById('fId').value = '';
+    ['fNombre','fCedula','fTelefono','fEmail','fInteres','fNotas'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('fPlataforma').value = 'whatsapp';
+    document.getElementById('fEstado').value     = 'nuevo';
+    Modal.open('modalProspecto');
+    setTimeout(() => document.getElementById('fNombre').focus(), 80);
+  };
+
+  window.openEdit = async function (id) {
+    try {
+      const res  = await fetch(`${API}?action=get&id=${id}`, { headers: { 'Authorization': `Bearer ${Auth.getToken()}` } });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message);
+      const p = data.data;
+      document.getElementById('modalTitle').textContent  = 'Editar Prospecto';
+      document.getElementById('fId').value               = p.id;
+      document.getElementById('fNombre').value           = p.nombre       || '';
+      document.getElementById('fCedula').value           = p.cedula       || '';
+      document.getElementById('fTelefono').value         = p.telefono     || '';
+      document.getElementById('fEmail').value            = p.email        || '';
+      document.getElementById('fPlataforma').value       = p.plataforma   || 'otro';
+      document.getElementById('fEstado').value           = p.estado       || 'nuevo';
+      document.getElementById('fInteres').value          = p.interes      || '';
+      document.getElementById('fNotas').value            = p.notas        || '';
+      Modal.open('modalProspecto');
+    } catch (e) { Toast.error(e.message); }
+  };
+
+  window.saveProspecto = async function () {
+    const id     = document.getElementById('fId').value;
+    const nombre = document.getElementById('fNombre').value.trim();
+    if (!nombre) { Toast.error('El nombre es requerido'); return; }
+
+    const body = {
+      id: id ? parseInt(id) : undefined,
+      nombre,
+      cedula:     document.getElementById('fCedula').value.trim(),
+      telefono:   document.getElementById('fTelefono').value.trim(),
+      email:      document.getElementById('fEmail').value.trim(),
+      plataforma: document.getElementById('fPlataforma').value,
+      estado:     document.getElementById('fEstado').value,
+      interes:    document.getElementById('fInteres').value.trim(),
+      notas:      document.getElementById('fNotas').value.trim(),
+    };
+    const action = id ? 'update' : 'create';
+
+    try {
+      const res  = await fetch(`${API}?action=${action}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${Auth.getToken()}` },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message);
+      Toast.success(id ? 'Prospecto actualizado' : 'Prospecto creado');
+      Modal.close('modalProspecto');
+      loadProspectos();
+    } catch (e) { Toast.error(e.message); }
+  };
+
+  // ── Confirm modal ──
+  let _confirmAction = null;
+
+  window.runConfirmAction = async function () {
+    Modal.close('modalConfirm');
+    if (_confirmAction) await _confirmAction();
+    _confirmAction = null;
+  };
+
+  function askConfirm({ emoji, title, desc, btnLabel, btnClass, action }) {
+    document.getElementById('confirmEmoji').textContent  = emoji;
+    document.getElementById('confirmTitle').textContent  = title;
+    document.getElementById('confirmDesc').textContent   = desc;
+    const btn = document.getElementById('confirmOkBtn');
+    btn.textContent = btnLabel;
+    btn.className   = `btn ${btnClass}`;
+    _confirmAction  = action;
+    Modal.open('modalConfirm');
+  }
+
+  window.askConvert = function (id, nombre) {
+    askConfirm({
+      emoji:    '✅',
+      title:    '¿Convertir a cliente?',
+      desc:     `"${nombre}" pasará a Clientes y se eliminará de Prospectos.`,
+      btnLabel: 'Convertir',
+      btnClass: 'btn-success',
+      action:   async () => {
+        try {
+          const res  = await fetch(`${API}?action=convert&id=${id}`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${Auth.getToken()}` }
+          });
+          const data = await res.json();
+          if (!data.success) throw new Error(data.message);
+          Toast.success(`Cliente creado correctamente`);
+          loadProspectos();
+        } catch (e) { Toast.error(e.message); }
+      }
+    });
+  };
+
+  window.askDelete = function (id, nombre) {
+    askConfirm({
+      emoji:    '🗑️',
+      title:    'Eliminar prospecto',
+      desc:     `¿Eliminar a "${nombre}"? Esta acción no se puede deshacer.`,
+      btnLabel: 'Eliminar',
+      btnClass: 'btn-danger',
+      action:   async () => {
+        try {
+          const res  = await fetch(`${API}?action=delete&id=${id}`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${Auth.getToken()}` }
+          });
+          const data = await res.json();
+          if (!data.success) throw new Error(data.message);
+          Toast.success('Prospecto eliminado');
+          loadProspectos();
+        } catch (e) { Toast.error(e.message); }
+      }
+    });
+  };
+
+  window.clearFiltros = function () {
+    document.getElementById('fBuscar').value     = '';
+    document.getElementById('fFiltroPlat').value = '';
+    document.getElementById('fFiltroEst').value  = '';
+    loadProspectos();
+  };
+
+  function esc(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Init ──
+  loadProspectos();
+
+})();
+</script>
+</body>
+</html>
