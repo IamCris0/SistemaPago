@@ -281,7 +281,7 @@
   function renderTable(rows) {
     if (!rows.length) {
       document.getElementById('tableBody').innerHTML =
-        `<tr><td colspan="7"><div class="empty-state"><div class="empty-state-icon">🎯</div><div class="empty-state-title">Sin prospectos</div><p class="empty-state-desc">Agrega tu primer prospecto con el boton de arriba</p></div></td></tr>`;
+        `<tr><td colspan="7"><div class="empty-state"><div class="empty-state-icon"></div><div class="empty-state-title">Sin prospectos</div><p class="empty-state-desc">Agrega tu primer prospecto con el boton de arriba</p></div></td></tr>`;
       return;
     }
     document.getElementById('tableBody').innerHTML = rows.map(p => `
