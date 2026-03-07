@@ -1,10 +1,7 @@
 <?php
 /**
  * API de Empleados - Mawewe CRM
- * ✅ Corregida para estructura real de BD:
- *    - Campos requeridos: employee_code (UNIQUE), email (UNIQUE), first_name, last_name
- *    - Campo nombre: columna separada (puede ser NULL)
- *    - Al crear: genera employee_code automático, email vacío permitido con truco UNIQUE
+ * ✅ Fix SQLSTATE[HY093]: parámetro :cargo duplicado corregido
  */
 
 header('Access-Control-Allow-Origin: *');
@@ -32,7 +29,6 @@ try {
         throw new Exception('Error de conexión a BD');
     }
 
-    // Verificar autenticación para acciones protegidas
     $protectedActions = ['create', 'update', 'delete', 'toggle-status'];
 
     if (in_array($action, $protectedActions)) {
@@ -49,7 +45,7 @@ try {
     }
 
     // ========================================
-    // OBTENER TODOS LOS EMPLEADOS
+    // LISTAR EMPLEADOS
     // ========================================
     if ($method === 'GET' && $action === 'list') {
 
@@ -89,7 +85,6 @@ try {
     // ========================================
     if ($method === 'GET' && $action === 'get') {
         $id = (int)($_GET['id'] ?? 0);
-
         if (!$id) throw new Exception('ID de empleado requerido');
 
         $sql = "SELECT 
@@ -128,11 +123,9 @@ try {
         $nombre = trim($input['nombre']);
         $cedula = trim($input['cedula']);
 
-        // Verificar cédula duplicada
         $stmtCheck = $db->prepare("SELECT id FROM employees WHERE cedula = :cedula");
         $stmtCheck->execute([':cedula' => $cedula]);
         if ($stmtCheck->fetch()) {
-            // Retornar 200 con success:false para que el frontend lo maneje correctamente
             echo json_encode([
                 'success' => false,
                 'message' => "La cédula {$cedula} ya está registrada en el sistema"
@@ -140,25 +133,18 @@ try {
             exit();
         }
 
-        // Separar nombre completo en first_name y last_name
         $partes     = explode(' ', $nombre, 2);
         $first_name = $partes[0];
-        $last_name  = isset($partes[1]) ? $partes[1] : $first_name;
+        $last_name  = isset($partes[1]) ? $partes[1] : $partes[0];
 
-        // Generar employee_code único (campo UNIQUE NOT NULL en BD)
         $employee_code = 'EMP-' . strtoupper(substr(md5($cedula . time()), 0, 8));
-
-        // Verificar que el code no exista (muy improbable pero por seguridad)
         $stmtCode = $db->prepare("SELECT id FROM employees WHERE employee_code = :ec");
         $stmtCode->execute([':ec' => $employee_code]);
         if ($stmtCode->fetch()) {
             $employee_code = 'EMP-' . strtoupper(uniqid());
         }
 
-        // Email: campo UNIQUE NOT NULL → usar placeholder único basado en cédula
         $email_placeholder = 'emp_' . $cedula . '@mawewe.internal';
-
-        // Verificar que ese email no exista
         $stmtEmail = $db->prepare("SELECT id FROM employees WHERE email = :email");
         $stmtEmail->execute([':email' => $email_placeholder]);
         if ($stmtEmail->fetch()) {
@@ -166,11 +152,11 @@ try {
         }
 
         $cargo    = trim($input['cargo']    ?? 'Vendedor');
-        $sucursal = trim($input['sucursal'] ?? 'JOYERIA MATRIZ');
+        $sucursal = trim($input['sucursal'] ?? 'MAWEWE');
         $is_admin = (int)($input['is_admin'] ?? 0);
 
         $sql = "INSERT INTO employees 
-                    (employee_code, cedula, first_name, last_name, nombre, email, 
+                    (employee_code, cedula, first_name, last_name, nombre, email,
                      position, cargo, sucursal, password_hash, is_admin, hire_date, active)
                 VALUES 
                     (:employee_code, :cedula, :first_name, :last_name, :nombre, :email,
@@ -184,7 +170,7 @@ try {
             ':last_name'     => $last_name,
             ':nombre'        => $nombre,
             ':email'         => $email_placeholder,
-            ':position'      => $cargo,
+            ':position'      => $cargo,   // position = cargo (parámetros distintos)
             ':cargo'         => $cargo,
             ':sucursal'      => $sucursal,
             ':is_admin'      => $is_admin,
@@ -192,7 +178,6 @@ try {
 
         $newId = (int)$db->lastInsertId();
 
-        // Auditoría
         logAudit($db, [
             'user_id'     => $currentUser['id'],
             'action'      => 'CREATE',
@@ -211,15 +196,18 @@ try {
     }
 
     // ========================================
-    // ACTUALIZAR EMPLEADO
+    // ACTUALIZAR EMPLEADO — ✅ SIN PARÁMETROS DUPLICADOS
     // ========================================
-    if ($method === 'PUT' && $action === 'update') {
+    if (($method === 'PUT' || $method === 'POST') && $action === 'update') {
         $input = json_decode(file_get_contents('php://input'), true);
         $id    = (int)($input['id'] ?? 0);
 
-        if (!$id) throw new Exception('ID de empleado requerido');
+        if (!$id) {
+            echo json_encode(['success' => false, 'message' => 'ID de empleado requerido']);
+            exit();
+        }
 
-        // Obtener datos actuales
+        // Cargar datos actuales
         $stmtOld = $db->prepare("SELECT * FROM employees WHERE id = :id");
         $stmtOld->execute([':id' => $id]);
         $oldData = $stmtOld->fetch(PDO::FETCH_ASSOC);
@@ -230,59 +218,84 @@ try {
             exit();
         }
 
-        $cedula = trim($input['cedula'] ?? $oldData['cedula']);
+        // Tomar nuevos valores o mantener los actuales
+        $nombre   = trim($input['nombre']   ?? $oldData['nombre']   ?? '');
+        $cedula   = trim($input['cedula']   ?? $oldData['cedula']   ?? '');
+        $cargo    = trim($input['cargo']    ?? $oldData['cargo']    ?? 'Vendedor');
+        $sucursal = trim($input['sucursal'] ?? $oldData['sucursal'] ?? 'MAWEWE');
+        $is_admin = isset($input['is_admin']) ? (int)$input['is_admin'] : (int)$oldData['is_admin'];
 
-        // Verificar cédula duplicada en otro empleado
-        $stmtCheck = $db->prepare("SELECT id FROM employees WHERE cedula = :cedula AND id != :id");
-        $stmtCheck->execute([':cedula' => $cedula, ':id' => $id]);
-        if ($stmtCheck->fetch()) {
-            echo json_encode([
-                'success' => false,
-                'message' => "La cédula {$cedula} ya está registrada en otro empleado"
-            ]);
+        if (empty($nombre)) {
+            echo json_encode(['success' => false, 'message' => 'El nombre es requerido']);
             exit();
         }
 
-        $nombre   = trim($input['nombre']   ?? $oldData['nombre']   ?? '');
-        $partes   = explode(' ', $nombre, 2);
+        // Verificar cédula duplicada en OTRO empleado
+        if (!empty($cedula)) {
+            $stmtCheck = $db->prepare("SELECT id FROM employees WHERE cedula = :cedula AND id != :id");
+            $stmtCheck->execute([':cedula' => $cedula, ':id' => $id]);
+            if ($stmtCheck->fetch()) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => "La cédula {$cedula} ya está registrada en otro empleado"
+                ]);
+                exit();
+            }
+        }
+
+        $partes     = explode(' ', $nombre, 2);
         $first_name = $partes[0];
-        $last_name  = isset($partes[1]) ? $partes[1] : $first_name;
+        $last_name  = isset($partes[1]) ? $partes[1] : $partes[0];
 
-        $cargo    = trim($input['cargo']    ?? $oldData['cargo']);
-        $sucursal = trim($input['sucursal'] ?? $oldData['sucursal']);
-        $is_admin = (int)($input['is_admin'] ?? $oldData['is_admin']);
-
-        $sql = "UPDATE employees 
-                SET nombre     = :nombre,
+        // ✅ CLAVE: position y cargo usan parámetros DISTINTOS (:position_val y :cargo_val)
+        // para evitar SQLSTATE[HY093]: Invalid parameter number
+        $sql = "UPDATE employees SET
+                    nombre     = :nombre,
                     first_name = :first_name,
                     last_name  = :last_name,
                     cedula     = :cedula,
-                    cargo      = :cargo,
-                    position   = :cargo,
+                    cargo      = :cargo_val,
+                    position   = :position_val,
                     sucursal   = :sucursal,
                     is_admin   = :is_admin,
                     updated_at = NOW()
                 WHERE id = :id";
 
         $stmt = $db->prepare($sql);
-        $stmt->execute([
-            ':nombre'     => $nombre,
-            ':first_name' => $first_name,
-            ':last_name'  => $last_name,
-            ':cedula'     => $cedula,
-            ':cargo'      => $cargo,
-            ':sucursal'   => $sucursal,
-            ':is_admin'   => $is_admin,
-            ':id'         => $id
+        $result = $stmt->execute([
+            ':nombre'       => $nombre,
+            ':first_name'   => $first_name,
+            ':last_name'    => $last_name,
+            ':cedula'       => $cedula,
+            ':cargo_val'    => $cargo,      // ← nombre único
+            ':position_val' => $cargo,      // ← nombre único (mismo valor, distinto parámetro)
+            ':sucursal'     => $sucursal,
+            ':is_admin'     => $is_admin,
+            ':id'           => $id,
         ]);
+
+        if (!$result) {
+            $errInfo = $stmt->errorInfo();
+            throw new Exception('Error SQL: ' . ($errInfo[2] ?? 'desconocido'));
+        }
 
         logAudit($db, [
             'user_id'     => $currentUser['id'],
             'action'      => 'UPDATE',
             'entity_type' => 'EMPLOYEE',
             'entity_id'   => $id,
-            'old_value'   => ['nombre' => $oldData['nombre'], 'cargo' => $oldData['cargo']],
-            'new_value'   => ['nombre' => $nombre, 'cargo' => $cargo],
+            'old_value'   => [
+                'nombre'   => $oldData['nombre'],
+                'cargo'    => $oldData['cargo'],
+                'sucursal' => $oldData['sucursal'],
+                'is_admin' => (bool)$oldData['is_admin'],
+            ],
+            'new_value'   => [
+                'nombre'   => $nombre,
+                'cargo'    => $cargo,
+                'sucursal' => $sucursal,
+                'is_admin' => (bool)$is_admin,
+            ],
             'description' => "Empleado actualizado: {$nombre}"
         ]);
 
@@ -293,10 +306,9 @@ try {
     // ========================================
     // ACTIVAR / DESACTIVAR
     // ========================================
-    if ($method === 'PUT' && $action === 'toggle-status') {
+    if (($method === 'PUT' || $method === 'POST') && $action === 'toggle-status') {
         $input = json_decode(file_get_contents('php://input'), true);
         $id    = (int)($input['id'] ?? 0);
-
         if (!$id) throw new Exception('ID requerido');
 
         $stmtOld = $db->prepare("SELECT nombre, active FROM employees WHERE id = :id");
@@ -335,9 +347,8 @@ try {
     // ========================================
     // ELIMINAR (SOFT DELETE)
     // ========================================
-    if ($method === 'DELETE' && $action === 'delete') {
-        $id = (int)($_GET['id'] ?? 0);
-
+    if (($method === 'DELETE' || $method === 'POST') && $action === 'delete') {
+        $id = (int)($_GET['id'] ?? $_POST['id'] ?? 0);
         if (!$id) throw new Exception('ID requerido');
 
         $stmtOld = $db->prepare("SELECT nombre FROM employees WHERE id = :id");
@@ -373,8 +384,7 @@ try {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'message' => 'Error en el servidor',
-        'error'   => $e->getMessage()
+        'message' => 'Error en el servidor: ' . $e->getMessage()
     ]);
 }
 ?>
