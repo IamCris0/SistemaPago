@@ -2,6 +2,8 @@
 /**
  * API Prospectos - Mawewe CRM
  * ✅ FIX: getAuthUser usa decodificación de token base64 (sin tabla auth_tokens)
+ * ✅ FIX: Al convertir, conserva el email real del prospecto; el placeholder
+ *         solo se usa si no tiene email y NO sobreescribe clientes existentes
  */
 
 header('Access-Control-Allow-Origin: *');
@@ -18,7 +20,6 @@ function getAuthUser(PDO $db): array {
     $headers = function_exists('getallheaders') ? getallheaders() : [];
     $token   = '';
 
-    // Buscar en headers (case-insensitive)
     foreach ($headers as $k => $v) {
         if (strtolower($k) === 'authorization') {
             $token = $v;
@@ -30,7 +31,6 @@ function getAuthUser(PDO $db): array {
 
     if (!$token) throw new Exception('No autorizado', 401);
 
-    // Token formato base64: "employee_id:timestamp:random"
     $decoded = base64_decode($token);
     $parts   = explode(':', $decoded);
     $userId  = (int)($parts[0] ?? 0);
@@ -268,16 +268,31 @@ try {
             $first_name = $partes[0];
             $last_name  = $partes[1] ?? $partes[0];
 
-            // Email único requerido en customers
-            $email = $prospect['email']
-                ?: ('prospect_' . $prospect['id'] . '_' . time() . '@mawewe.internal');
+            // ✅ FIX: Usar el email REAL del prospecto si existe y no está en uso
+            // Solo generar placeholder si NO tiene email real
+            $emailReal = trim($prospect['email'] ?? '');
+            $usarEmail = '';
 
-            // Verificar email duplicado en customers
-            $chkEmail = $db->prepare("SELECT id FROM customers WHERE email = :email LIMIT 1");
-            $chkEmail->execute([':email' => $email]);
-            if ($chkEmail->fetch()) {
-                $email = 'prospect_' . $prospect['id'] . '_' . time() . '@mawewe.internal';
+            if ($emailReal && strpos($emailReal, '@mawewe.internal') === false) {
+                // Tiene email real — verificar que no esté en uso por otro cliente
+                $chkEmail = $db->prepare("SELECT id FROM customers WHERE email = :email LIMIT 1");
+                $chkEmail->execute([':email' => $emailReal]);
+                if (!$chkEmail->fetch()) {
+                    // Email libre, usarlo
+                    $usarEmail = $emailReal;
+                } else {
+                    // Email ya en uso → generar placeholder (no pisar al cliente existente)
+                    $usarEmail = 'prospect_' . $prospect['id'] . '_' . time() . '@mawewe.internal';
+                }
+            } else {
+                // Sin email real → placeholder único
+                $usarEmail = 'prospect_' . $prospect['id'] . '_' . time() . '@mawewe.internal';
             }
+
+            // Notas enriquecidas con contexto del prospecto
+            $notasExtra = "[Convertido desde prospecto - Plataforma: {$prospect['plataforma']}"
+                        . " - Interés: {$prospect['interes']}]";
+            $notasFinales = trim(($prospect['notas'] ?? '') . "\n" . $notasExtra);
 
             $insertStmt = $db->prepare(
                 "INSERT INTO customers
@@ -287,14 +302,10 @@ try {
             $insertStmt->execute([
                 ':fn'     => $first_name,
                 ':ln'     => $last_name,
-                ':email'  => $email,
+                ':email'  => $usarEmail,
                 ':phone'  => $prospect['telefono'],
                 ':cedula' => $prospect['cedula'],
-                ':notes'  => trim(
-                    ($prospect['notas'] ?? '') .
-                    "\n[Convertido desde prospecto - Plataforma: {$prospect['plataforma']}" .
-                    " - Interés: {$prospect['interes']}]"
-                ),
+                ':notes'  => $notasFinales,
                 ':uid'    => $user['id'],
             ]);
             $clientId = (int)$db->lastInsertId();

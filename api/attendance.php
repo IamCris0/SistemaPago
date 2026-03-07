@@ -1,7 +1,7 @@
 <?php
 /**
  * API de Asistencia - Mawewe CRM
- * Control de entrada y salida de empleados
+ * ✅ Control de entrada y salida disponible 24/7 (sin restricciones de horario)
  */
 
 header('Access-Control-Allow-Origin: *');
@@ -18,6 +18,9 @@ require_once __DIR__ . '/config/database.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
+
+// ✅ Siempre trabajar en zona horaria Bogotá/Quito UTC-5
+date_default_timezone_set('America/Bogota');
 
 try {
     $database = new Database();
@@ -38,7 +41,7 @@ try {
             throw new Exception('ID de empleado requerido');
         }
         
-        // Verificar si ya marcó entrada hoy
+        // Verificar si ya marcó entrada hoy (sin salida pendiente)
         $today = date('Y-m-d');
         $sql = "SELECT * FROM attendance 
                 WHERE employee_id = :employee_id 
@@ -55,21 +58,24 @@ try {
             throw new Exception('Ya has marcado entrada hoy');
         }
         
-        // Marcar entrada
+        // ✅ Marcar entrada con hora en zona Bogotá
+        $nowBogota = date('Y-m-d H:i:s');
+
         $sql = "INSERT INTO attendance (employee_id, check_in, date) 
-                VALUES (:employee_id, NOW(), :date)";
+                VALUES (:employee_id, :check_in, :date)";
         
         $stmt = $db->prepare($sql);
         $stmt->execute([
             ':employee_id' => $employeeId,
-            ':date' => $today
+            ':check_in'    => $nowBogota,
+            ':date'        => $today
         ]);
         
         echo json_encode([
             'success' => true,
             'message' => 'Entrada marcada exitosamente',
-            'time' => date('H:i:s'),
-            'id' => (int)$db->lastInsertId()
+            'time'    => date('H:i:s'),
+            'id'      => (int)$db->lastInsertId()
         ]);
         exit();
     }
@@ -106,28 +112,30 @@ try {
             throw new Exception('No hay entrada registrada hoy');
         }
         
-        // Calcular horas trabajadas
-        $checkIn = new DateTime($attendance['check_in']);
-        $checkOut = new DateTime();
-        $diff = $checkIn->diff($checkOut);
-        $hoursWorked = $diff->h + ($diff->i / 60);
+        // ✅ Calcular horas trabajadas con hora Bogotá
+        $nowBogota = date('Y-m-d H:i:s');
+        $checkIn   = new DateTime($attendance['check_in']);
+        $checkOut  = new DateTime($nowBogota);
+        $diff      = $checkIn->diff($checkOut);
+        $hoursWorked = $diff->h + ($diff->i / 60) + ($diff->days * 24);
         
         // Marcar salida
         $sql = "UPDATE attendance 
-                SET check_out = NOW(), 
+                SET check_out    = :check_out, 
                     hours_worked = :hours_worked 
                 WHERE id = :id";
         
         $stmt = $db->prepare($sql);
         $stmt->execute([
+            ':check_out'    => $nowBogota,
             ':hours_worked' => round($hoursWorked, 2),
-            ':id' => $attendance['id']
+            ':id'           => $attendance['id']
         ]);
         
         echo json_encode([
-            'success' => true,
-            'message' => 'Salida marcada exitosamente',
-            'time' => date('H:i:s'),
+            'success'      => true,
+            'message'      => 'Salida marcada exitosamente',
+            'time'         => date('H:i:s'),
             'hours_worked' => round($hoursWorked, 2)
         ]);
         exit();
@@ -159,7 +167,7 @@ try {
         $records = $stmt->fetchAll();
         
         foreach ($records as &$record) {
-            $record['id'] = (int)$record['id'];
+            $record['id']          = (int)$record['id'];
             $record['employee_id'] = (int)$record['employee_id'];
             $record['hours_worked'] = (float)($record['hours_worked'] ?? 0);
         }
@@ -167,7 +175,7 @@ try {
         echo json_encode([
             'success' => true,
             'records' => $records,
-            'total' => count($records)
+            'total'   => count($records)
         ]);
         exit();
     }
@@ -177,8 +185,8 @@ try {
     // ========================================
     if ($method === 'GET' && $action === 'history') {
         $employeeId = $_GET['employee_id'] ?? 0;
-        $startDate = $_GET['start_date'] ?? date('Y-m-01');
-        $endDate = $_GET['end_date'] ?? date('Y-m-t');
+        $startDate  = $_GET['start_date'] ?? date('Y-m-01');
+        $endDate    = $_GET['end_date']   ?? date('Y-m-t');
         
         $sql = "SELECT a.*, e.nombre, e.cargo 
                 FROM attendance a
@@ -187,7 +195,7 @@ try {
         
         $params = [
             ':start_date' => $startDate,
-            ':end_date' => $endDate
+            ':end_date'   => $endDate
         ];
         
         if ($employeeId) {
@@ -202,18 +210,18 @@ try {
         $records = $stmt->fetchAll();
         
         foreach ($records as &$record) {
-            $record['id'] = (int)$record['id'];
-            $record['employee_id'] = (int)$record['employee_id'];
+            $record['id']           = (int)$record['id'];
+            $record['employee_id']  = (int)$record['employee_id'];
             $record['hours_worked'] = (float)($record['hours_worked'] ?? 0);
         }
         
         echo json_encode([
             'success' => true,
             'records' => $records,
-            'total' => count($records),
-            'period' => [
+            'total'   => count($records),
+            'period'  => [
                 'start' => $startDate,
-                'end' => $endDate
+                'end'   => $endDate
             ]
         ]);
         exit();
@@ -224,7 +232,7 @@ try {
     // ========================================
     if ($method === 'GET' && $action === 'stats') {
         $employeeId = $_GET['employee_id'] ?? 0;
-        $month = $_GET['month'] ?? date('Y-m');
+        $month      = $_GET['month'] ?? date('Y-m');
         
         $sql = "SELECT 
                     COUNT(*) as total_days,
@@ -247,11 +255,11 @@ try {
         
         echo json_encode([
             'success' => true,
-            'stats' => [
-                'total_days' => (int)$stats['total_days'],
+            'stats'   => [
+                'total_days'    => (int)$stats['total_days'],
                 'complete_days' => (int)$stats['complete_days'],
-                'total_hours' => round((float)$stats['total_hours'], 2),
-                'avg_hours' => round((float)$stats['avg_hours'], 2)
+                'total_hours'   => round((float)$stats['total_hours'], 2),
+                'avg_hours'     => round((float)$stats['avg_hours'], 2)
             ],
             'month' => $month
         ]);
@@ -272,7 +280,7 @@ try {
     echo json_encode([
         'success' => false,
         'message' => 'Error en el servidor',
-        'error' => $e->getMessage()
+        'error'   => $e->getMessage()
     ]);
 }
 ?>
