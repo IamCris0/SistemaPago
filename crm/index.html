@@ -4,12 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mawewe CRM - Iniciar Sesión</title>
+  <!-- FAVICON -->
+  <link rel="icon" type="image/png" href="assets/img/logos.jpeg">
+  <link rel="apple-touch-icon" href="assets/img/logos.jpeg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/variables.css">
   <link rel="stylesheet" href="assets/css/main.css">
   <link rel="stylesheet" href="assets/css/login.css">
+  <!-- RESPONSIVE MÓVIL LOGIN -->
+  <link rel="stylesheet" href="assets/css/login-responsive.css">
   <style>
     /* Pasos */
     .steps-bar { display:flex; align-items:center; gap:8px; margin-bottom:28px; }
@@ -267,6 +272,9 @@
   function showStep(id) {
     document.querySelectorAll('.login-panel-step').forEach(el => el.classList.remove('active'));
     document.getElementById(id).classList.add('active');
+    // Scroll al top del panel en móvil para que el usuario vea el formulario
+    var panel = document.querySelector('.login-panel');
+    if (panel) panel.scrollTop = 0;
   }
 
   function setDots(step) {
