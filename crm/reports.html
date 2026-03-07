@@ -10,7 +10,6 @@
   <link rel="stylesheet" href="assets/css/variables.css">
   <link rel="stylesheet" href="assets/css/main.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
-  <!-- SheetJS para exportar Excel -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     .rep-tabs { display:flex; gap:4px; border-bottom:2px solid var(--border); margin-bottom:var(--spacing-lg); }
@@ -46,7 +45,28 @@
     .compact-table tr:last-child td { border-bottom:none; }
     .compact-table tr:hover td { background:var(--bg); }
 
-    /* Botón Excel verde */
+    /* ── Filas de horas empleados ── */
+    .emp-row-under td { background:rgba(239,68,68,0.04); }
+    .emp-row-under:hover td { background:rgba(239,68,68,0.08) !important; }
+    .emp-row-ok td { background:transparent; }
+
+    .hours-ok    { color:var(--success); font-weight:700; font-family:var(--font-mono); }
+    .hours-under { color:var(--danger);  font-weight:700; font-family:var(--font-mono); }
+    .hours-none  { color:var(--text-muted); font-family:var(--font-mono); }
+
+    .badge-cumple    { background:rgba(16,185,129,.12); color:#10b981; font-size:10px; font-weight:700; padding:2px 8px; border-radius:999px; }
+    .badge-nocumple  { background:rgba(239,68,68,.12);  color:#ef4444; font-size:10px; font-weight:700; padding:2px 8px; border-radius:999px; }
+    .badge-sindata   { background:var(--bg); color:var(--text-muted); font-size:10px; font-weight:600; padding:2px 8px; border-radius:999px; border:1px solid var(--border); }
+
+    .leyenda-horas {
+      display:flex; gap:16px; align-items:center; flex-wrap:wrap;
+      font-size:12px; color:var(--text-secondary);
+      background:var(--bg); border:1px solid var(--border);
+      border-radius:var(--radius-md); padding:10px 16px;
+      margin-top:12px;
+    }
+    .leyenda-dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:5px; }
+
     .btn-excel {
       display:inline-flex; align-items:center; gap:6px;
       padding:7px 14px; border-radius:var(--radius-md);
@@ -56,7 +76,6 @@
       box-shadow:0 2px 8px rgba(22,163,74,.25);
     }
     .btn-excel:hover { background:#15803d; box-shadow:0 4px 16px rgba(22,163,74,.35); transform:translateY(-1px); }
-
     #pdfFrame { display:none; }
   </style>
 </head>
@@ -283,7 +302,7 @@
   document.getElementById('pXLSX').addEventListener('click', () => exportExcel('productos'));
 
   /* ══════════════════════════════════════════
-     EMPLEADOS
+     EMPLEADOS — con colores 40h
   ══════════════════════════════════════════ */
   let empleadosData = null;
 
@@ -295,19 +314,59 @@
       empleadosData = { ...d, month };
       const s = d.summary||{}, at = d.attendance||[];
 
+      // Construir filas con lógica de colores
+      const rowsHTML = at.map(r => {
+        const hrs    = parseFloat(r.total_hours || 0);
+        const worked = parseInt(r.days_worked   || 0);
+        const under40 = worked > 0 && hrs < 40;
+        const ok      = worked > 0 && hrs >= 40;
+        const noData  = worked === 0;
+
+        const rowClass  = under40 ? 'emp-row-under' : 'emp-row-ok';
+        const hrsClass  = noData  ? 'hours-none' : (under40 ? 'hours-under' : 'hours-ok');
+        const nameBadge = under40
+          ? `<span style="margin-left:6px;background:rgba(239,68,68,.12);color:#ef4444;font-size:9px;font-weight:700;padding:1px 6px;border-radius:999px;vertical-align:middle;">▼ &lt;40h</span>`
+          : '';
+        const cumpleBadge = noData
+          ? `<span class="badge-sindata">Sin datos</span>`
+          : (ok ? `<span class="badge-cumple">✓ Sí</span>` : `<span class="badge-nocumple">✗ No</span>`);
+
+        return `<tr class="${rowClass}">
+          <td style="font-weight:600;">${r.nombre}${nameBadge}</td>
+          <td style="color:var(--text-muted);">${r.cargo||'—'}</td>
+          <td style="text-align:center;">${worked}</td>
+          <td class="${hrsClass}">${r.total_hours} h</td>
+          <td style="font-family:var(--font-mono);color:var(--text-muted);">${r.avg_hours} h</td>
+          <td>${cumpleBadge}</td>
+        </tr>`;
+      }).join('');
+
       document.getElementById('empleadosContent').innerHTML = `
         <div class="kpi-row">
           <div class="kpi-card"><div class="kpi-label">Total Empleados</div><div class="kpi-value">${s.total_employees||0}</div></div>
           <div class="kpi-card"><div class="kpi-label">Activos</div><div class="kpi-value" style="color:var(--success);">${s.active_employees||0}</div></div>
           <div class="kpi-card"><div class="kpi-label">Administradores</div><div class="kpi-value">${s.admins||0}</div></div>
+          <div class="kpi-card">
+            <div class="kpi-label">Cumplen 40h</div>
+            <div class="kpi-value" style="color:var(--success);">${at.filter(r=>parseFloat(r.total_hours||0)>=40&&parseInt(r.days_worked||0)>0).length}</div>
+            <div class="kpi-sub" style="color:var(--danger);">${at.filter(r=>parseFloat(r.total_hours||0)<40&&parseInt(r.days_worked||0)>0).length} por debajo</div>
+          </div>
         </div>
         <div class="card">
           <div class="card-header"><div class="card-title">Asistencia del mes — ${month}</div></div>
           <div class="card-body" style="padding:0;">
-            ${at.length===0 ? `<div class="empty-state" style="padding:32px;"><div class="empty-state-title">Sin registros de asistencia</div></div>` :
-            `<table class="compact-table"><thead><tr><th>Empleado</th><th>Cargo</th><th>Dias trabajados</th><th>Horas totales</th><th>Promedio/dia</th></tr></thead>
-            <tbody>${at.map(r=>`<tr><td style="font-weight:600;">${r.nombre}</td><td style="color:var(--text-muted);">${r.cargo||'—'}</td><td style="text-align:center;">${r.days_worked}</td><td style="font-family:var(--font-mono);">${r.total_hours} h</td><td style="font-family:var(--font-mono);color:var(--text-muted);">${r.avg_hours} h</td></tr>`).join('')}</tbody></table>`}
+            ${at.length===0
+              ? `<div class="empty-state" style="padding:32px;"><div class="empty-state-title">Sin registros de asistencia</div></div>`
+              : `<table class="compact-table">
+                  <thead><tr><th>Empleado</th><th>Cargo</th><th>Dias trabajados</th><th>Horas totales</th><th>Promedio/dia</th><th>Cumple 40h</th></tr></thead>
+                  <tbody>${rowsHTML}</tbody>
+                </table>`}
           </div>
+        </div>
+        <div class="leyenda-horas">
+          <span><span class="leyenda-dot" style="background:var(--success);"></span>Verde — Cumple 40h o más</span>
+          <span><span class="leyenda-dot" style="background:var(--danger);"></span>Rojo — Menos de 40h trabajadas</span>
+          <span><span class="leyenda-dot" style="background:var(--border);"></span>Gris — Sin registros ese mes</span>
         </div>`;
     } catch(e) {
       document.getElementById('empleadosContent').innerHTML = `<div class="empty-state"><div class="empty-state-title">Error al cargar</div><div class="empty-state-desc">${e.message}</div></div>`;
@@ -320,11 +379,10 @@
   document.getElementById('eXLSX').addEventListener('click', () => exportExcel('empleados'));
 
   /* ══════════════════════════════════════════
-     EXPORTAR EXCEL — SheetJS (client-side)
+     EXPORTAR EXCEL
   ══════════════════════════════════════════ */
   function exportExcel(tipo) {
     if (typeof XLSX === 'undefined') { Toast.error('Libreria Excel no disponible'); return; }
-
     const wb  = XLSX.utils.book_new();
     const now = new Date();
     let filename = '';
@@ -332,111 +390,84 @@
     if (tipo === 'ventas') {
       if (!ventasData) { Toast.warning('Carga el reporte primero'); return; }
       const t = ventasData.totals||{}, daily = ventasData.daily||[], top = ventasData.top_products||[];
-
-      /* Hoja 1: Resumen KPIs */
       const wsRes = XLSX.utils.aoa_to_sheet([
         ['REPORTE DE VENTAS'],
         [`Periodo: ${ventasData.from}  →  ${ventasData.to}`],
         [`Generado: ${now.toLocaleString('es-EC')}`],
         [],
-        ['Indicador',            'Valor'],
-        ['Total Ingresos (USD)', parseFloat(t.total_revenue   || 0)],
-        ['Total Ordenes',        parseInt(t.total_orders      || 0)],
-        ['Ticket Promedio (USD)',parseFloat(t.avg_order_value || 0)],
-        ['Ordenes Completadas',  parseInt(t.completed_orders  || 0)],
-        ['Ordenes Pendientes',   parseInt(t.pending_orders    || 0)],
+        ['Indicador','Valor'],
+        ['Total Ingresos (USD)', parseFloat(t.total_revenue||0)],
+        ['Total Ordenes',        parseInt(t.total_orders||0)],
+        ['Ticket Promedio (USD)',parseFloat(t.avg_order_value||0)],
+        ['Ordenes Completadas',  parseInt(t.completed_orders||0)],
+        ['Ordenes Pendientes',   parseInt(t.pending_orders||0)],
       ]);
-      wsRes['!cols'] = [{ wch: 26 }, { wch: 18 }];
+      wsRes['!cols'] = [{wch:26},{wch:18}];
       XLSX.utils.book_append_sheet(wb, wsRes, 'Resumen');
-
-      /* Hoja 2: Ventas por día */
       const wsDaily = XLSX.utils.aoa_to_sheet([
-        ['Fecha', 'Ordenes', 'Ingresos (USD)'],
-        ...daily.map(r => [r.date, parseInt(r.orders), parseFloat(r.revenue)])
+        ['Fecha','Ordenes','Ingresos (USD)'],
+        ...daily.map(r=>[r.date,parseInt(r.orders),parseFloat(r.revenue)])
       ]);
-      wsDaily['!cols'] = [{ wch: 14 }, { wch: 10 }, { wch: 16 }];
-      XLSX.utils.book_append_sheet(wb, wsDaily, 'Ventas por Dia');
-
-      /* Hoja 3: Top productos */
+      wsDaily['!cols']=[{wch:14},{wch:10},{wch:16}];
+      XLSX.utils.book_append_sheet(wb,wsDaily,'Ventas por Dia');
       const wsTop = XLSX.utils.aoa_to_sheet([
-        ['#', 'Producto', 'SKU', 'Unidades Vendidas', 'Ingresos (USD)'],
-        ...top.map((r, i) => [i+1, r.product_name, r.product_sku||'—', parseInt(r.total_sold), parseFloat(r.total_revenue)])
+        ['#','Producto','SKU','Unidades Vendidas','Ingresos (USD)'],
+        ...top.map((r,i)=>[i+1,r.product_name,r.product_sku||'—',parseInt(r.total_sold),parseFloat(r.total_revenue)])
       ]);
-      wsTop['!cols'] = [{ wch: 4 }, { wch: 36 }, { wch: 18 }, { wch: 18 }, { wch: 16 }];
-      XLSX.utils.book_append_sheet(wb, wsTop, 'Top Productos');
-
+      wsTop['!cols']=[{wch:4},{wch:36},{wch:18},{wch:18},{wch:16}];
+      XLSX.utils.book_append_sheet(wb,wsTop,'Top Productos');
       filename = `Reporte_Ventas_${ventasData.from}_${ventasData.to}.xlsx`;
 
     } else if (tipo === 'productos') {
       if (!productosData) { Toast.warning('Carga el reporte primero'); return; }
-      const inv = productosData.inventory||{}, low = productosData.low_stock||[], out = productosData.out_of_stock||[], cat = productosData.by_category||[];
-
-      /* Hoja 1: Resumen + categorías */
+      const inv=productosData.inventory||{}, low=productosData.low_stock||[], out=productosData.out_of_stock||[], cat=productosData.by_category||[];
       const wsRes = XLSX.utils.aoa_to_sheet([
-        ['REPORTE DE INVENTARIO'],
-        [`Generado: ${now.toLocaleString('es-EC')}`],
-        [],
-        ['Indicador',                'Valor'],
-        ['Total Productos Activos',  parseInt(inv.total_products || 0)],
-        ['En Stock',                 parseInt(inv.in_stock       || 0)],
-        ['Stock Bajo (<10 uds)',     parseInt(inv.low_stock      || 0)],
-        ['Sin Stock',                parseInt(inv.out_of_stock   || 0)],
-        ['Unidades Totales',         parseInt(inv.total_items    || 0)],
-        [],
-        ['Categoria', 'Productos', 'Stock Total'],
-        ...cat.map(r => [r.category||'—', parseInt(r.count), parseInt(r.total_stock)])
+        ['REPORTE DE INVENTARIO'],[`Generado: ${now.toLocaleString('es-EC')}`],[],
+        ['Indicador','Valor'],
+        ['Total Productos Activos',parseInt(inv.total_products||0)],
+        ['En Stock',parseInt(inv.in_stock||0)],
+        ['Stock Bajo (<10 uds)',parseInt(inv.low_stock||0)],
+        ['Sin Stock',parseInt(inv.out_of_stock||0)],
+        ['Unidades Totales',parseInt(inv.total_items||0)],
+        [],[`Categoria`,'Productos','Stock Total'],
+        ...cat.map(r=>[r.category||'—',parseInt(r.count),parseInt(r.total_stock)])
       ]);
-      wsRes['!cols'] = [{ wch: 28 }, { wch: 12 }, { wch: 14 }];
-      XLSX.utils.book_append_sheet(wb, wsRes, 'Resumen');
-
-      /* Hoja 2: Bajo stock */
-      const wsLow = XLSX.utils.aoa_to_sheet([
-        ['SKU', 'Producto', 'Categoria', 'Stock', 'Precio (USD)'],
-        ...low.map(r => [r.sku, r.name, r.category, parseInt(r.stock), parseFloat(r.price)])
-      ]);
-      wsLow['!cols'] = [{ wch: 18 }, { wch: 36 }, { wch: 16 }, { wch: 8 }, { wch: 14 }];
-      XLSX.utils.book_append_sheet(wb, wsLow, 'Bajo Stock');
-
-      /* Hoja 3: Sin stock */
-      const wsOut = XLSX.utils.aoa_to_sheet([
-        ['SKU', 'Producto', 'Categoria', 'Precio (USD)'],
-        ...out.map(r => [r.sku, r.name, r.category, parseFloat(r.price)])
-      ]);
-      wsOut['!cols'] = [{ wch: 18 }, { wch: 36 }, { wch: 16 }, { wch: 14 }];
-      XLSX.utils.book_append_sheet(wb, wsOut, 'Sin Stock');
-
-      filename = `Reporte_Inventario_${now.toISOString().slice(0,10)}.xlsx`;
+      wsRes['!cols']=[{wch:28},{wch:12},{wch:14}];
+      XLSX.utils.book_append_sheet(wb,wsRes,'Resumen');
+      const wsLow=XLSX.utils.aoa_to_sheet([['SKU','Producto','Categoria','Stock','Precio (USD)'],...low.map(r=>[r.sku,r.name,r.category,parseInt(r.stock),parseFloat(r.price)])]);
+      wsLow['!cols']=[{wch:18},{wch:36},{wch:16},{wch:8},{wch:14}];
+      XLSX.utils.book_append_sheet(wb,wsLow,'Bajo Stock');
+      const wsOut=XLSX.utils.aoa_to_sheet([['SKU','Producto','Categoria','Precio (USD)'],...out.map(r=>[r.sku,r.name,r.category,parseFloat(r.price)])]);
+      wsOut['!cols']=[{wch:18},{wch:36},{wch:16},{wch:14}];
+      XLSX.utils.book_append_sheet(wb,wsOut,'Sin Stock');
+      filename=`Reporte_Inventario_${now.toISOString().slice(0,10)}.xlsx`;
 
     } else if (tipo === 'empleados') {
       if (!empleadosData) { Toast.warning('Carga el reporte primero'); return; }
-      const s = empleadosData.summary||{}, at = empleadosData.attendance||[];
-
-      /* Hoja 1: Resumen */
-      const wsRes = XLSX.utils.aoa_to_sheet([
-        ['REPORTE DE EMPLEADOS'],
-        [`Mes: ${empleadosData.month}`],
-        [`Generado: ${now.toLocaleString('es-EC')}`],
-        [],
-        ['Indicador',       'Valor'],
-        ['Total Empleados', parseInt(s.total_employees  || 0)],
-        ['Activos',         parseInt(s.active_employees || 0)],
-        ['Administradores', parseInt(s.admins           || 0)],
+      const s=empleadosData.summary||{}, at=empleadosData.attendance||[];
+      const wsRes=XLSX.utils.aoa_to_sheet([
+        ['REPORTE DE EMPLEADOS'],[`Mes: ${empleadosData.month}`],[`Generado: ${now.toLocaleString('es-EC')}`],[],
+        ['Indicador','Valor'],
+        ['Total Empleados',parseInt(s.total_employees||0)],
+        ['Activos',parseInt(s.active_employees||0)],
+        ['Administradores',parseInt(s.admins||0)],
       ]);
-      wsRes['!cols'] = [{ wch: 22 }, { wch: 12 }];
-      XLSX.utils.book_append_sheet(wb, wsRes, 'Resumen');
-
-      /* Hoja 2: Asistencia mensual */
-      const wsAt = XLSX.utils.aoa_to_sheet([
-        ['Empleado', 'Cargo', 'Dias Trabajados', 'Horas Totales (h)', 'Promedio por Dia (h)'],
-        ...at.map(r => [r.nombre, r.cargo||'—', parseInt(r.days_worked), parseFloat(r.total_hours), parseFloat(r.avg_hours)])
+      wsRes['!cols']=[{wch:22},{wch:12}];
+      XLSX.utils.book_append_sheet(wb,wsRes,'Resumen');
+      const wsAt=XLSX.utils.aoa_to_sheet([
+        ['Empleado','Cargo','Dias Trabajados','Horas Totales (h)','Promedio por Dia (h)','Cumple 40h'],
+        ...at.map(r=>{
+          const hrs=parseFloat(r.total_hours||0), worked=parseInt(r.days_worked||0);
+          const cumple = worked===0 ? 'Sin datos' : (hrs>=40 ? 'SÍ ✓' : 'NO ▼');
+          return [r.nombre,r.cargo||'—',worked,hrs,parseFloat(r.avg_hours||0),cumple];
+        })
       ]);
-      wsAt['!cols'] = [{ wch: 28 }, { wch: 18 }, { wch: 16 }, { wch: 18 }, { wch: 20 }];
-      XLSX.utils.book_append_sheet(wb, wsAt, 'Asistencia');
-
-      filename = `Reporte_Empleados_${empleadosData.month}.xlsx`;
+      wsAt['!cols']=[{wch:28},{wch:18},{wch:16},{wch:18},{wch:20},{wch:12}];
+      XLSX.utils.book_append_sheet(wb,wsAt,'Asistencia');
+      filename=`Reporte_Empleados_${empleadosData.month}.xlsx`;
     }
 
-    XLSX.writeFile(wb, filename);
+    XLSX.writeFile(wb,filename);
     Toast.success(`Excel exportado: ${filename}`);
   }
 
@@ -444,15 +475,14 @@
      EXPORTAR PDF
   ══════════════════════════════════════════ */
   function exportPDF(tipo) {
-    let titulo = '', subtitulo = '', bodyHTML = '';
+    let titulo='', subtitulo='', bodyHTML='';
     const now = Fmt.datetime(new Date());
 
-    if (tipo === 'ventas') {
-      if (!ventasData) { Toast.warning('Carga el reporte primero'); return; }
-      const t = ventasData.totals||{}, daily = ventasData.daily||[], top = ventasData.top_products||[];
-      titulo = 'Reporte de Ventas';
-      subtitulo = `Periodo: ${Fmt.date(ventasData.from)} — ${Fmt.date(ventasData.to)}`;
-      bodyHTML = `
+    if (tipo==='ventas') {
+      if(!ventasData){Toast.warning('Carga el reporte primero');return;}
+      const t=ventasData.totals||{},daily=ventasData.daily||[],top=ventasData.top_products||[];
+      titulo='Reporte de Ventas'; subtitulo=`Periodo: ${Fmt.date(ventasData.from)} — ${Fmt.date(ventasData.to)}`;
+      bodyHTML=`
         <h2 style="margin:0 0 16px;font-size:15px;color:#0D1B3E;">Resumen General</h2>
         <table class="kpi-table">
           <tr><td>Total Ingresos</td><td class="val">${Fmt.money(t.total_revenue||0)}</td></tr>
@@ -468,12 +498,11 @@
         <table class="data-table"><thead><tr><th>#</th><th>Producto</th><th>SKU</th><th>Unidades</th><th>Total</th></tr></thead>
         <tbody>${top.map((r,i)=>`<tr><td>${i+1}</td><td>${r.product_name}</td><td class="mono">${r.product_sku||'—'}</td><td>${r.total_sold}</td><td class="mono">${Fmt.money(r.total_revenue)}</td></tr>`).join('')}</tbody></table>`:'<p style="color:#94a3b8;text-align:center;padding:24px 0;">Sin datos de productos vendidos</p>'}`;
 
-    } else if (tipo === 'productos') {
-      if (!productosData) { Toast.warning('Carga el reporte primero'); return; }
-      const inv = productosData.inventory||{}, low = productosData.low_stock||[], out = productosData.out_of_stock||[], cat = productosData.by_category||[];
-      titulo = 'Reporte de Inventario';
-      subtitulo = `Generado: ${now}`;
-      bodyHTML = `
+    } else if (tipo==='productos') {
+      if(!productosData){Toast.warning('Carga el reporte primero');return;}
+      const inv=productosData.inventory||{},low=productosData.low_stock||[],out=productosData.out_of_stock||[],cat=productosData.by_category||[];
+      titulo='Reporte de Inventario'; subtitulo=`Generado: ${now}`;
+      bodyHTML=`
         <h2 style="margin:0 0 16px;font-size:15px;color:#0D1B3E;">Estado del Inventario</h2>
         <table class="kpi-table">
           <tr><td>Total Productos Activos</td><td class="val">${inv.total_products||0}</td></tr>
@@ -492,12 +521,11 @@
         <table class="data-table"><thead><tr><th>SKU</th><th>Producto</th><th>Categoria</th><th>Precio</th></tr></thead>
         <tbody>${out.map(r=>`<tr><td class="mono">${r.sku}</td><td>${r.name}</td><td style="text-transform:capitalize;">${r.category}</td><td class="mono">${Fmt.money(r.price)}</td></tr>`).join('')}</tbody></table>`:''}`;
 
-    } else if (tipo === 'empleados') {
-      if (!empleadosData) { Toast.warning('Carga el reporte primero'); return; }
-      const s = empleadosData.summary||{}, at = empleadosData.attendance||[];
-      titulo = 'Reporte de Empleados';
-      subtitulo = `Mes: ${empleadosData.month}`;
-      bodyHTML = `
+    } else if (tipo==='empleados') {
+      if(!empleadosData){Toast.warning('Carga el reporte primero');return;}
+      const s=empleadosData.summary||{}, at=empleadosData.attendance||[];
+      titulo='Reporte de Empleados'; subtitulo=`Mes: ${empleadosData.month}`;
+      bodyHTML=`
         <h2 style="margin:0 0 16px;font-size:15px;color:#0D1B3E;">Resumen de Personal</h2>
         <table class="kpi-table">
           <tr><td>Total Empleados</td><td class="val">${s.total_employees||0}</td></tr>
@@ -505,11 +533,23 @@
           <tr><td>Administradores</td><td class="val">${s.admins||0}</td></tr>
         </table>
         ${at.length>0?`<h2 style="margin:24px 0 12px;font-size:15px;color:#0D1B3E;">Asistencia — ${empleadosData.month}</h2>
-        <table class="data-table"><thead><tr><th>Empleado</th><th>Cargo</th><th>Dias Trabajados</th><th>Horas Totales</th><th>Prom./Dia</th></tr></thead>
-        <tbody>${at.map(r=>`<tr><td style="font-weight:600;">${r.nombre}</td><td>${r.cargo||'—'}</td><td style="text-align:center;">${r.days_worked}</td><td class="mono">${r.total_hours} h</td><td class="mono">${r.avg_hours} h</td></tr>`).join('')}</tbody></table>`:'<p style="color:#94a3b8;text-align:center;padding:24px 0;">Sin registros de asistencia</p>'}`;
+        <table class="data-table">
+          <thead><tr><th>Empleado</th><th>Cargo</th><th>Dias</th><th>Horas Totales</th><th>Prom./Dia</th><th>Cumple 40h</th></tr></thead>
+          <tbody>${at.map(r=>{
+            const hrs=parseFloat(r.total_hours||0), worked=parseInt(r.days_worked||0);
+            const under40=worked>0&&hrs<40, noData=worked===0;
+            const rowBg=under40?'background:rgba(239,68,68,0.06);':'';
+            const hrsStyle=noData?'color:#94a3b8;':(under40?'color:#ef4444;font-weight:700;':'color:#10b981;font-weight:700;');
+            const cumple=noData?'<span style="color:#94a3b8;">—</span>':(under40?'<span style="color:#ef4444;font-weight:700;">⚠ NO</span>':'<span style="color:#10b981;font-weight:700;">✓ SÍ</span>');
+            return `<tr style="${rowBg}"><td style="font-weight:600;">${r.nombre}</td><td>${r.cargo||'—'}</td><td style="text-align:center;">${worked}</td><td class="mono" style="${hrsStyle}">${r.total_hours} h</td><td class="mono">${r.avg_hours} h</td><td>${cumple}</td></tr>`;
+          }).join('')}</tbody>
+        </table>
+        <div style="margin-top:12px;padding:10px 14px;background:#f8fafc;border-radius:6px;font-size:11px;color:#64748b;border:1px solid #e2e8f0;">
+          <strong>Leyenda:</strong> 🟢 Verde = Cumple 40h &nbsp;|&nbsp; 🔴 Rojo = Menos de 40h &nbsp;|&nbsp; — = Sin registros
+        </div>`:'<p style="color:#94a3b8;text-align:center;padding:24px 0;">Sin registros de asistencia</p>'}`;
     }
 
-    const win = window.open('', '_blank', 'width=900,height=650');
+    const win=window.open('','_blank','width=900,height=650');
     win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${titulo}</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}body{font-family:'Helvetica Neue',Arial,sans-serif;font-size:13px;color:#1e293b;background:#fff}
