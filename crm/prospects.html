@@ -25,57 +25,65 @@
     .est-seguimiento { background:var(--accent-soft);color:var(--accent); }
     .est-perdido     { background:var(--danger-soft);color:var(--danger); }
 
-    /* ── Stat cards prospectos ── */
-    .pstat-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:var(--spacing-md);margin-bottom:var(--spacing-xl); }
-    .pstat { background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--spacing-lg);border-left:4px solid var(--accent); }
-    .pstat.fb { border-color:#1877f2; }
-    .pstat.ig { border-color:#e1306c; }
-    .pstat.tt { border-color:#010101; }
-    .pstat.wa { border-color:#25d366; }
-    .pstat-label { font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);margin-bottom:4px; }
-    .pstat-val   { font-family:var(--font-display);font-size:26px;font-weight:800;color:var(--text-primary);line-height:1; }
+    /* ── Avatar prospecto ── */
+    .prospect-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; flex-shrink: 0;
+    }
+    .avatar-facebook  { background:#e7f0fd; color:#1877f2; }
+    .avatar-instagram { background:#fce4ec; color:#e1306c; }
+    .avatar-tiktok    { background:#f1f1f1; color:#111; }
+    .avatar-whatsapp  { background:#e8f5e9; color:#1a7339; }
+    .avatar-otro      { background:var(--accent-soft); color:var(--accent); }
 
-    /* ── Acciones botones ── */
-    .act-btn { width:30px;height:30px;border-radius:var(--radius-md);display:inline-flex;align-items:center;justify-content:center;font-size:14px;border:1px solid var(--border);background:var(--bg-card);cursor:pointer;transition:all .15s; }
-    .act-btn:hover { background:var(--bg); }
+    /* ── Detalle modal ── */
+    .info-block { background: var(--bg); border-radius: var(--radius-md); padding: 14px 16px; }
+    .info-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 4px; }
+    .info-val   { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+    .info-sub   { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .det-grid2  { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    @media(max-width:580px){ .det-grid2 { grid-template-columns: 1fr; } }
 
     /* ── Form grid ── */
-    .fgrid { display:grid;grid-template-columns:1fr 1fr;gap:var(--spacing-md); }
-    .fgrid .full { grid-column:1/-1; }
-    @media(max-width:600px){ .fgrid { grid-template-columns:1fr; } }
+    .modal-lg { max-width: 680px; }
   </style>
 </head>
 <body>
 <div class="app-layout" id="appLayout"></div>
 
-<!-- ══════════ MODAL PROSPECTO ══════════ -->
-<div class="modal-overlay" id="modalProspecto">
-  <div class="modal">
+<!-- ══════════ MODAL CREAR / EDITAR ══════════ -->
+<div class="modal-overlay" id="modalForm">
+  <div class="modal modal-lg">
     <div class="modal-header">
-      <div class="modal-title" id="modalTitle">Nuevo Prospecto</div>
-      <button class="modal-close" onclick="Modal.close('modalProspecto')">
+      <div class="modal-title" id="formTitle">Nuevo Prospecto</div>
+      <button class="modal-close" onclick="Modal.closeAll()">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="fId"/>
-      <div class="fgrid">
-        <div class="form-group full">
+      <div class="form-row">
+        <div class="form-group">
           <label class="form-label required">Nombre completo</label>
           <input id="fNombre" class="form-control" placeholder="Juan Pérez"/>
         </div>
         <div class="form-group">
-          <label class="form-label">Cedula</label>
+          <label class="form-label">Cédula</label>
           <input id="fCedula" class="form-control" placeholder="0912345678"/>
         </div>
+      </div>
+      <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Telefono</label>
+          <label class="form-label">Teléfono</label>
           <input id="fTelefono" class="form-control" placeholder="0991234567"/>
         </div>
         <div class="form-group">
           <label class="form-label">Email</label>
           <input id="fEmail" type="email" class="form-control" placeholder="correo@ejemplo.com"/>
         </div>
+      </div>
+      <div class="form-row">
         <div class="form-group">
           <label class="form-label required">Plataforma de origen</label>
           <select id="fPlataforma" class="form-control">
@@ -95,40 +103,37 @@
             <option value="perdido">Perdido</option>
           </select>
         </div>
-        <div class="form-group full">
-          <label class="form-label">Que producto/servicio le interesa?</label>
-          <input id="fInteres" class="form-control" placeholder="Ej: Instalación eléctrica, mantenimiento..."/>
-        </div>
-        <div class="form-group full">
-          <label class="form-label">Notas</label>
-          <textarea id="fNotas" class="form-control" rows="3" placeholder="Observaciones, horario de contacto, etc."></textarea>
-        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">¿Qué le interesa?</label>
+        <input id="fInteres" class="form-control"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notas</label>
+        <textarea id="fNotas" class="form-control" rows="3" placeholder="Observaciones, horario de contacto, etc."></textarea>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="Modal.close('modalProspecto')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveProspecto()">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      <button class="btn btn-secondary" onclick="Modal.closeAll()">Cancelar</button>
+      <button class="btn btn-primary" id="btnSave">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
         Guardar
       </button>
     </div>
   </div>
 </div>
 
-<!-- ══════════ MODAL CONFIRMAR ══════════ -->
-<div class="modal-overlay" id="modalConfirm">
-  <div class="modal" style="max-width:420px;">
-    <div class="modal-body" style="text-align:center;padding-top:32px;">
-      <div class="confirm-icon confirm-icon-danger" id="confirmIcon" style="margin-bottom:16px;">
-        <span id="confirmEmoji" style="font-size:28px;">⚠️</span>
-      </div>
-      <div class="confirm-title" id="confirmTitle"></div>
-      <p class="confirm-desc" id="confirmDesc" style="margin-top:8px;"></p>
+<!-- ══════════ MODAL DETALLE ══════════ -->
+<div class="modal-overlay" id="modalDetail">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title" id="detTitle">Perfil del Prospecto</div>
+      <button class="modal-close" onclick="Modal.closeAll()">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="Modal.close('modalConfirm')">Cancelar</button>
-      <button class="btn" id="confirmOkBtn" onclick="runConfirmAction()"></button>
-    </div>
+    <div class="modal-body" id="detBody" style="max-height:68vh;overflow-y:auto;"></div>
+    <div class="modal-footer" id="detFooter"></div>
   </div>
 </div>
 
@@ -141,19 +146,23 @@
   const user = Auth.guard();
   if (!user) return;
 
+  const PAPI = `${CONFIG.API_BASE}/prospects_crud.php`;
+
   // ── Render layout ──
   document.getElementById('appLayout').innerHTML = `
     ${SidebarHTML.render('prospects.html')}
     <div class="main-content" id="mainContent">
-
-      <!-- TOPBAR -->
       <header class="topbar">
         <div class="topbar-left">
           <div class="topbar-title">Prospectos</div>
           <div class="topbar-subtitle">Leads de redes sociales y canales digitales</div>
         </div>
         <div class="topbar-actions">
-          <button class="btn btn-primary" onclick="openCreate()">
+          <button class="btn btn-secondary btn-sm" id="btnRefresh">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Actualizar
+          </button>
+          <button class="btn btn-primary" id="btnNew">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
@@ -162,51 +171,41 @@
         </div>
       </header>
 
-      <!-- PAGE CONTENT -->
       <main class="page-content">
 
         <!-- STATS -->
-        <div class="pstat-grid" id="statGrid">
-          <div class="pstat"><div class="pstat-label">Total</div><div class="pstat-val" id="statTotal">—</div></div>
-          <div class="pstat fb"><div class="pstat-label">📘 Facebook</div><div class="pstat-val" id="statFb">0</div></div>
-          <div class="pstat ig"><div class="pstat-label">📷 Instagram</div><div class="pstat-val" id="statIg">0</div></div>
-          <div class="pstat tt"><div class="pstat-label">🎵 TikTok</div><div class="pstat-val" id="statTt">0</div></div>
-          <div class="pstat wa"><div class="pstat-label">💬 WhatsApp</div><div class="pstat-val" id="statWa">0</div></div>
+        <div class="stats-grid" id="statsGrid" style="grid-template-columns:repeat(5,1fr);margin-bottom:var(--spacing-xl);">
+          ${[0,1,2,3,4].map(()=>`<div class="stat-card"><div class="skeleton" style="width:100%;height:64px;border-radius:8px;"></div></div>`).join('')}
         </div>
 
         <!-- FILTROS -->
-        <div class="card" style="margin-bottom:var(--spacing-lg);">
-          <div class="card-body" style="padding:var(--spacing-md) var(--spacing-xl);display:flex;gap:var(--spacing-md);flex-wrap:wrap;align-items:flex-end;">
-            <div class="form-group" style="margin:0;flex:1;min-width:180px;">
-              <label class="form-label" style="margin-bottom:4px;">Buscar</label>
-              <div class="search-box">
-                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input id="fBuscar" class="form-control" style="padding-left:36px;" placeholder="Nombre, cédula, teléfono…" oninput="loadProspectos()"/>
-              </div>
-            </div>
-            <div class="form-group" style="margin:0;">
-              <label class="form-label" style="margin-bottom:4px;">Plataforma</label>
-              <select id="fFiltroPlat" class="form-control" onchange="loadProspectos()">
-                <option value="">Todas</option>
-                <option value="facebook">📘 Facebook</option>
-                <option value="instagram">📷 Instagram</option>
-                <option value="tiktok">🎵 TikTok</option>
-                <option value="whatsapp">💬 WhatsApp</option>
-                <option value="otro">Otro</option>
-              </select>
-            </div>
-            <div class="form-group" style="margin:0;">
-              <label class="form-label" style="margin-bottom:4px;">Estado</label>
-              <select id="fFiltroEst" class="form-control" onchange="loadProspectos()">
-                <option value="">Todos</option>
-                <option value="nuevo">Nuevo</option>
-                <option value="contactado">Contactado</option>
-                <option value="seguimiento">Seguimiento</option>
-                <option value="perdido">Perdido</option>
-              </select>
-            </div>
-            <button class="btn btn-secondary" onclick="clearFiltros()">✕ Limpiar</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+          <div>
+            <div class="page-title">Todos los Prospectos</div>
+            <div class="page-subtitle" id="subCount">Cargando...</div>
           </div>
+        </div>
+        <div class="filters-bar" style="margin-bottom:var(--spacing-lg);">
+          <div style="position:relative;flex:1;min-width:220px;">
+            <svg style="position:absolute;left:11px;top:50%;transform:translateY(-50%);" width="14" height="14" fill="none" stroke="var(--text-muted)" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="fSearch" class="form-control" placeholder="Buscar por nombre, cédula, teléfono..." style="padding-left:36px;">
+          </div>
+          <select id="fPlat" class="form-control" style="width:auto;">
+            <option value="">Todas las plataformas</option>
+            <option value="facebook">📘 Facebook</option>
+            <option value="instagram">📷 Instagram</option>
+            <option value="tiktok">🎵 TikTok</option>
+            <option value="whatsapp">💬 WhatsApp</option>
+            <option value="otro">Otro</option>
+          </select>
+          <select id="fEst" class="form-control" style="width:auto;">
+            <option value="">Todos los estados</option>
+            <option value="nuevo">Nuevo</option>
+            <option value="contactado">Contactado</option>
+            <option value="seguimiento">Seguimiento</option>
+            <option value="perdido">Perdido</option>
+          </select>
+          <button class="btn btn-secondary btn-sm" id="btnClear">Limpiar</button>
         </div>
 
         <!-- TABLA -->
@@ -215,134 +214,278 @@
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Nombre</th>
-                  <th>Telefono</th>
+                  <th>Prospecto</th>
+                  <th>Contacto</th>
                   <th>Plataforma</th>
-                  <th>Interes</th>
+                  <th>Interés</th>
                   <th>Estado</th>
-                  <th>Registrado</th>
+                  <th>Registrado por</th>
+                  <th>Fecha</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
-              <tbody id="tableBody">
-                <tr><td colspan="7" class="empty-state" style="padding:40px;text-align:center;color:var(--text-muted);">
+              <tbody id="tBody">
+                <tr><td colspan="8" style="text-align:center;padding:40px;">
                   <div class="spinner spinner-dark" style="margin:auto;"></div>
                 </td></tr>
               </tbody>
             </table>
           </div>
         </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:var(--spacing-lg);">
+          <div style="font-size:13px;color:var(--text-muted);" id="pgInfo"></div>
+          <div class="pagination" id="pgBar"></div>
+        </div>
 
       </main>
-    </div>
-  `;
+    </div>`;
 
   Sidebar.init();
 
-  // ── Constantes ──
-  const API = `${CONFIG.API_BASE}/prospects_crud.php`;
+  /* ── Constantes ── */
   const platIcon  = { facebook:'📘', instagram:'📷', tiktok:'🎵', whatsapp:'💬', otro:'🔗' };
   const platLabel = { facebook:'Facebook', instagram:'Instagram', tiktok:'TikTok', whatsapp:'WhatsApp', otro:'Otro' };
   const estLabel  = { nuevo:'Nuevo', contactado:'Contactado', seguimiento:'Seguimiento', perdido:'Perdido' };
 
-  // ── Cargar prospectos ──
-  window.loadProspectos = async function () {
-    const params = new URLSearchParams({ action: 'list' });
-    const s = document.getElementById('fBuscar').value.trim();
-    const p = document.getElementById('fFiltroPlat').value;
-    const e = document.getElementById('fFiltroEst').value;
-    if (s) params.set('search', s);
-    if (p) params.set('plataforma', p);
-    if (e) params.set('estado', e);
+  /* ── Estado ── */
+  let prospectos = [], filtered = [], page = 1;
+  const PER = 25;
 
+  /* ── Cargar ── */
+  async function load() {
+    document.getElementById('tBody').innerHTML =
+      `<tr><td colspan="8" style="text-align:center;padding:40px;"><div class="spinner spinner-dark" style="margin:auto;"></div></td></tr>`;
     try {
-      const res  = await fetch(`${API}?${params}`, { headers: { 'Authorization': `Bearer ${Auth.getToken()}` } });
+      const params = { action: 'list' };
+      const s = document.getElementById('fSearch').value.trim();
+      const p = document.getElementById('fPlat').value;
+      const e = document.getElementById('fEst').value;
+      if (s) params.search     = s;
+      if (p) params.plataforma = p;
+      if (e) params.estado     = e;
+
+      const qs  = new URLSearchParams(params).toString();
+      const res = await fetch(`${PAPI}?${qs}`, { headers: { 'Authorization': `Bearer ${Auth.getToken()}` } });
       const data = await res.json();
       if (!data.success) throw new Error(data.message);
 
-      renderStats(data.data.length, data.counts_by_platform || []);
-      renderTable(data.data);
-    } catch (err) {
-      document.getElementById('tableBody').innerHTML =
-        `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--danger);">⚠️ ${err.message}</td></tr>`;
+      prospectos = data.data || [];
+      filtered   = [...prospectos];
+      document.getElementById('subCount').textContent =
+        `${filtered.length} prospecto${filtered.length !== 1 ? 's' : ''}`;
+      page = 1;
+      renderStats(data.counts_by_platform || []);
+      renderTable();
+    } catch(e) {
+      document.getElementById('tBody').innerHTML = `
+        <tr><td colspan="8">
+          <div class="empty-state">
+            <div class="empty-state-title">Error al cargar prospectos</div>
+            <div class="empty-state-desc"><small style="color:var(--danger);font-family:monospace;">${e.message}</small></div>
+            <button class="btn btn-primary" onclick="load()" style="margin-top:14px;">Reintentar</button>
+          </div>
+        </td></tr>`;
     }
-  };
-
-  function renderStats(total, counts) {
-    document.getElementById('statTotal').textContent = total;
-    const m = {};
-    counts.forEach(c => m[c.plataforma] = c.total);
-    document.getElementById('statFb').textContent = m.facebook   || 0;
-    document.getElementById('statIg').textContent = m.instagram  || 0;
-    document.getElementById('statTt').textContent = m.tiktok     || 0;
-    document.getElementById('statWa').textContent = m.whatsapp   || 0;
   }
 
-  function renderTable(rows) {
-    if (!rows.length) {
-      document.getElementById('tableBody').innerHTML =
-        `<tr><td colspan="7"><div class="empty-state"><div class="empty-state-icon"></div><div class="empty-state-title">Sin prospectos</div><p class="empty-state-desc">Agrega tu primer prospecto con el boton de arriba</p></div></td></tr>`;
+  /* ── Stats ── */
+  function renderStats(counts) {
+    const total = prospectos.length;
+    const m = {};
+    counts.forEach(c => m[c.plataforma] = parseInt(c.total));
+
+    document.getElementById('statsGrid').innerHTML = `
+      <div class="stat-card" style="--stat-color:var(--accent)">
+        <div><div class="stat-label">Total</div><div class="stat-value">${total}</div><div style="font-size:11px;color:var(--text-muted);">En base de datos</div></div>
+        <div class="stat-icon" style="background:var(--accent-soft);color:var(--accent);">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+        </div>
+      </div>
+      <div class="stat-card" style="--stat-color:#1877f2">
+        <div><div class="stat-label">📘 Facebook</div><div class="stat-value">${m.facebook||0}</div></div>
+        <div class="stat-icon" style="background:#e7f0fd;color:#1877f2;font-size:20px;">📘</div>
+      </div>
+      <div class="stat-card" style="--stat-color:#e1306c">
+        <div><div class="stat-label">📷 Instagram</div><div class="stat-value">${m.instagram||0}</div></div>
+        <div class="stat-icon" style="background:#fce4ec;color:#e1306c;font-size:20px;">📷</div>
+      </div>
+      <div class="stat-card" style="--stat-color:#25d366">
+        <div><div class="stat-label">💬 WhatsApp</div><div class="stat-value">${m.whatsapp||0}</div></div>
+        <div class="stat-icon" style="background:#e8f5e9;color:#1a7339;font-size:20px;">💬</div>
+      </div>
+      <div class="stat-card" style="--stat-color:#111">
+        <div><div class="stat-label">🎵 TikTok</div><div class="stat-value">${m.tiktok||0}</div></div>
+        <div class="stat-icon" style="background:#f1f1f1;color:#111;font-size:20px;">🎵</div>
+      </div>`;
+  }
+
+  /* ── Tabla ── */
+  function renderTable() {
+    const start = (page - 1) * PER;
+    const slice = filtered.slice(start, start + PER);
+    const pages = Math.ceil(filtered.length / PER);
+
+    document.getElementById('pgInfo').textContent = filtered.length
+      ? `Mostrando ${start+1}–${Math.min(start+PER,filtered.length)} de ${filtered.length}`
+      : 'Mostrando 0';
+    renderPagination('pgBar', page, pages, p => { page = p; renderTable(); });
+
+    if (!slice.length) {
+      document.getElementById('tBody').innerHTML = `
+        <tr><td colspan="8">
+          <div class="empty-state">
+            <div class="empty-state-title">Sin prospectos</div>
+            <div class="empty-state-desc">No hay prospectos que coincidan con los filtros</div>
+          </div>
+        </td></tr>`;
       return;
     }
-    document.getElementById('tableBody').innerHTML = rows.map(p => `
-      <tr>
-        <td>
-          <strong>${esc(p.nombre)}</strong>
-          ${p.cedula ? `<br><span style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);">${esc(p.cedula)}</span>` : ''}
-        </td>
-        <td>${p.telefono ? `<a href="tel:${esc(p.telefono)}" style="color:var(--accent);">${esc(p.telefono)}</a>` : '<span style="color:var(--text-muted)">—</span>'}</td>
-        <td><span class="plat plat-${p.plataforma}">${platIcon[p.plataforma]||'🔗'} ${platLabel[p.plataforma]||p.plataforma}</span></td>
-        <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(p.interes||'')}">
-          ${p.interes ? esc(p.interes) : '<span style="color:var(--text-muted)">—</span>'}
-        </td>
-        <td><span class="badge est-${p.estado}">${estLabel[p.estado]||p.estado}</span></td>
-        <td style="font-size:12px;color:var(--text-muted);">${Fmt.date(p.created_at)}</td>
-        <td>
-          <div style="display:flex;gap:6px;">
-            <button class="act-btn" title="Editar" onclick="openEdit(${p.id})">✏️</button>
-            <button class="act-btn" title="Convertir a cliente" onclick="askConvert(${p.id},'${esc(p.nombre)}')">✅</button>
-            <button class="act-btn" title="Eliminar" onclick="askDelete(${p.id},'${esc(p.nombre)}')">🗑️</button>
-          </div>
-        </td>
-      </tr>
-    `).join('');
+
+    document.getElementById('tBody').innerHTML = slice.map(p => {
+      const ini   = Fmt.initials(p.nombre || '?');
+      const avatarClass = `avatar-${p.plataforma || 'otro'}`;
+      const estClass    = `est-${p.estado || 'nuevo'}`;
+      return `
+        <tr style="cursor:pointer;" onclick="viewProspecto(${p.id})">
+          <td>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="prospect-avatar ${avatarClass}">${ini}</div>
+              <div>
+                <div style="font-weight:600;">${esc(p.nombre)}</div>
+                ${p.cedula ? `<div style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);">${esc(p.cedula)}</div>` : `<div style="font-size:11px;color:var(--text-muted);">#${p.id}</div>`}
+              </div>
+            </div>
+          </td>
+          <td>
+            <div style="font-size:13px;">${p.email ? `<a href="mailto:${esc(p.email)}" onclick="event.stopPropagation();" style="color:var(--accent);">${esc(p.email)}</a>` : '—'}</div>
+            <div style="font-size:11px;color:var(--text-muted);">${p.telefono ? `<a href="tel:${esc(p.telefono)}" onclick="event.stopPropagation();" style="color:var(--text-muted);">${esc(p.telefono)}</a>` : ''}</div>
+          </td>
+          <td><span class="plat plat-${p.plataforma||'otro'}">${platIcon[p.plataforma]||'🔗'} ${platLabel[p.plataforma]||p.plataforma}</span></td>
+          <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(p.interes||'')}">
+            <span style="font-size:13px;color:var(--text-secondary);">${p.interes ? esc(p.interes) : '<span style="color:var(--text-muted)">—</span>'}</span>
+          </td>
+          <td><span class="badge ${estClass}">${estLabel[p.estado]||p.estado}</span></td>
+          <td>
+            <div style="font-size:12px;font-weight:600;">${esc(p.registrado_por||'—')}</div>
+          </td>
+          <td style="font-size:12px;color:var(--text-muted);">${Fmt.date(p.created_at)}</td>
+          <td onclick="event.stopPropagation();" style="white-space:nowrap;">
+            <button class="btn btn-secondary btn-sm btn-icon" onclick="viewProspecto(${p.id})" title="Ver detalle">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <button class="btn btn-secondary btn-sm btn-icon" onclick="openEdit(${p.id})" title="Editar">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="btn btn-success btn-sm btn-icon" onclick="askConvert(${p.id},'${esc(p.nombre)}')" title="Convertir a cliente">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
+            ${user.is_admin ? `
+            <button class="btn btn-danger btn-sm btn-icon" onclick="askDelete(${p.id},'${esc(p.nombre)}')" title="Eliminar">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+            </button>` : ''}
+          </td>
+        </tr>`;
+    }).join('');
   }
 
-  // ── CRUD ──
-  window.openCreate = function () {
-    document.getElementById('modalTitle').textContent = 'Nuevo Prospecto';
-    document.getElementById('fId').value = '';
-    ['fNombre','fCedula','fTelefono','fEmail','fInteres','fNotas'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('fPlataforma').value = 'whatsapp';
-    document.getElementById('fEstado').value     = 'nuevo';
-    Modal.open('modalProspecto');
-    setTimeout(() => document.getElementById('fNombre').focus(), 80);
+  /* ── Ver detalle ── */
+  window.viewProspecto = function(id) {
+    const p = prospectos.find(x => x.id == id);
+    if (!p) return;
+    const ini = Fmt.initials(p.nombre || '?');
+    const avatarClass = `avatar-${p.plataforma || 'otro'}`;
+    const estClass    = `est-${p.estado || 'nuevo'}`;
+
+    document.getElementById('detTitle').textContent = p.nombre;
+    document.getElementById('detBody').innerHTML = `
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+        <div class="prospect-avatar ${avatarClass}" style="width:56px;height:56px;font-size:20px;font-weight:800;">${ini}</div>
+        <div>
+          <div style="font-size:18px;font-weight:700;">${esc(p.nombre)}</div>
+          <div style="margin-top:4px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <span class="plat plat-${p.plataforma||'otro'}">${platIcon[p.plataforma]||'🔗'} ${platLabel[p.plataforma]||p.plataforma}</span>
+            <span class="badge ${estClass}">${estLabel[p.estado]||p.estado}</span>
+          </div>
+          ${p.cedula ? `<div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-top:4px;">CI: ${esc(p.cedula)}</div>` : ''}
+        </div>
+      </div>
+
+      <div class="det-grid2">
+        <div class="info-block">
+          <div class="info-label">Teléfono</div>
+          <div class="info-val">${p.telefono ? `<a href="tel:${esc(p.telefono)}" style="color:var(--accent);">${esc(p.telefono)}</a>` : '—'}</div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Email</div>
+          <div class="info-val" style="word-break:break-all;">${p.email ? `<a href="mailto:${esc(p.email)}" style="color:var(--accent);">${esc(p.email)}</a>` : '—'}</div>
+        </div>
+      </div>
+
+      ${p.interes ? `
+      <div class="info-block" style="margin-bottom:12px;">
+        <div class="info-label">Interés</div>
+        <div class="info-val">${esc(p.interes)}</div>
+      </div>` : ''}
+
+      ${p.notas ? `
+      <div class="info-block" style="margin-bottom:12px;">
+        <div class="info-label">Notas</div>
+        <div style="font-size:13px;color:var(--text-secondary);font-style:italic;white-space:pre-wrap;">${esc(p.notas)}</div>
+      </div>` : ''}
+
+      <div class="info-block">
+        <div class="info-label">Registrado por</div>
+        <div class="info-val">${esc(p.registrado_por||'—')}</div>
+        <div class="info-sub">${Fmt.datetime(p.created_at)}</div>
+      </div>
+    `;
+
+    document.getElementById('detFooter').innerHTML = `
+      <button class="btn btn-secondary" onclick="Modal.closeAll()">Cerrar</button>
+      <button class="btn btn-success" onclick="Modal.closeAll(); askConvert(${p.id},'${esc(p.nombre)}')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        Convertir a Cliente
+      </button>
+      <button class="btn btn-primary" onclick="Modal.closeAll(); openEdit(${p.id})">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Editar
+      </button>`;
+
+    Modal.open('modalDetail');
   };
 
-  window.openEdit = async function (id) {
+  /* ── Abrir formulario crear ── */
+  function openForm(p = null) {
+    document.getElementById('formTitle').textContent = p ? 'Editar Prospecto' : 'Nuevo Prospecto';
+    document.getElementById('fId').value         = p ? p.id         : '';
+    document.getElementById('fNombre').value     = p ? p.nombre     || '' : '';
+    document.getElementById('fCedula').value     = p ? p.cedula     || '' : '';
+    document.getElementById('fTelefono').value   = p ? p.telefono   || '' : '';
+    document.getElementById('fEmail').value      = p ? p.email      || '' : '';
+    document.getElementById('fPlataforma').value = p ? p.plataforma || 'whatsapp' : 'whatsapp';
+    document.getElementById('fEstado').value     = p ? p.estado     || 'nuevo' : 'nuevo';
+    document.getElementById('fInteres').value    = p ? p.interes    || '' : '';
+    document.getElementById('fNotas').value      = p ? p.notas      || '' : '';
+    Modal.open('modalForm');
+    setTimeout(() => document.getElementById('fNombre').focus(), 200);
+  }
+
+  document.getElementById('btnNew').addEventListener('click', () => openForm());
+
+  window.openEdit = async function(id) {
     try {
-      const res  = await fetch(`${API}?action=get&id=${id}`, { headers: { 'Authorization': `Bearer ${Auth.getToken()}` } });
+      const res  = await fetch(`${PAPI}?action=get&id=${id}`, { headers: { 'Authorization': `Bearer ${Auth.getToken()}` } });
       const data = await res.json();
       if (!data.success) throw new Error(data.message);
-      const p = data.data;
-      document.getElementById('modalTitle').textContent  = 'Editar Prospecto';
-      document.getElementById('fId').value               = p.id;
-      document.getElementById('fNombre').value           = p.nombre       || '';
-      document.getElementById('fCedula').value           = p.cedula       || '';
-      document.getElementById('fTelefono').value         = p.telefono     || '';
-      document.getElementById('fEmail').value            = p.email        || '';
-      document.getElementById('fPlataforma').value       = p.plataforma   || 'otro';
-      document.getElementById('fEstado').value           = p.estado       || 'nuevo';
-      document.getElementById('fInteres').value          = p.interes      || '';
-      document.getElementById('fNotas').value            = p.notas        || '';
-      Modal.open('modalProspecto');
-    } catch (e) { Toast.error(e.message); }
+      openForm(data.data);
+    } catch(e) { Toast.error(e.message); }
   };
 
-  window.saveProspecto = async function () {
+  /* ── Guardar ── */
+  document.getElementById('btnSave').addEventListener('click', async () => {
     const id     = document.getElementById('fId').value;
     const nombre = document.getElementById('fNombre').value.trim();
-    if (!nombre) { Toast.error('El nombre es requerido'); return; }
+    if (!nombre) { Toast.warning('El nombre es requerido'); return; }
 
     const body = {
       id: id ? parseInt(id) : undefined,
@@ -357,8 +500,11 @@
     };
     const action = id ? 'update' : 'create';
 
+    const btn = document.getElementById('btnSave');
+    btn.disabled = true; btn.textContent = 'Guardando...';
+
     try {
-      const res  = await fetch(`${API}?action=${action}`, {
+      const res  = await fetch(`${PAPI}?action=${action}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${Auth.getToken()}` },
         body: JSON.stringify(body)
@@ -366,89 +512,72 @@
       const data = await res.json();
       if (!data.success) throw new Error(data.message);
       Toast.success(id ? 'Prospecto actualizado' : 'Prospecto creado');
-      Modal.close('modalProspecto');
-      loadProspectos();
-    } catch (e) { Toast.error(e.message); }
-  };
+      Modal.closeAll();
+      load();
+    } catch(e) {
+      Toast.error(e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Guardar';
+    }
+  });
 
-  // ── Confirm modal ──
-  let _confirmAction = null;
-
-  window.runConfirmAction = async function () {
-    Modal.close('modalConfirm');
-    if (_confirmAction) await _confirmAction();
-    _confirmAction = null;
-  };
-
-  function askConfirm({ emoji, title, desc, btnLabel, btnClass, action }) {
-    document.getElementById('confirmEmoji').textContent  = emoji;
-    document.getElementById('confirmTitle').textContent  = title;
-    document.getElementById('confirmDesc').textContent   = desc;
-    const btn = document.getElementById('confirmOkBtn');
-    btn.textContent = btnLabel;
-    btn.className   = `btn ${btnClass}`;
-    _confirmAction  = action;
-    Modal.open('modalConfirm');
-  }
-
-  window.askConvert = function (id, nombre) {
-    askConfirm({
-      emoji:    '✅',
-      title:    '¿Convertir a cliente?',
-      desc:     `"${nombre}" pasará a Clientes y se eliminará de Prospectos.`,
-      btnLabel: 'Convertir',
-      btnClass: 'btn-success',
-      action:   async () => {
+  /* ── Convertir ── */
+  window.askConvert = function(id, nombre) {
+    Modal.confirm(
+      `¿Convertir a cliente?`,
+      `"${nombre}" pasará a Clientes y se eliminará de Prospectos.`,
+      async () => {
         try {
-          const res  = await fetch(`${API}?action=convert&id=${id}`, {
+          const res  = await fetch(`${PAPI}?action=convert&id=${id}`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${Auth.getToken()}` }
           });
           const data = await res.json();
           if (!data.success) throw new Error(data.message);
-          Toast.success(`Cliente creado correctamente`);
-          loadProspectos();
-        } catch (e) { Toast.error(e.message); }
-      }
-    });
+          Toast.success('Cliente creado correctamente');
+          load();
+        } catch(e) { Toast.error(e.message); }
+      }, false
+    );
   };
 
-  window.askDelete = function (id, nombre) {
-    askConfirm({
-      emoji:    '🗑️',
-      title:    'Eliminar prospecto',
-      desc:     `¿Eliminar a "${nombre}"? Esta acción no se puede deshacer.`,
-      btnLabel: 'Eliminar',
-      btnClass: 'btn-danger',
-      action:   async () => {
+  /* ── Eliminar ── */
+  window.askDelete = function(id, nombre) {
+    Modal.confirm(
+      `¿Eliminar a ${nombre}?`,
+      'Esta acción eliminará permanentemente al prospecto.',
+      async () => {
         try {
-          const res  = await fetch(`${API}?action=delete&id=${id}`, {
+          const res  = await fetch(`${PAPI}?action=delete&id=${id}`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${Auth.getToken()}` }
           });
           const data = await res.json();
           if (!data.success) throw new Error(data.message);
           Toast.success('Prospecto eliminado');
-          loadProspectos();
-        } catch (e) { Toast.error(e.message); }
-      }
-    });
+          load();
+        } catch(e) { Toast.error(e.message); }
+      }, true
+    );
   };
 
-  window.clearFiltros = function () {
-    document.getElementById('fBuscar').value     = '';
-    document.getElementById('fFiltroPlat').value = '';
-    document.getElementById('fFiltroEst').value  = '';
-    loadProspectos();
-  };
+  /* ── Eventos filtros ── */
+  document.getElementById('btnRefresh').addEventListener('click', load);
+  document.getElementById('fSearch').addEventListener('input', debounce(load, 400));
+  document.getElementById('fPlat').addEventListener('change', load);
+  document.getElementById('fEst').addEventListener('change', load);
+  document.getElementById('btnClear').addEventListener('click', () => {
+    document.getElementById('fSearch').value = '';
+    document.getElementById('fPlat').value   = '';
+    document.getElementById('fEst').value    = '';
+    load();
+  });
 
   function esc(str) {
     return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  // ── Init ──
-  loadProspectos();
-
+  load();
 })();
 </script>
 </body>
