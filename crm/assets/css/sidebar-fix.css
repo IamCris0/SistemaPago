@@ -1,55 +1,69 @@
 /* ============================================================
-   SIDEBAR FIX — sticky desktop
-   Incluir ÚLTIMO en todos los HTML, después de responsive.css
+   SIDEBAR-FIX.CSS — v4 DEFINITIVO
+   Reemplaza el archivo anterior completamente.
+   Colocar ÚLTIMO en todos los HTML, después de responsive.css
    ============================================================ */
 
-/* ── Desktop: sidebar sticky que sigue el scroll ── */
+/* ============================================================
+   DESKTOP ≥ 1025px
+   Técnica: app-layout = flex row fijo en viewport.
+   Sidebar = columna izquierda fija. Main = columna derecha que scrollea.
+   ============================================================ */
 @media (min-width: 1025px) {
 
-  /* El layout debe ser flex ROW con items alineados al top */
+  /* html/body no scrollean — el scroll vive en .main-content */
   html, body {
-    height: 100%;
+    height: 100% !important;
+    overflow: hidden !important;
   }
 
+  /* Contenedor raíz: fila flex que llena 100vh */
   .app-layout {
     display: flex !important;
     flex-direction: row !important;
-    align-items: flex-start !important;  /* CRÍTICO: sin esto sticky no funciona */
-    min-height: 100vh !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    overflow: hidden !important;
   }
 
-  /* Sobreescribir el position:fixed del main.css */
+  /* SIDEBAR: columna izquierda fija — NUNCA desaparece */
   .sidebar {
-    position: sticky !important;
+    position: relative !important;  /* cancela el fixed de main.css */
     top: 0 !important;
-    left: auto !important;
+    left: 0 !important;
+    width: var(--sidebar-width, 260px) !important;
+    min-width: var(--sidebar-width, 260px) !important;
     height: 100vh !important;
-    min-height: 100vh !important;
     flex-shrink: 0 !important;
-    transform: none !important;
-    align-self: flex-start !important;  /* CRÍTICO */
+    flex-grow: 0 !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
+    scrollbar-width: none !important;
+    transform: none !important;
     z-index: 100 !important;
-    /* Quitar cualquier margin/translate que pueda quedar */
-    margin-left: 0 !important;
+  }
+  .sidebar::-webkit-scrollbar { display: none !important; }
+
+  .sidebar.collapsed {
+    width: var(--sidebar-width-mini, 72px) !important;
+    min-width: var(--sidebar-width-mini, 72px) !important;
   }
 
-  /* El contenido principal ocupa el resto */
+  /* MAIN CONTENT: ocupa el resto, scrollea verticalmente */
   .main-content {
     flex: 1 1 0% !important;
     min-width: 0 !important;
-    width: auto !important;
-    max-width: none !important;
-    margin-left: 0 !important;          /* ya no necesita margin porque el sidebar es sticky */
-    min-height: 100vh !important;
+    height: 100vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    margin-left: 0 !important;
   }
 
-  /* Cuando el sidebar está colapsado, también sticky */
-  .sidebar.collapsed {
+  /* Topbar sticky dentro del scroll container (.main-content) */
+  .topbar {
     position: sticky !important;
     top: 0 !important;
-    align-self: flex-start !important;
+    z-index: 50 !important;
   }
 
   /* Ocultar elementos solo-móvil */
@@ -58,28 +72,238 @@
   .sidebar-overlay { display: none !important; }
 }
 
-/* ── Tablet/Móvil: sidebar fuera de pantalla (sin cambios) ── */
+/* ============================================================
+   MÓVIL / TABLET ≤ 1024px
+   ============================================================ */
 @media (max-width: 1024px) {
-  .app-layout {
-    display: block !important;
+
+  html, body {
+    height: auto !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
   }
 
+  .app-layout {
+    display: block !important;
+    width: 100% !important;
+    min-height: 100vh !important;
+    overflow: visible !important;
+  }
+
+  /* SIDEBAR: panel oculto que desliza desde la izquierda */
   .sidebar {
     position: fixed !important;
     top: 0 !important;
     left: -280px !important;
+    width: 265px !important;
     height: 100vh !important;
-    z-index: 300 !important;
-    transition: left 0.25s ease !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    z-index: 400 !important;
+    transition: left 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
     transform: none !important;
+    box-shadow: none !important;
   }
 
   .sidebar.mobile-open {
     left: 0 !important;
+    box-shadow: 4px 0 28px rgba(0, 0, 0, 0.22) !important;
   }
 
+  /* MAIN CONTENT: ocupa todo el ancho */
   .main-content {
     margin-left: 0 !important;
     width: 100% !important;
+    min-height: 100vh !important;
   }
+
+  /* Topbar sticky */
+  .topbar {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 50 !important;
+  }
+
+  /* OVERLAY detrás del sidebar */
+  .sidebar-overlay {
+    display: block !important;
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.55) !important;
+    backdrop-filter: blur(2px) !important;
+    -webkit-backdrop-filter: blur(2px) !important;
+    z-index: 399 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.28s ease !important;
+  }
+  .sidebar-overlay.visible {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+
+  /* BOTÓN HAMBURGUESA */
+  .mobile-menu-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: var(--radius-md, 10px) !important;
+    background: var(--bg, #f0f4fa) !important;
+    border: 1.5px solid var(--border, #e2e8f0) !important;
+    color: var(--text-secondary, #64748b) !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    transition: all 0.15s !important;
+  }
+  .mobile-menu-btn:hover {
+    background: var(--accent-soft, rgba(37,99,235,.12)) !important;
+    border-color: var(--accent, #2563eb) !important;
+    color: var(--accent, #2563eb) !important;
+  }
+
+  /* TOPBAR: row con hamburguesa + título */
+  .topbar-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+  .topbar-title {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+}
+
+/* ============================================================
+   BOTTOM NAV — barra inferior móvil
+   ============================================================ */
+:root {
+  --bottom-nav-height: 62px;
+}
+
+@media (max-width: 1024px) {
+
+  .bottom-nav {
+    display: flex !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: var(--bottom-nav-height) !important;
+    background: var(--bg-card, #fff) !important;
+    border-top: 1px solid var(--border, #e2e8f0) !important;
+    z-index: 300 !important;
+    box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.07) !important;
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+    align-items: stretch !important;
+  }
+
+  .bottom-nav-inner {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    width: 100% !important;
+    padding: 0 4px !important;
+  }
+
+  .bottom-nav-item {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    flex: 1 !important;
+    padding: 6px 4px !important;
+    border-radius: 10px !important;
+    color: var(--text-muted, #94a3b8) !important;
+    text-decoration: none !important;
+    transition: color 0.15s, background 0.15s !important;
+    min-width: 0 !important;
+    position: relative !important;
+  }
+
+  .bottom-nav-item.active {
+    color: var(--accent, #2563eb) !important;
+  }
+
+  .bottom-nav-item.active::after {
+    content: '' !important;
+    position: absolute !important;
+    bottom: 4px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 4px !important;
+    height: 4px !important;
+    border-radius: 50% !important;
+    background: var(--accent, #2563eb) !important;
+  }
+
+  .bottom-nav-label {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+    line-height: 1.2 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    width: 100% !important;
+  }
+
+  /* Espacio para que el contenido no quede tapado */
+  .page-content {
+    padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 20px) !important;
+  }
+
+  /* Toast por encima */
+  .toast-container {
+    bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 12px) !important;
+    right: 12px !important;
+    left: 12px !important;
+  }
+}
+
+/* Safe area — iPhone con notch */
+@supports (padding: env(safe-area-inset-bottom)) {
+  @media (max-width: 1024px) {
+    .bottom-nav {
+      height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom)) !important;
+    }
+    .page-content {
+      padding-bottom: calc(
+        var(--bottom-nav-height) + env(safe-area-inset-bottom) + 20px
+      ) !important;
+    }
+  }
+}
+
+/* ============================================================
+   TOPBAR MÓVIL PEQUEÑO ≤ 768px
+   ============================================================ */
+@media (max-width: 768px) {
+  .topbar {
+    height: 56px !important;
+    padding: 0 12px !important;
+  }
+  .topbar-subtitle { display: none !important; }
+  .topbar-title    { font-size: 16px !important; }
+  .topbar-actions .btn-topbar { display: none !important; }
+  .topbar-actions .btn-secondary { display: none !important; }
+  .topbar-actions .btn-primary {
+    font-size: 12px !important;
+    padding: 7px 10px !important;
+  }
+}
+
+/* Fix iOS zoom en inputs */
+@media (max-width: 768px) {
+  input, select, textarea { font-size: 16px !important; }
+}
+
+/* Print */
+@media print {
+  .bottom-nav, .mobile-menu-btn, .sidebar-overlay { display: none !important; }
 }
