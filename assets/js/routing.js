@@ -4,6 +4,7 @@
  * ✅ Facebook usa share.php → muestra imagen del producto (no el logo)
  * ✅ WhatsApp envía texto + enlace con preview de imagen
  * ✅ Instagram: copia enlace + guía visual para historia/publicación
+ * ✅ NUEVO: Precios con descuento en modal de producto
  */
 
 const routing = {
@@ -31,12 +32,10 @@ const routing = {
     this.updateMetaTags(params);
   },
 
-  // URL para COMPARTIR en redes → pasa por share.php (OG tags dinámicos)
   getShareURL(productId) {
     return `${this.SITE_URL}/share.php?product=${productId}`;
   },
 
-  // URL directa a la tienda (para navegación interna)
   getProductURL(productId) {
     return `${this.SITE_URL}/?product=${productId}`;
   },
@@ -83,7 +82,6 @@ const routing = {
     tag.setAttribute('content', content);
   },
 
-  // ─── Copiar al portapapeles ────────────────────────────────────────────────
   async copyToClipboard(text) {
     try { await navigator.clipboard.writeText(text); }
     catch {
@@ -94,43 +92,33 @@ const routing = {
     if (window.mawewe?.ui) window.mawewe.ui.showNotification('✓ Enlace copiado');
   },
 
-  // ─── COMPARTIR EN REDES ────────────────────────────────────────────────────
-  // shareUrl = URL de share.php (tiene OG tags con imagen del producto)
   shareOn(platform, shareUrl, encodedTitle, encodedText) {
     const enc = encodeURIComponent(shareUrl);
 
     if (platform === 'facebook') {
-      // Facebook Sharer lee los OG tags de share.php → muestra imagen del producto
       window.open(
         `https://www.facebook.com/sharer/sharer.php?u=${enc}`,
         '_blank', 'width=640,height=480,noopener,noreferrer'
       );
     }
     else if (platform === 'whatsapp') {
-      // WhatsApp: texto + enlace (el enlace genera preview con imagen del producto)
       window.open(
         `https://wa.me/?text=${encodedText}%20${enc}`,
         '_blank', 'noopener,noreferrer'
       );
     }
     else if (platform === 'instagram') {
-      // Instagram no tiene API web de sharer → copiar + guía
       this._shareInstagram(shareUrl, decodeURIComponent(encodedText));
     }
   },
 
-  // ─── Instagram: copiar + mostrar guía ─────────────────────────────────────
   async _shareInstagram(shareUrl, text) {
-    // En móvil: intentar Web Share API nativa (abre Instagram directamente)
     if (navigator.share) {
       try {
         await navigator.share({ title: text, text: text, url: shareUrl });
-        return; // éxito → no mostrar modal
-      } catch (e) {
-        // usuario canceló o no soportado → continuar con modal
-      }
+        return;
+      } catch (e) {}
     }
-    // Copiar enlace + mostrar guía
     await this.copyToClipboard(shareUrl);
     this._showInstagramGuide(shareUrl);
   },
@@ -161,7 +149,6 @@ const routing = {
           }
         </style>
 
-        <!-- Icono Instagram -->
         <div style="
           width:72px;height:72px;border-radius:20px;margin:0 auto 1rem;
           background:linear-gradient(45deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);
@@ -182,9 +169,7 @@ const routing = {
           ✅ ¡Enlace copiado al portapapeles!
         </p>
 
-        <!-- Pasos -->
         <div style="background:#f8f8f8;border-radius:14px;padding:1rem;text-align:left;margin-bottom:1.25rem;">
-
           <p style="font-size:0.82rem;font-weight:700;color:#333;margin-bottom:0.5rem;">
             📸 Para una <strong>Historia</strong>:
           </p>
@@ -207,7 +192,6 @@ const routing = {
           </div>
         </div>
 
-        <!-- URL visible -->
         <div style="
           background:#f0e8f6;border:1px dashed #c084fc;border-radius:10px;
           padding:0.6rem 0.75rem;font-size:0.72rem;color:#7c3aed;
@@ -215,7 +199,6 @@ const routing = {
           user-select:all;
         ">${shareUrl}</div>
 
-        <!-- Botones -->
         <div style="display:flex;gap:0.6rem;">
           <button id="ig-copy-again" style="
             flex:1;padding:0.75rem;background:#f3f0ff;color:#7c3aed;
@@ -246,7 +229,6 @@ const routing = {
     modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
   },
 
-  // ─── Procesar URL al cargar ────────────────────────────────────────────────
   handleInitialURL() {
     const params = this.getURLParams();
 
@@ -297,7 +279,7 @@ const routing = {
 };
 
 // =============================================================================
-// SOBREESCRIBIR productModal.show — BOTONES: Copiar / WhatsApp / Facebook / Instagram
+// SOBREESCRIBIR productModal.show — CON PRECIOS DE DESCUENTO
 // =============================================================================
 if (window.productModal) {
 
@@ -312,11 +294,17 @@ if (window.productModal) {
       ? product.images.slice(0, 3)
       : [product.image, product.image, product.image];
 
-    // ✅ URL de share.php para redes (imagen dinámica del producto)
     const shareUrl    = routing.getShareURL(productId);
     const storeUrl    = routing.getProductURL(productId);
     const titleEnc    = encodeURIComponent(`${product.name} - $${Number(product.price).toFixed(2)} | Mawewe Ecuador`);
     const textEnc     = encodeURIComponent(`¡Mira este producto en Mawewe! ${product.name} - $${Number(product.price).toFixed(2)}`);
+
+    // ✅ Calcular precios con descuento
+    const originalPrice  = Number(product.price);
+    const pricePaypal    = (originalPrice * 0.84).toFixed(2);
+    const priceTransfer  = (originalPrice * 0.80).toFixed(2);
+    const savePaypal     = (originalPrice * 0.16).toFixed(2);
+    const saveTransfer   = (originalPrice * 0.20).toFixed(2);
 
     const modal = document.createElement('div');
     modal.className = 'product-modal-overlay';
@@ -351,10 +339,75 @@ if (window.productModal) {
             <div class="product-category">${(product.category||'').toUpperCase()}</div>
             ${product.subcategory ? `<div class="product-subcategory">${product.subcategory.toUpperCase()}</div>` : ''}
             <h2 class="modal-title">${product.name}</h2>
-            <div class="modal-price">$${Number(product.price).toFixed(2)}</div>
+
+            <!-- ✅ BLOQUE DE PRECIO CON DESCUENTOS -->
+            <div style="margin-bottom:1rem;">
+
+              <!-- Precio original tachado -->
+              <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:10px;">
+                <span style="font-size:1.1rem; color:var(--gray-400); text-decoration:line-through;">$${originalPrice.toFixed(2)}</span>
+                <span style="font-size:0.72rem; color:var(--gray-500); font-weight:500;">precio sin descuento</span>
+              </div>
+
+              <!-- Tarjetas de precio con descuento -->
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+
+                <!-- Transferencia / Efectivo -->
+                <div style="
+                  padding:10px 12px;
+                  border-radius:10px;
+                  background:#f0fdf4;
+                  border:1px solid #86efac;
+                ">
+                  <div style="font-size:0.62rem; font-weight:700; color:#15803d; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:3px;">
+                    Transferencia / Efectivo
+                  </div>
+                  <div style="font-size:1.35rem; font-weight:700; color:#15803d; line-height:1;">
+                    $${priceTransfer}
+                  </div>
+                  <div style="font-size:0.68rem; color:#16a34a; margin-top:3px; font-weight:600;">
+                    Ahorras $${saveTransfer} · 20% OFF
+                  </div>
+                </div>
+
+                <!-- PayPal -->
+                <div style="
+                  padding:10px 12px;
+                  border-radius:10px;
+                  background:#eff6ff;
+                  border:1px solid #93c5fd;
+                ">
+                  <div style="font-size:0.62rem; font-weight:700; color:#1d4ed8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:3px;">
+                    PayPal
+                  </div>
+                  <div style="font-size:1.35rem; font-weight:700; color:#1d4ed8; line-height:1;">
+                    $${pricePaypal}
+                  </div>
+                  <div style="font-size:0.68rem; color:#2563eb; margin-top:3px; font-weight:600;">
+                    Ahorras $${savePaypal} · 16% OFF
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Nota envío gratis -->
+              <div style="
+                margin-top:8px;
+                padding:6px 10px;
+                background:#fefce8;
+                border:1px solid #fde68a;
+                border-radius:8px;
+                font-size:0.72rem;
+                color:#92400e;
+                font-weight:500;
+              ">
+                📦 Envío gratis en compras superiores a $60
+              </div>
+            </div>
+
             <p class="modal-description">${product.description}</p>
 
-            <!-- ✅ BOTONES DE COMPARTIR ACTUALIZADOS -->
+            <!-- BOTONES DE COMPARTIR -->
             <div style="
               margin: var(--spacing-lg) 0;
               padding: var(--spacing-md);
@@ -367,7 +420,6 @@ if (window.productModal) {
               </p>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
 
-                <!-- Copiar enlace -->
                 <button onclick="routing.copyToClipboard('${shareUrl}')" style="
                   padding:0.65rem 0.5rem;background:#f1f5f9;color:#334155;
                   border:1px solid #cbd5e1;border-radius:10px;cursor:pointer;
@@ -378,7 +430,6 @@ if (window.productModal) {
                   🔗 Copiar enlace
                 </button>
 
-                <!-- WhatsApp -->
                 <button onclick="routing.shareOn('whatsapp','${shareUrl}','${titleEnc}','${textEnc}')" style="
                   padding:0.65rem 0.5rem;background:#25D366;color:#fff;
                   border:none;border-radius:10px;cursor:pointer;
@@ -390,7 +441,6 @@ if (window.productModal) {
                   WhatsApp
                 </button>
 
-                <!-- Facebook -->
                 <button onclick="routing.shareOn('facebook','${shareUrl}','${titleEnc}','${textEnc}')" style="
                   padding:0.65rem 0.5rem;background:#1877F2;color:#fff;
                   border:none;border-radius:10px;cursor:pointer;
@@ -402,7 +452,6 @@ if (window.productModal) {
                   Facebook
                 </button>
 
-                <!-- Instagram -->
                 <button onclick="routing.shareOn('instagram','${shareUrl}','${titleEnc}','${textEnc}')" style="
                   padding:0.65rem 0.5rem;
                   background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);
@@ -489,7 +538,7 @@ window.addEventListener('popstate', () => routing.handleInitialURL());
 
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => routing.handleInitialURL(), 100);
-  console.log('✅ routing.js v4 — Facebook/WhatsApp imagen producto + Instagram');
+  console.log('✅ routing.js v4 — Precios descuento en modal + Instagram');
 });
 
 window.routing = routing;

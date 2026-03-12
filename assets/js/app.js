@@ -2,6 +2,7 @@
  * MAWEWE E-COMMERCE - VERSIÓN CORREGIDA V2
  * ✅ FIX: Orden por categoría en "Todos" (mayor a menor productos)
  * ✅ FIX: Credenciales PayPal LIVE actualizadas
+ * ✅ NUEVO: Badges de descuento discretos en tarjetas de producto
  */
 
 // =============================================================================
@@ -18,10 +19,9 @@ const CONFIG = {
   },
 
   paypal: {
-    // ✅ CREDENCIALES LIVE ACTUALIZADAS
     clientId: "Ack7D-Wa-nhgUcL0ijOQHSQZUNJHy3GCX4tBKxrAyDYF6K-laohRj0ke49AAeg6NcUjSXHCBJNLhFGJt",
     currency: "USD",
-    mode: "production", // ✅ MODO PRODUCCIÓN
+    mode: "production",
   },
 
   shipping: {
@@ -412,6 +412,10 @@ const productModal = {
     const shareTitle = `${product.name} - Mawewe`;
     const shareText = `Mira este producto: ${product.name} - $${Number(product.price).toFixed(2)}`;
 
+    // ✅ Calcular precios con descuento
+    const pricePaypal    = (Number(product.price) * 0.84).toFixed(2);
+    const priceTransfer  = (Number(product.price) * 0.80).toFixed(2);
+
     const modal = document.createElement("div");
     modal.className = "product-modal-overlay";
     modal.id = "product-detail-modal";
@@ -457,7 +461,24 @@ const productModal = {
             ${product.subcategory ? `<div class="product-subcategory">${product.subcategory.toUpperCase()}</div>` : ""}
             
             <h2 class="modal-title">${product.name}</h2>
-            <div class="modal-price">$${Number(product.price).toFixed(2)}</div>
+
+            <!-- ✅ BLOQUE DE PRECIO CON DESCUENTOS -->
+            <div style="margin-bottom: 0.5rem;">
+              <div style="display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;">
+                <span class="modal-price">$${Number(product.price).toFixed(2)}</span>
+                <span style="font-size:0.8rem; color:var(--gray-500); text-decoration:line-through;">precio regular</span>
+              </div>
+              <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+                <div style="display:flex; flex-direction:column; padding:8px 12px; border-radius:10px; background:#f0fdf4; border:1px solid #bbf7d0;">
+                  <span style="font-size:0.68rem; font-weight:600; color:#15803d; text-transform:uppercase; letter-spacing:0.04em;">-20% Transferencia/Efectivo</span>
+                  <span style="font-size:1.1rem; font-weight:700; color:#15803d;">$${priceTransfer}</span>
+                </div>
+                <div style="display:flex; flex-direction:column; padding:8px 12px; border-radius:10px; background:#eff6ff; border:1px solid #bfdbfe;">
+                  <span style="font-size:0.68rem; font-weight:600; color:#1d4ed8; text-transform:uppercase; letter-spacing:0.04em;">-16% PayPal</span>
+                  <span style="font-size:1.1rem; font-weight:700; color:#1d4ed8;">$${pricePaypal}</span>
+                </div>
+              </div>
+            </div>
             
             <p class="modal-description">${product.description}</p>
             
@@ -659,31 +680,20 @@ const render = {
     let sortedProducts;
     
     if (state.currentFilter === 'all') {
-      // En "Todos": ordenar por categoría con más productos
       const categoryCount = {};
-      
-      // Contar productos por categoría
       products.forEach(p => {
         const cat = p.category || 'sin_categoria';
         categoryCount[cat] = (categoryCount[cat] || 0) + 1;
       });
       
-      // Ordenar productos agrupando por categoría (de mayor a menor cantidad)
       sortedProducts = [...products].sort((a, b) => {
         const catA = a.category || 'sin_categoria';
         const catB = b.category || 'sin_categoria';
-        
-        // Primero por cantidad de productos en la categoría
         const countDiff = (categoryCount[catB] || 0) - (categoryCount[catA] || 0);
         if (countDiff !== 0) return countDiff;
-        
-        // Si están en la misma categoría, por ID
         return a.id - b.id;
       });
-      
-      console.log(`✅ Productos ordenados por categoría (mayor a menor):`, categoryCount);
     } else {
-      // En categorías específicas: ordenar solo por ID
       sortedProducts = [...products].sort((a, b) => a.id - b.id);
     }
 
@@ -692,6 +702,9 @@ const render = {
         const imageUrl =
           product.image ||
           "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIiB2aWV3Qm94PSIwIDAgNDAwIDQwMCI+CiAgPHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9IiNmMGYwZjAiIHJ4PSIxMiIvPgogIDxyZWN0IHg9IjE0MCIgeT0iMTQwIiB3aWR0aD0iMTIwIiBoZWlnaHQ9IjkwIiByeD0iOCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYmJiIiBzdHJva2Utd2lkdGg9IjMiLz4KICA8Y2lyY2xlIGN4PSIxNzAiIGN5PSIxNzAiIHI9IjEyIiBmaWxsPSJub25lIiBzdHJva2U9IiNiYmIiIHN0cm9rZS13aWR0aD0iMyIvPgogIDxwb2x5Z29uIHBvaW50cz0iMTQwLDIzMCAxODUsMTg1IDIxMCwyMTAgMjQwLDE5MCAyNjAsMjMwIiBmaWxsPSIjYmJiIi8+CiAgPHRleHQgeD0iMjAwIiB5PSIyODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjIyIiBmaWxsPSIjOTk5Ij5TaW4gSW1hZ2VuPC90ZXh0Pgo8L3N2Zz4=";
+
+        // ✅ Precios con descuento para la tarjeta
+        const priceTransfer = (Number(product.price) * 0.80).toFixed(2);
 
         return `
       <article class="product-card" data-product-id="${product.id}">
@@ -714,7 +727,12 @@ const render = {
           <p class="product-description">${(product.description || "").substring(0, 80)}...</p>
           
           <div class="product-footer">
-            <span class="product-price">$${Number(product.price).toFixed(2)}</span>
+            <div style="display:flex; flex-direction:column; gap:2px;">
+              <span class="product-price">$${Number(product.price).toFixed(2)}</span>
+              <span style="font-size:0.7rem; color:var(--gray-500); line-height:1.3;">
+                Desde <strong style="color:#16a34a;">$${priceTransfer}</strong> con descuento
+              </span>
+            </div>
             <button 
               class="btn-add-to-cart" 
               onclick="event.stopPropagation(); cart.addItem(${product.id})"
@@ -722,6 +740,11 @@ const render = {
             >
               ${product.stock > 0 ? "Añadir" : "Sin Stock"}
             </button>
+          </div>
+
+          <div style="display:flex; gap:4px; margin-top:6px; flex-wrap:wrap;">
+            <span style="font-size:0.65rem; font-weight:600; padding:2px 7px; border-radius:20px; background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; white-space:nowrap;">-20% Transferencia</span>
+            <span style="font-size:0.65rem; font-weight:600; padding:2px 7px; border-radius:20px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; white-space:nowrap;">-16% PayPal</span>
           </div>
           
           <div class="stock-indicator ${product.stock < 5 ? "low" : ""} ${product.stock < 1 ? "out" : ""}">
@@ -771,10 +794,7 @@ const render = {
       )
       .join("");
 
-    console.log(
-      "✅ Categorías renderizadas (ordenadas por cantidad):",
-      sortedCategories,
-    );
+    console.log("✅ Categorías renderizadas:", sortedCategories);
   },
 
   subcategories() {
@@ -820,11 +840,6 @@ const render = {
           )
           .join("");
       }
-
-      console.log(
-        `✅ Subcategorías de ${state.currentFilter} renderizadas:`,
-        currentSubcategories,
-      );
     } else {
       subcatContainer.style.display = "none";
       state.currentSubcategory = null;
@@ -971,7 +986,6 @@ const filters = {
     const trimmedQuery = query ? query.trim() : "";
 
     state.searchQuery = trimmedQuery;
-    console.log("🔍 Búsqueda GLOBAL:", state.searchQuery || "(vacía)");
 
     if (trimmedQuery && trimmedQuery.length >= CONFIG.search.minChars) {
       state.currentFilter = "all";
@@ -1017,7 +1031,6 @@ const filters = {
 
   apply() {
     if (state.isSearching) {
-      console.log("⏳ Búsqueda en progreso, esperando...");
       return;
     }
 
@@ -1041,19 +1054,12 @@ const filters = {
       filterParams.search = state.searchQuery;
     }
 
-    console.log("📊 Aplicando filtros:", filterParams);
-
     api
       .fetchProducts(filterParams)
       .then((data) => {
         if (data && data.success) {
           state.products = data.products || [];
-          console.log(`✅ ${state.products.length} productos encontrados`);
           render.products(state.products);
-
-          if (state.products.length === 0) {
-            console.log("ℹ️ No se encontraron productos con estos filtros");
-          }
         } else {
           throw new Error(data.message || "Error en la respuesta");
         }
@@ -1218,4 +1224,4 @@ window.mawewe = {
 
 window.productModal = productModal;
 
-console.log("✅ Mawewe cargado - V2 (orden por categoría + PayPal LIVE)");
+console.log("✅ Mawewe V2 — Badges de descuento + orden por categoría + PayPal LIVE");
