@@ -33,6 +33,7 @@ html, body {
     display: flex !important;
     flex-direction: row !important;
     min-height: 100vh;
+    align-items: flex-start; /* ← CLAVE */
   }
 
   .sidebar {
@@ -44,6 +45,7 @@ html, body {
     transform: none !important;
     z-index: 100;
     overflow-y: auto;
+    align-self: flex-start; /* ← CLAVE */
   }
 
   .main-content {
@@ -52,9 +54,9 @@ html, body {
     width: auto !important;
     max-width: none !important;
     margin-left: 0 !important;
+    min-height: 100vh; /* ← para que el fondo llegue al fondo */
   }
 
-  /* Ocultar elementos móviles en desktop */
   .bottom-nav        { display: none !important; }
   .mobile-menu-btn   { display: none !important; }
   .sidebar-overlay   { display: none !important; }

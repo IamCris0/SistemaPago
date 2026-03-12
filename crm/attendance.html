@@ -1,172 +1,284 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema de Seguimiento - Asistencia</title>
-    <link rel="icon" type="image/png" href="assets/img/icono.png">
-  <link rel="apple-touch-icon" href="assets/img/icono.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/variables.css">
-  <link rel="stylesheet" href="assets/css/main.css">
-  <link rel="stylesheet" href="assets/css/dashboard.css">
-  <link rel="stylesheet" href="assets/css/responsive.css">
-  <style>
-    .clock-display {
-      font-family: var(--font-mono);
-      font-size: 42px;
-      font-weight: 700;
-      color: var(--text-primary);
-      letter-spacing: 2px;
-      line-height: 1;
-    }
-    .clock-date { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
-    .clock-zone {
-      font-size: 11px; color: var(--text-muted);
-      background: var(--bg); padding: 2px 8px;
-      border-radius: 999px; display: inline-block; margin-top: 6px;
-    }
-    .live-timer {
-      font-family: var(--font-mono); font-size: 20px;
-      font-weight: 700; color: var(--info); letter-spacing: 1px;
-    }
-    .attendance-hero {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-mid) 100%);
-      border-radius: var(--radius-xl); padding: 32px 40px;
-      display: grid; grid-template-columns: auto 1fr auto;
-      gap: 32px; align-items: center;
-      margin-bottom: var(--spacing-xl); color: white;
-      position: relative; overflow: hidden;
-    }
-    @media (max-width: 768px) {
-      .attendance-hero { grid-template-columns: 1fr; text-align: center; }
-    }
-    .attendance-hero::after {
-      content: ''; position: absolute; right: -80px; top: -80px;
-      width: 250px; height: 250px; border-radius: 50%;
-      background: rgba(255,255,255,0.04); pointer-events: none;
-    }
-    .hero-user-avatar {
-      width: 72px; height: 72px; border-radius: 18px;
-      background: var(--accent); display: flex;
-      align-items: center; justify-content: center;
-      font-family: var(--font-display); font-size: 26px;
-      font-weight: 800; color: white; flex-shrink: 0;
-      position: relative; z-index: 1;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-    }
-    .hero-user-info { position: relative; z-index: 1; }
-    .hero-user-name { font-family: var(--font-display); font-size: 22px; font-weight: 800; margin-bottom: 4px; }
-    .hero-user-role { font-size: 13px; color: rgba(255,255,255,0.6); }
-    .hero-times { display: flex; gap: 32px; position: relative; z-index: 1; }
-    .hero-time-block { text-align: center; }
-    .hero-time-label {
-      font-size: 10px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 1.5px; color: rgba(255,255,255,0.5); margin-bottom: 6px;
-    }
-    .hero-time-val { font-family: var(--font-mono); font-size: 24px; font-weight: 700; letter-spacing: 2px; }
-    .hero-time-val.green { color: #34D399; }
-    .hero-time-val.red   { color: #F87171; }
-    .hero-time-val.blue  { color: #60A5FA; }
-    .hero-time-val.muted { color: rgba(255,255,255,0.3); }
-    .hero-status-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 4px 12px; border-radius: 999px;
-      font-size: 11px; font-weight: 700; margin-top: 8px;
-    }
-    .pulse-dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: currentColor;
-      animation: pulse-live 1.5s ease-in-out infinite;
-    }
-    @keyframes pulse-live {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50%       { opacity: 0.4; transform: scale(0.8); }
-    }
-  </style>
-</head>
-<body>
-<div class="app-layout" id="appLayout"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema de Seguimiento - Asistencia</title>
+    <link rel="icon" type="image/png" href="assets/img/icono.png" />
+    <link rel="apple-touch-icon" href="assets/img/icono.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/variables.css" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <link rel="stylesheet" href="assets/css/dashboard.css" />
+    <link rel="stylesheet" href="assets/css/responsive.css" />
+    <link rel="stylesheet" href="assets/css/sidebar-fix.css" />
+    <style>
+      .clock-display {
+        font-family: var(--font-mono);
+        font-size: 42px;
+        font-weight: 700;
+        color: var(--text-primary);
+        letter-spacing: 2px;
+        line-height: 1;
+      }
+      .clock-date {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-top: 4px;
+      }
+      .clock-zone {
+        font-size: 11px;
+        color: var(--text-muted);
+        background: var(--bg);
+        padding: 2px 8px;
+        border-radius: 999px;
+        display: inline-block;
+        margin-top: 6px;
+      }
+      .live-timer {
+        font-family: var(--font-mono);
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--info);
+        letter-spacing: 1px;
+      }
+      .attendance-hero {
+        background: linear-gradient(
+          135deg,
+          var(--primary) 0%,
+          var(--primary-mid) 100%
+        );
+        border-radius: var(--radius-xl);
+        padding: 32px 40px;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 32px;
+        align-items: center;
+        margin-bottom: var(--spacing-xl);
+        color: white;
+        position: relative;
+        overflow: hidden;
+      }
+      @media (max-width: 768px) {
+        .attendance-hero {
+          grid-template-columns: 1fr;
+          text-align: center;
+        }
+      }
+      .attendance-hero::after {
+        content: "";
+        position: absolute;
+        right: -80px;
+        top: -80px;
+        width: 250px;
+        height: 250px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.04);
+        pointer-events: none;
+      }
+      .hero-user-avatar {
+        width: 72px;
+        height: 72px;
+        border-radius: 18px;
+        background: var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-display);
+        font-size: 26px;
+        font-weight: 800;
+        color: white;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 1;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      }
+      .hero-user-info {
+        position: relative;
+        z-index: 1;
+      }
+      .hero-user-name {
+        font-family: var(--font-display);
+        font-size: 22px;
+        font-weight: 800;
+        margin-bottom: 4px;
+      }
+      .hero-user-role {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+      .hero-times {
+        display: flex;
+        gap: 32px;
+        position: relative;
+        z-index: 1;
+      }
+      .hero-time-block {
+        text-align: center;
+      }
+      .hero-time-label {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: rgba(255, 255, 255, 0.5);
+        margin-bottom: 6px;
+      }
+      .hero-time-val {
+        font-family: var(--font-mono);
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: 2px;
+      }
+      .hero-time-val.green {
+        color: #34d399;
+      }
+      .hero-time-val.red {
+        color: #f87171;
+      }
+      .hero-time-val.blue {
+        color: #60a5fa;
+      }
+      .hero-time-val.muted {
+        color: rgba(255, 255, 255, 0.3);
+      }
+      .hero-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        margin-top: 8px;
+      }
+      .pulse-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: currentColor;
+        animation: pulse-live 1.5s ease-in-out infinite;
+      }
+      @keyframes pulse-live {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.4;
+          transform: scale(0.8);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-layout" id="appLayout"></div>
 
-<script src="assets/js/core.js"></script>
-<script src="assets/js/sidebar.js"></script>
-<script>
-(function() {
-  const user = Auth.guard();
-  if (!user) return;
+    <script src="assets/js/core.js"></script>
+    <script src="assets/js/sidebar.js"></script>
+    <script>
+      (function () {
+        const user = Auth.guard();
+        if (!user) return;
 
-  /* =============================================================
+        /* =============================================================
      ZONA HORARIA: Bogotá / Quito / Lima = UTC-5
      ============================================================= */
-  const TZ = 'America/Bogota';
+        const TZ = "America/Bogota";
 
-  function nowBogota() {
-    return new Date(new Date().toLocaleString('en-US', { timeZone: TZ }));
-  }
+        function nowBogota() {
+          return new Date(new Date().toLocaleString("en-US", { timeZone: TZ }));
+        }
 
-  function timeBogota() {
-    return new Date().toLocaleTimeString('es-CO', {
-      timeZone: TZ, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
-    });
-  }
+        function timeBogota() {
+          return new Date().toLocaleTimeString("es-CO", {
+            timeZone: TZ,
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false,
+          });
+        }
 
-  function dateBogota() {
-    return new Date().toLocaleDateString('es-CO', {
-      timeZone: TZ, weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'
-    });
-  }
+        function dateBogota() {
+          return new Date().toLocaleDateString("es-CO", {
+            timeZone: TZ,
+            weekday: "long",
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+          });
+        }
 
-  // ✅ FIX: Esta función devuelve la hora LOCAL (Bogotá) en formato HH:MM
-  function timeShortLocal() {
-    return new Date().toLocaleTimeString('es-CO', {
-      timeZone: TZ, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
-    });
-  }
+        // ✅ FIX: Esta función devuelve la hora LOCAL (Bogotá) en formato HH:MM
+        function timeShortLocal() {
+          return new Date().toLocaleTimeString("es-CO", {
+            timeZone: TZ,
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false,
+          });
+        }
 
-  function parseTimeStr(str) {
-    if (!str) return null;
-    const timePart = str.includes(' ') ? str.split(' ')[1] : str;
-    const [h, m, s] = timePart.split(':').map(Number);
-    const now = nowBogota();
-    return new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s || 0);
-  }
+        function parseTimeStr(str) {
+          if (!str) return null;
+          const timePart = str.includes(" ") ? str.split(" ")[1] : str;
+          const [h, m, s] = timePart.split(":").map(Number);
+          const now = nowBogota();
+          return new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+            h,
+            m,
+            s || 0,
+          );
+        }
 
-  function calcDuration(start, end) {
-    if (!start) return '00:00:00';
-    const endTime  = end || nowBogota();
-    const diffMs   = endTime - start;
-    if (diffMs < 0) return '00:00:00';
-    const totalSec = Math.floor(diffMs / 1000);
-    const h = Math.floor(totalSec / 3600);
-    const m = Math.floor((totalSec % 3600) / 60);
-    const s = totalSec % 60;
-    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-  }
+        function calcDuration(start, end) {
+          if (!start) return "00:00:00";
+          const endTime = end || nowBogota();
+          const diffMs = endTime - start;
+          if (diffMs < 0) return "00:00:00";
+          const totalSec = Math.floor(diffMs / 1000);
+          const h = Math.floor(totalSec / 3600);
+          const m = Math.floor((totalSec % 3600) / 60);
+          const s = totalSec % 60;
+          return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+        }
 
-  function calcHoursDecimal(start, end) {
-    if (!start || !end) return 0;
-    return ((end - start) / 3600000).toFixed(2);
-  }
+        function calcHoursDecimal(start, end) {
+          if (!start || !end) return 0;
+          return ((end - start) / 3600000).toFixed(2);
+        }
 
-  /* =============================================================
+        /* =============================================================
      ESTADO GLOBAL
      ============================================================= */
-  let myRecord = null;
-  let clockInterval = null;
-  let timerInterval = null;
+        let myRecord = null;
+        let clockInterval = null;
+        let timerInterval = null;
 
-  /* =============================================================
+        /* =============================================================
      RENDER
      ============================================================= */
-  const initials   = Fmt.initials(user.nombre);
-  const todayLabel = new Date().toLocaleDateString('es-CO', {
-    timeZone: TZ, weekday: 'long', day: '2-digit', month: 'long'
-  });
+        const initials = Fmt.initials(user.nombre);
+        const todayLabel = new Date().toLocaleDateString("es-CO", {
+          timeZone: TZ,
+          weekday: "long",
+          day: "2-digit",
+          month: "long",
+        });
 
-  document.getElementById('appLayout').innerHTML = `
-    ${SidebarHTML.render('attendance.html')}
+        document.getElementById("appLayout").innerHTML = `
+    ${SidebarHTML.render("attendance.html")}
     <div class="main-content" id="mainContent">
       <header class="topbar">
         <div class="topbar-left">
@@ -203,7 +315,7 @@
             <div class="hero-user-avatar">${initials}</div>
             <div class="hero-user-info">
               <div class="hero-user-name">${user.nombre}</div>
-              <div class="hero-user-role">${user.cargo || 'Empleado'}${user.sucursal ? ' — ' + user.sucursal : ''}</div>
+              <div class="hero-user-role">${user.cargo || "Empleado"}${user.sucursal ? " — " + user.sucursal : ""}</div>
               <div id="myStatusBadge" style="margin-top:10px;"></div>
             </div>
             <div class="hero-times">
@@ -255,187 +367,241 @@
     </div>
   `;
 
-  Sidebar.init();
+        Sidebar.init();
 
-  /* =============================================================
+        /* =============================================================
      RELOJ
      ============================================================= */
-  function startClock() {
-    function tick() {
-      document.getElementById('liveClock').textContent = timeBogota();
-      document.getElementById('liveDate').textContent  = dateBogota();
-    }
-    tick();
-    clockInterval = setInterval(tick, 1000);
-  }
-  startClock();
+        function startClock() {
+          function tick() {
+            document.getElementById("liveClock").textContent = timeBogota();
+            document.getElementById("liveDate").textContent = dateBogota();
+          }
+          tick();
+          clockInterval = setInterval(tick, 1000);
+        }
+        startClock();
 
-  /* =============================================================
+        /* =============================================================
      TIMER
      ============================================================= */
-  function startLiveTimer(checkInStr) {
-    clearInterval(timerInterval);
-    const checkInDate = parseTimeStr(checkInStr);
-    if (!checkInDate) return;
-    function updateTimer() {
-      const elapsed = calcDuration(checkInDate, nowBogota());
-      const el = document.getElementById('myLiveTimer');
-      if (el) el.textContent = elapsed;
-    }
-    updateTimer();
-    timerInterval = setInterval(updateTimer, 1000);
-  }
+        function startLiveTimer(checkInStr) {
+          clearInterval(timerInterval);
+          const checkInDate = parseTimeStr(checkInStr);
+          if (!checkInDate) return;
+          function updateTimer() {
+            const elapsed = calcDuration(checkInDate, nowBogota());
+            const el = document.getElementById("myLiveTimer");
+            if (el) el.textContent = elapsed;
+          }
+          updateTimer();
+          timerInterval = setInterval(updateTimer, 1000);
+        }
 
-  function stopLiveTimer(checkInStr, checkOutStr) {
-    clearInterval(timerInterval);
-    const ci    = parseTimeStr(checkInStr);
-    const co    = parseTimeStr(checkOutStr);
-    const total = calcDuration(ci, co);
-    const el    = document.getElementById('myLiveTimer');
-    if (el) { el.textContent = total; el.style.color = 'var(--success)'; }
-  }
+        function stopLiveTimer(checkInStr, checkOutStr) {
+          clearInterval(timerInterval);
+          const ci = parseTimeStr(checkInStr);
+          const co = parseTimeStr(checkOutStr);
+          const total = calcDuration(ci, co);
+          const el = document.getElementById("myLiveTimer");
+          if (el) {
+            el.textContent = total;
+            el.style.color = "var(--success)";
+          }
+        }
 
-  /* =============================================================
+        /* =============================================================
      ESTADO DEL USUARIO
      ============================================================= */
-  async function loadMyStatus() {
-    try {
-      const data    = await API.get('attendance.php', { action: 'today', employee_id: user.id });
-      const records = data.records || [];
-      myRecord = records.find(r => String(r.employee_id) === String(user.id)) || records[0] || null;
+        async function loadMyStatus() {
+          try {
+            const data = await API.get("attendance.php", {
+              action: "today",
+              employee_id: user.id,
+            });
+            const records = data.records || [];
+            myRecord =
+              records.find((r) => String(r.employee_id) === String(user.id)) ||
+              records[0] ||
+              null;
 
-      const ciEl    = document.getElementById('myCheckIn');
-      const coEl    = document.getElementById('myCheckOut');
-      const stBadge = document.getElementById('myStatusBadge');
+            const ciEl = document.getElementById("myCheckIn");
+            const coEl = document.getElementById("myCheckOut");
+            const stBadge = document.getElementById("myStatusBadge");
 
-      if (!myRecord || !myRecord.check_in) {
-        ciEl.textContent = '--:--'; ciEl.classList.add('muted'); ciEl.classList.remove('green');
-        coEl.textContent = '--:--'; coEl.classList.add('muted'); coEl.classList.remove('red');
-        document.getElementById('myLiveTimer').textContent = '00:00:00';
-        stBadge.innerHTML = '<span class="hero-status-badge" style="background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);">Sin registro hoy</span>';
-        return;
-      }
-
-      const ciTime = myRecord.check_in.includes(' ')
-        ? myRecord.check_in.split(' ')[1].slice(0,5)
-        : myRecord.check_in.slice(0,5);
-      ciEl.textContent = ciTime;
-      ciEl.classList.remove('muted'); ciEl.classList.add('green');
-
-      if (myRecord.check_out) {
-        const coTime = myRecord.check_out.includes(' ')
-          ? myRecord.check_out.split(' ')[1].slice(0,5)
-          : myRecord.check_out.slice(0,5);
-        coEl.textContent = coTime;
-        coEl.classList.remove('muted'); coEl.classList.add('red');
-        stBadge.innerHTML = '<span class="hero-status-badge" style="background:rgba(52,211,153,0.2);color:#34D399;"><span class="pulse-dot" style="background:#34D399;"></span>Jornada completada</span>';
-        stopLiveTimer(myRecord.check_in, myRecord.check_out);
-      } else {
-        coEl.textContent = '--:--'; coEl.classList.add('muted'); coEl.classList.remove('red');
-        stBadge.innerHTML = '<span class="hero-status-badge" style="background:rgba(96,165,250,0.2);color:#60A5FA;"><span class="pulse-dot" style="background:#60A5FA;"></span>Turno activo</span>';
-        startLiveTimer(myRecord.check_in);
-      }
-    } catch(e) { console.error('Error cargando estado:', e); }
-  }
-
-  /* =============================================================
-     TABLA HOY
-     ============================================================= */
-  async function loadToday() {
-    try {
-      const data    = await API.get('attendance.php', { action: 'today' });
-      const records = data.records || [];
-
-      document.getElementById('attendanceTodayBody').innerHTML = records.length
-        ? records.map(r => {
-            const ciStr = r.check_in
-              ? (r.check_in.includes(' ') ? r.check_in.split(' ')[1].slice(0,5) : r.check_in.slice(0,5))
-              : '--:--';
-            const coStr = r.check_out
-              ? (r.check_out.includes(' ') ? r.check_out.split(' ')[1].slice(0,5) : r.check_out.slice(0,5))
-              : '--:--';
-
-            let worked = '—';
-            if (r.check_in) {
-              const ci = parseTimeStr(r.check_in);
-              if (r.check_out) {
-                const co  = parseTimeStr(r.check_out);
-                const hrs = calcHoursDecimal(ci, co);
-                worked = `${calcDuration(ci, co).slice(0,5)} (${hrs}h)`;
-              } else {
-                worked = calcDuration(ci) + ' <span style="font-size:10px;color:var(--info);">↺ vivo</span>';
-              }
+            if (!myRecord || !myRecord.check_in) {
+              ciEl.textContent = "--:--";
+              ciEl.classList.add("muted");
+              ciEl.classList.remove("green");
+              coEl.textContent = "--:--";
+              coEl.classList.add("muted");
+              coEl.classList.remove("red");
+              document.getElementById("myLiveTimer").textContent = "00:00:00";
+              stBadge.innerHTML =
+                '<span class="hero-status-badge" style="background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);">Sin registro hoy</span>';
+              return;
             }
 
-            const statusHtml = r.check_out
-              ? `<span class="badge badge-success">Completo</span>`
-              : r.check_in
-                ? `<span class="badge badge-warning" style="display:flex;align-items:center;gap:4px;">
+            const ciTime = myRecord.check_in.includes(" ")
+              ? myRecord.check_in.split(" ")[1].slice(0, 5)
+              : myRecord.check_in.slice(0, 5);
+            ciEl.textContent = ciTime;
+            ciEl.classList.remove("muted");
+            ciEl.classList.add("green");
+
+            if (myRecord.check_out) {
+              const coTime = myRecord.check_out.includes(" ")
+                ? myRecord.check_out.split(" ")[1].slice(0, 5)
+                : myRecord.check_out.slice(0, 5);
+              coEl.textContent = coTime;
+              coEl.classList.remove("muted");
+              coEl.classList.add("red");
+              stBadge.innerHTML =
+                '<span class="hero-status-badge" style="background:rgba(52,211,153,0.2);color:#34D399;"><span class="pulse-dot" style="background:#34D399;"></span>Jornada completada</span>';
+              stopLiveTimer(myRecord.check_in, myRecord.check_out);
+            } else {
+              coEl.textContent = "--:--";
+              coEl.classList.add("muted");
+              coEl.classList.remove("red");
+              stBadge.innerHTML =
+                '<span class="hero-status-badge" style="background:rgba(96,165,250,0.2);color:#60A5FA;"><span class="pulse-dot" style="background:#60A5FA;"></span>Turno activo</span>';
+              startLiveTimer(myRecord.check_in);
+            }
+          } catch (e) {
+            console.error("Error cargando estado:", e);
+          }
+        }
+
+        /* =============================================================
+     TABLA HOY
+     ============================================================= */
+        async function loadToday() {
+          try {
+            const data = await API.get("attendance.php", { action: "today" });
+            const records = data.records || [];
+
+            document.getElementById("attendanceTodayBody").innerHTML =
+              records.length
+                ? records
+                    .map((r) => {
+                      const ciStr = r.check_in
+                        ? r.check_in.includes(" ")
+                          ? r.check_in.split(" ")[1].slice(0, 5)
+                          : r.check_in.slice(0, 5)
+                        : "--:--";
+                      const coStr = r.check_out
+                        ? r.check_out.includes(" ")
+                          ? r.check_out.split(" ")[1].slice(0, 5)
+                          : r.check_out.slice(0, 5)
+                        : "--:--";
+
+                      let worked = "—";
+                      if (r.check_in) {
+                        const ci = parseTimeStr(r.check_in);
+                        if (r.check_out) {
+                          const co = parseTimeStr(r.check_out);
+                          const hrs = calcHoursDecimal(ci, co);
+                          worked = `${calcDuration(ci, co).slice(0, 5)} (${hrs}h)`;
+                        } else {
+                          worked =
+                            calcDuration(ci) +
+                            ' <span style="font-size:10px;color:var(--info);">↺ vivo</span>';
+                        }
+                      }
+
+                      const statusHtml = r.check_out
+                        ? `<span class="badge badge-success">Completo</span>`
+                        : r.check_in
+                          ? `<span class="badge badge-warning" style="display:flex;align-items:center;gap:4px;">
                      <span class="pulse-dot" style="width:6px;height:6px;background:var(--warning);
                        animation:pulse-live 1.5s ease-in-out infinite;border-radius:50%;"></span>Activo</span>`
-                : `<span class="badge badge-neutral">Sin entrada</span>`;
+                          : `<span class="badge badge-neutral">Sin entrada</span>`;
 
-            return `<tr>
-              <td style="font-weight:600;">${r.nombre || '-'}</td>
-              <td><span class="badge badge-neutral">${r.cargo || '-'}</span></td>
+                      return `<tr>
+              <td style="font-weight:600;">${r.nombre || "-"}</td>
+              <td><span class="badge badge-neutral">${r.cargo || "-"}</span></td>
               <td style="font-family:var(--font-mono);color:var(--success);font-weight:700;">${ciStr}</td>
               <td style="font-family:var(--font-mono);color:var(--danger);font-weight:700;">${coStr}</td>
               <td style="font-family:var(--font-mono);font-size:13px;">${worked}</td>
               <td>${statusHtml}</td>
             </tr>`;
-          }).join('')
-        : `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);">Sin registros de asistencia hoy</td></tr>`;
+                    })
+                    .join("")
+                : `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);">Sin registros de asistencia hoy</td></tr>`;
+          } catch (e) {
+            Toast.error("Error al cargar asistencia");
+          }
+        }
 
-    } catch(e) { Toast.error('Error al cargar asistencia'); }
-  }
-
-  /* =============================================================
+        /* =============================================================
      ✅ FIX: MARCAR ENTRADA / SALIDA — hora siempre en UTC-5
      El servidor puede devolver data.time en UTC.
      Ignoramos data.time y usamos siempre la hora local del navegador (ya en UTC-5).
      ============================================================= */
-  document.getElementById('checkInBtn').addEventListener('click', async () => {
-    // ✅ Capturamos la hora LOCAL antes de la petición
-    const horaLocal = timeShortLocal();
-    try {
-      const data = await API.post('attendance.php?action=check-in', { employee_id: user.id });
-      if (data.success) {
-        // ✅ Siempre mostramos horaLocal (UTC-5), nunca data.time (que puede ser UTC)
-        Toast.success(`Entrada marcada a las ${horaLocal} (Bogotá UTC-5)`);
-        await loadMyStatus();
+        document
+          .getElementById("checkInBtn")
+          .addEventListener("click", async () => {
+            // ✅ Capturamos la hora LOCAL antes de la petición
+            const horaLocal = timeShortLocal();
+            try {
+              const data = await API.post("attendance.php?action=check-in", {
+                employee_id: user.id,
+              });
+              if (data.success) {
+                // ✅ Siempre mostramos horaLocal (UTC-5), nunca data.time (que puede ser UTC)
+                Toast.success(
+                  `Entrada marcada a las ${horaLocal} (Bogotá UTC-5)`,
+                );
+                await loadMyStatus();
+                loadToday();
+              } else {
+                Toast.warning(
+                  data.message || "Ya tienes una entrada registrada hoy",
+                );
+              }
+            } catch (e) {
+              Toast.error("Error de conexion con el servidor");
+            }
+          });
+
+        document
+          .getElementById("checkOutBtn")
+          .addEventListener("click", async () => {
+            // ✅ Capturamos la hora LOCAL antes de la petición
+            const horaLocal = timeShortLocal();
+            try {
+              const data = await API.post("attendance.php?action=check-out", {
+                employee_id: user.id,
+              });
+              if (data.success) {
+                // ✅ Siempre mostramos horaLocal (UTC-5), nunca data.time (que puede ser UTC)
+                Toast.success(
+                  `Salida marcada a las ${horaLocal} (Bogotá UTC-5)`,
+                );
+                await loadMyStatus();
+                loadToday();
+              } else {
+                Toast.warning(
+                  data.message || "No tienes una entrada registrada hoy",
+                );
+              }
+            } catch (e) {
+              Toast.error("Error de conexion con el servidor");
+            }
+          });
+
+        document
+          .getElementById("refreshAttendanceBtn")
+          .addEventListener("click", () => {
+            loadMyStatus();
+            loadToday();
+          });
+
+        setInterval(loadToday, 60000);
+
+        loadMyStatus();
         loadToday();
-      } else {
-        Toast.warning(data.message || 'Ya tienes una entrada registrada hoy');
-      }
-    } catch(e) { Toast.error('Error de conexion con el servidor'); }
-  });
-
-  document.getElementById('checkOutBtn').addEventListener('click', async () => {
-    // ✅ Capturamos la hora LOCAL antes de la petición
-    const horaLocal = timeShortLocal();
-    try {
-      const data = await API.post('attendance.php?action=check-out', { employee_id: user.id });
-      if (data.success) {
-        // ✅ Siempre mostramos horaLocal (UTC-5), nunca data.time (que puede ser UTC)
-        Toast.success(`Salida marcada a las ${horaLocal} (Bogotá UTC-5)`);
-        await loadMyStatus();
-        loadToday();
-      } else {
-        Toast.warning(data.message || 'No tienes una entrada registrada hoy');
-      }
-    } catch(e) { Toast.error('Error de conexion con el servidor'); }
-  });
-
-  document.getElementById('refreshAttendanceBtn').addEventListener('click', () => {
-    loadMyStatus();
-    loadToday();
-  });
-
-  setInterval(loadToday, 60000);
-
-  loadMyStatus();
-  loadToday();
-})();
-</script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

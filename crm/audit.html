@@ -1,48 +1,70 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema de Seguimiento - Auditoria</title>
-    <link rel="icon" type="image/png" href="assets/img/icono.png">
-  <link rel="apple-touch-icon" href="assets/img/icono.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/variables.css">
-  <link rel="stylesheet" href="assets/css/main.css">
-  <link rel="stylesheet" href="assets/css/dashboard.css">
-  <link rel="stylesheet" href="assets/css/responsive.css">
-  <style>
-    .action-badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .4px;
-      text-transform: uppercase;
-    }
-    .action-CREATE  { background:#d1fae5; color:#065f46; }
-    .action-UPDATE  { background:#dbeafe; color:#1e40af; }
-    .action-DELETE  { background:#fee2e2; color:#991b1b; }
-    .action-LOGIN   { background:#ede9fe; color:#5b21b6; }
-    .action-LOGOUT  { background:#fef3c7; color:#92400e; }
-    .action-default { background:#f1f5f9; color:#475569; }
-  </style>
-</head>
-<body>
-<div class="app-layout" id="appLayout"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema de Seguimiento - Auditoria</title>
+    <link rel="icon" type="image/png" href="assets/img/icono.png" />
+    <link rel="apple-touch-icon" href="assets/img/icono.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/variables.css" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <link rel="stylesheet" href="assets/css/dashboard.css" />
+    <link rel="stylesheet" href="assets/css/responsive.css" />
+    <link rel="stylesheet" href="assets/css/sidebar-fix.css" />
+    <style>
+      .action-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+      }
+      .action-CREATE {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      .action-UPDATE {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+      .action-DELETE {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .action-LOGIN {
+        background: #ede9fe;
+        color: #5b21b6;
+      }
+      .action-LOGOUT {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .action-default {
+        background: #f1f5f9;
+        color: #475569;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-layout" id="appLayout"></div>
 
-<script src="assets/js/core.js"></script>
-<script src="assets/js/sidebar.js"></script>
-<script>
-(function() {
-  const user = Auth.guard();
-  if (!user) return;
+    <script src="assets/js/core.js"></script>
+    <script src="assets/js/sidebar.js"></script>
+    <script>
+      (function () {
+        const user = Auth.guard();
+        if (!user) return;
 
-  document.getElementById('appLayout').innerHTML = `
-    ${SidebarHTML.render('audit.html')}
+        document.getElementById("appLayout").innerHTML = `
+    ${SidebarHTML.render("audit.html")}
     <div class="main-content" id="mainContent">
       <header class="topbar">
         <div class="topbar-left">
@@ -122,102 +144,133 @@
     </div>
   `;
 
-  Sidebar.init();
+        Sidebar.init();
 
-  let currentPage = 1;
-  const perPage   = 20;
+        let currentPage = 1;
+        const perPage = 20;
 
-  async function load() {
-    document.getElementById('auditTableBody').innerHTML =
-      `<tr><td colspan="7" style="text-align:center;padding:32px;"><div class="spinner spinner-dark" style="margin:auto;"></div></td></tr>`;
+        async function load() {
+          document.getElementById("auditTableBody").innerHTML =
+            `<tr><td colspan="7" style="text-align:center;padding:32px;"><div class="spinner spinner-dark" style="margin:auto;"></div></td></tr>`;
 
-    /* ✅ FIX: usar parámetro "audit_action" internamente y mapear a "action" en la URL */
-    const actionFilter = document.getElementById('auditActionFilter').value;
-    const entity       = document.getElementById('auditEntity').value;
-    const from         = document.getElementById('auditDateFrom').value;
-    const to           = document.getElementById('auditDateTo').value;
+          /* ✅ FIX: usar parámetro "audit_action" internamente y mapear a "action" en la URL */
+          const actionFilter =
+            document.getElementById("auditActionFilter").value;
+          const entity = document.getElementById("auditEntity").value;
+          const from = document.getElementById("auditDateFrom").value;
+          const to = document.getElementById("auditDateTo").value;
 
-    /* Construir params como objeto y dejar que API.get lo serialice correctamente */
-    const params = {
-      action : 'list',
-      page   : currentPage,
-      limit  : perPage
-    };
-    /* ✅ action del filtro va en query separado. En PHP $_GET['action'] = 'list' siempre */
-    if (actionFilter) params.action_filter = actionFilter;
-    if (entity)       params.entity_type   = entity;
-    if (from)         params.start_date    = from;
-    if (to)           params.end_date      = to;
+          /* Construir params como objeto y dejar que API.get lo serialice correctamente */
+          const params = {
+            action: "list",
+            page: currentPage,
+            limit: perPage,
+          };
+          /* ✅ action del filtro va en query separado. En PHP $_GET['action'] = 'list' siempre */
+          if (actionFilter) params.action_filter = actionFilter;
+          if (entity) params.entity_type = entity;
+          if (from) params.start_date = from;
+          if (to) params.end_date = to;
 
-    try {
-      const d = await API.get('audit.php', params);
+          try {
+            const d = await API.get("audit.php", params);
 
-      const logs     = d.logs || [];
-      const total    = d.total || logs.length;
-      const pages    = d.pages || 1;
+            const logs = d.logs || [];
+            const total = d.total || logs.length;
+            const pages = d.pages || 1;
 
-      document.getElementById('auditSubtitle').textContent =
-        `${total} registro${total !== 1 ? 's' : ''}`;
+            document.getElementById("auditSubtitle").textContent =
+              `${total} registro${total !== 1 ? "s" : ""}`;
 
-      renderPagination('auditPagination', currentPage, pages, p => {
-        currentPage = p;
-        load();
-      });
+            renderPagination("auditPagination", currentPage, pages, (p) => {
+              currentPage = p;
+              load();
+            });
 
-      document.getElementById('auditPaginationInfo').textContent =
-        `Pagina ${currentPage} de ${pages} - ${total} registros total`;
+            document.getElementById("auditPaginationInfo").textContent =
+              `Pagina ${currentPage} de ${pages} - ${total} registros total`;
 
-      document.getElementById('auditTableBody').innerHTML = logs.length
-        ? logs.map(l => `
+            document.getElementById("auditTableBody").innerHTML = logs.length
+              ? logs
+                  .map(
+                    (l) => `
           <tr>
             <td style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);">${l.id}</td>
-            <td><span class="action-badge action-${l.action || 'default'}">${l.action || '-'}</span></td>
+            <td><span class="action-badge action-${l.action || "default"}">${l.action || "-"}</span></td>
             <td>
               ${l.entity_type ? `<span class="badge badge-neutral" style="font-size:10px;">${l.entity_type}</span>` : '<span style="color:var(--text-muted);">-</span>'}
-              ${l.entity_id   ? `<span style="font-size:11px;color:var(--text-muted);margin-left:4px;">#${l.entity_id}</span>` : ''}
+              ${l.entity_id ? `<span style="font-size:11px;color:var(--text-muted);margin-left:4px;">#${l.entity_id}</span>` : ""}
             </td>
             <td>
               ${l.user_name ? `<div style="font-weight:600;font-size:13px;">${l.user_name}</div>` : '<span style="color:var(--text-muted);">Sistema</span>'}
-              ${l.user_role ? `<div style="font-size:11px;color:var(--text-muted);">${l.user_role}</div>` : ''}
+              ${l.user_role ? `<div style="font-size:11px;color:var(--text-muted);">${l.user_role}</div>` : ""}
             </td>
-            <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;">${l.description || '-'}</td>
-            <td style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);">${l.ip_address || '-'}</td>
+            <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;">${l.description || "-"}</td>
+            <td style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);">${l.ip_address || "-"}</td>
             <td style="font-size:12px;color:var(--text-muted);">${Fmt.datetime(l.created_at)}</td>
           </tr>
-        `).join('')
-        : `<tr><td colspan="7"><div class="empty-state">
+        `,
+                  )
+                  .join("")
+              : `<tr><td colspan="7"><div class="empty-state">
             <div class="empty-state-title">Sin registros</div>
             <div class="empty-state-desc">No hay actividad que coincida con los filtros</div>
           </div></td></tr>`;
-
-    } catch(e) {
-      console.error('[Audit]', e);
-      document.getElementById('auditTableBody').innerHTML =
-        `<tr><td colspan="7"><div class="empty-state">
+          } catch (e) {
+            console.error("[Audit]", e);
+            document.getElementById("auditTableBody").innerHTML =
+              `<tr><td colspan="7"><div class="empty-state">
           <div class="empty-state-title">Error al cargar</div>
           <div class="empty-state-desc" style="color:var(--danger);">${e.message}</div>
           <button class="btn btn-primary" onclick="load()" style="margin-top:12px;">Reintentar</button>
         </div></td></tr>`;
-      Toast.error('Error al cargar auditoria');
-    }
-  }
+            Toast.error("Error al cargar auditoria");
+          }
+        }
 
-  document.getElementById('refreshAuditBtn').addEventListener('click', () => { currentPage=1; load(); });
-  document.getElementById('auditActionFilter').addEventListener('change', () => { currentPage=1; load(); });
-  document.getElementById('auditEntity').addEventListener('change',       () => { currentPage=1; load(); });
-  document.getElementById('auditDateFrom').addEventListener('change',     () => { currentPage=1; load(); });
-  document.getElementById('auditDateTo').addEventListener('change',       () => { currentPage=1; load(); });
-  document.getElementById('clearAuditFilters').addEventListener('click', () => {
-    document.getElementById('auditActionFilter').value = '';
-    document.getElementById('auditEntity').value       = '';
-    document.getElementById('auditDateFrom').value     = '';
-    document.getElementById('auditDateTo').value       = '';
-    currentPage = 1;
-    load();
-  });
+        document
+          .getElementById("refreshAuditBtn")
+          .addEventListener("click", () => {
+            currentPage = 1;
+            load();
+          });
+        document
+          .getElementById("auditActionFilter")
+          .addEventListener("change", () => {
+            currentPage = 1;
+            load();
+          });
+        document
+          .getElementById("auditEntity")
+          .addEventListener("change", () => {
+            currentPage = 1;
+            load();
+          });
+        document
+          .getElementById("auditDateFrom")
+          .addEventListener("change", () => {
+            currentPage = 1;
+            load();
+          });
+        document
+          .getElementById("auditDateTo")
+          .addEventListener("change", () => {
+            currentPage = 1;
+            load();
+          });
+        document
+          .getElementById("clearAuditFilters")
+          .addEventListener("click", () => {
+            document.getElementById("auditActionFilter").value = "";
+            document.getElementById("auditEntity").value = "";
+            document.getElementById("auditDateFrom").value = "";
+            document.getElementById("auditDateTo").value = "";
+            currentPage = 1;
+            load();
+          });
 
-  load();
-})();
-</script>
-</body>
+        load();
+      })();
+    </script>
+  </body>
 </html>

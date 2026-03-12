@@ -1,0 +1,85 @@
+/* ============================================================
+   SIDEBAR FIX — sticky desktop
+   Incluir ÚLTIMO en todos los HTML, después de responsive.css
+   ============================================================ */
+
+/* ── Desktop: sidebar sticky que sigue el scroll ── */
+@media (min-width: 1025px) {
+
+  /* El layout debe ser flex ROW con items alineados al top */
+  html, body {
+    height: 100%;
+  }
+
+  .app-layout {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;  /* CRÍTICO: sin esto sticky no funciona */
+    min-height: 100vh !important;
+  }
+
+  /* Sobreescribir el position:fixed del main.css */
+  .sidebar {
+    position: sticky !important;
+    top: 0 !important;
+    left: auto !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    flex-shrink: 0 !important;
+    transform: none !important;
+    align-self: flex-start !important;  /* CRÍTICO */
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    z-index: 100 !important;
+    /* Quitar cualquier margin/translate que pueda quedar */
+    margin-left: 0 !important;
+  }
+
+  /* El contenido principal ocupa el resto */
+  .main-content {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    width: auto !important;
+    max-width: none !important;
+    margin-left: 0 !important;          /* ya no necesita margin porque el sidebar es sticky */
+    min-height: 100vh !important;
+  }
+
+  /* Cuando el sidebar está colapsado, también sticky */
+  .sidebar.collapsed {
+    position: sticky !important;
+    top: 0 !important;
+    align-self: flex-start !important;
+  }
+
+  /* Ocultar elementos solo-móvil */
+  .bottom-nav      { display: none !important; }
+  .mobile-menu-btn { display: none !important; }
+  .sidebar-overlay { display: none !important; }
+}
+
+/* ── Tablet/Móvil: sidebar fuera de pantalla (sin cambios) ── */
+@media (max-width: 1024px) {
+  .app-layout {
+    display: block !important;
+  }
+
+  .sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: -280px !important;
+    height: 100vh !important;
+    z-index: 300 !important;
+    transition: left 0.25s ease !important;
+    transform: none !important;
+  }
+
+  .sidebar.mobile-open {
+    left: 0 !important;
+  }
+
+  .main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+}

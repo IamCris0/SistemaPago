@@ -1021,3 +1021,14 @@ select.form-control {
   .topbar { padding: 0 var(--spacing-md); }
   .modal { margin: var(--spacing-md); border-radius: var(--radius-lg); }
 }
+
+@media (min-width: 1025px) {
+  .sidebar {
+    position: sticky !important;
+    top: 0;
+    height: 100vh;
+  }
+  .main-content {
+    margin-left: 0 !important;
+  }
+}
